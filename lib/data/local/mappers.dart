@@ -57,6 +57,9 @@ Topup topupFromRow(db.Topup r) => Topup(
       hasUpiQr: r.upiQrPath != null,
       createdBy: r.createdBy,
       createdAt: r.createdAt,
+      reversed: r.reversed,
+      reversedAt: r.reversedAt,
+      reversedBy: r.reversedBy,
     );
 
 Refund refundFromRow(db.Refund r) => Refund(

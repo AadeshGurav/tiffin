@@ -99,6 +99,8 @@ UI) — from then on, all account management happens through the admin-only
 - If payment method is `upi`: generate a UPI payment QR (standard `upi://pay` URI scheme — no payment gateway integration) and show it in a pop-up at the moment of payment, so the payer can scan it right there — it does **not** appear on the bill PDF itself. Payment status starts `pending`.
 - If payment method is `cash`: payment status is `confirmed` immediately; no UPI QR needed.
 - Admin can manually mark a pending UPI top-up as `confirmed` once they've verified receipt in their own UPI app. There is no automated payment webhook in this build.
+- The member is chosen through a **searchable picker** (name, class, roll number, staff ID); a **+ New member** shortcut in that picker creates a walk-up member inline without leaving the screen.
+- Admin can **reverse** a top-up from the **Top-up history** screen. A reversal subtracts the units it credited back off the member's current balance and records who/when; the row is kept and flagged `reversed`, never deleted (audit trail, same rule as scan reversal in §6.4). A reversal is refused once any of those units have already been spent — that case is a refund (§6.7), not a reversal. Admin-only, allowed any time (no window).
 
 ### 6.4 Scanning (Counter Flow)
 - One shared scanner page, browser-based, accessed via a local-network DNS name from a mobile phone camera. Requires signing in with an account that has `scanner`, `counter`, or `admin` role (superseding the original "no login" decision — see §9) — the session is remembered on that device/browser until sign-out or expiry, so this is still effectively a fast, shared kiosk in practice, just no longer an open endpoint.
@@ -114,7 +116,7 @@ UI) — from then on, all account management happens through the admin-only
 
 ### 6.5 Menu Planning (Admin-only)
 - Admin manages **menu categories** as a first-class, CRUD-editable list (e.g. "Jain", "Normal", "Staff") — categories are not a fixed enum in code. Admin can add, rename, or remove categories as the canteen's offering changes.
-- Admin can log what's being served, per date, per meal type, tagged with one or more menu categories (a dish might apply to just "Jain", or to both "Normal" and "Staff").
+- Admin can log what's being served, per date, per meal type, tagged with zero or more menu categories (a dish might apply to just "Jain", to both "Normal" and "Staff", or to none). A meal type plus at least one item is a valid entry — categories are optional, and a new category can be created from the add-entry dialog itself.
 - The primary planning surface is an interactive month calendar (prev/next navigation, current day highlighted, each day's logged meals shown as tags at a glance) — clicking any day opens a dialog pre-filled with that date to log a new entry or review/delete what's already logged there.
 - This is a planning/record tool only — no student- or staff-facing view.
 
@@ -170,8 +172,8 @@ See `app/schemas/` and `app/core/database.py` in the codebase for the authoritat
 
 - `member_entities` — student/staff records, balances, QR code identifier, grace override, status.
 - `scans` — one record per scan attempt's outcome, reversal state, and whether it was via the grace allowance (`via_grace`).
-- `topups` — one record per credit/billing transaction, payment method/status, bill + UPI QR paths.
-- `menu_log` — admin's meal planning entries, tagged with one or more menu categories.
+- `topups` — one record per credit/billing transaction, payment method/status, bill + UPI QR paths, and reversal state (`reversed`, `reversed_at`, `reversed_by`).
+- `menu_log` — admin's meal planning entries, tagged with zero or more menu categories.
 - `menu_categories` — admin-managed list of categories (e.g. Jain, Normal, Staff) used to tag menu entries.
 - `refunds` — one record per refund: units deducted, amount, reason, who processed it. The payout itself happens outside the app.
 - `expenses` — logged business expenses.

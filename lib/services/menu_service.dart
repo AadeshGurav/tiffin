@@ -102,13 +102,14 @@ class MenuService {
   }
 
   Future<MenuEntry> addEntry(MenuEntryDraft draft) async {
-    if (draft.categories.isEmpty) {
-      throw const ValidationException('At least one category is required.');
-    }
     if (draft.items.isEmpty) {
       throw const ValidationException('At least one item is required.');
     }
-    await _validateCategoryNames(draft.categories);
+    // Categories are optional — a meal plus its items is a valid entry. Any
+    // categories that *are* named still have to exist.
+    if (draft.categories.isNotEmpty) {
+      await _validateCategoryNames(draft.categories);
+    }
 
     final id =
         await _db.into(_db.menuEntries).insert(MenuEntriesCompanion.insert(

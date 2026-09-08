@@ -129,6 +129,122 @@ void main() {
     expect((member.json['balances'] as Map)['lunch'], 3);
   });
 
+  test('reverse a top-up: balance is corrected and the row is flagged',
+      () async {
+    await _send(http, 'PATCH', '$base/api/settings', token: adminToken, body: {
+      'unitPrices': {'lunch': 40.0, 'breakfast': 25.0, 'brunch': 50.0},
+    });
+    final m = await _send(http, 'POST', '$base/api/members',
+        token: adminToken,
+        body: {'type': 'staff', 'name': 'Meera', 'staffId': 'M1'});
+    final memberId = m.json['id'] as int;
+
+    final topup = await _send(http, 'POST', '$base/api/topups',
+        token: adminToken,
+        body: {'memberId': memberId, 'lunchUnits': 5, 'paymentMethod': 'cash'});
+    final topupId = topup.json['id'] as int;
+
+    final reverse = await _send(
+        http, 'POST', '$base/api/topups/$topupId/reverse',
+        token: adminToken);
+    expect(reverse.status, 200);
+    expect(reverse.json['success'], true);
+
+    final member = await _send(http, 'GET', '$base/api/members/$memberId',
+        token: adminToken);
+    expect((member.json['balances'] as Map)['lunch'], 0);
+
+    final topups =
+        await _send(http, 'GET', '$base/api/topups', token: adminToken);
+    final row = (jsonDecode(topups.body) as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((t) => t['id'] == topupId);
+    expect(row['reversed'], true);
+    expect(row['reversedBy'], 'admin');
+
+    // A second reversal is refused.
+    final again = await _send(http, 'POST', '$base/api/topups/$topupId/reverse',
+        token: adminToken);
+    expect(again.json['success'], false);
+  });
+
+  test('a top-up cannot be reversed once its units have been spent', () async {
+    await _send(http, 'PATCH', '$base/api/settings', token: adminToken, body: {
+      'unitPrices': {'lunch': 40.0, 'breakfast': 25.0, 'brunch': 50.0},
+      'mealWindows': {
+        'breakfast': {'start': '00:00', 'end': '00:01'},
+        'brunch': {'start': '00:00', 'end': '00:01'},
+        'lunch': {'start': '00:02', 'end': '23:59'},
+      },
+    });
+    final m = await _send(http, 'POST', '$base/api/members',
+        token: adminToken,
+        body: {'type': 'staff', 'name': 'Nita', 'staffId': 'N1'});
+    final memberId = m.json['id'] as int;
+    final qr = m.json['qrCodeId'] as String;
+
+    final topup = await _send(http, 'POST', '$base/api/topups',
+        token: adminToken,
+        body: {'memberId': memberId, 'lunchUnits': 1, 'paymentMethod': 'cash'});
+    await _send(http, 'POST', '$base/api/scan',
+        token: adminToken, body: {'qrCodeId': qr});
+
+    final reverse = await _send(
+        http, 'POST', '$base/api/topups/${topup.json['id']}/reverse',
+        token: adminToken);
+    expect(reverse.json['success'], false);
+    expect(reverse.json['message'], contains('refund'));
+  });
+
+  test('purchase schedule generates from a menu item that matches a recipe',
+      () async {
+    final day = DateTime.now();
+    String ymd(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+
+    final rice = await _send(http, 'POST', '$base/api/ingredients',
+        token: adminToken, body: {'name': 'Rice', 'unit': 'kg'});
+    final riceId = rice.json['id'] as int;
+
+    await _send(http, 'POST', '$base/api/recipes', token: adminToken, body: {
+      'dishName': 'Veg Pulao',
+      'ingredients': [
+        {'ingredientId': riceId, 'quantityNote': '2 kg'}
+      ],
+    });
+
+    // Menu entry with no categories — categories are optional now.
+    await _send(http, 'POST', '$base/api/menu', token: adminToken, body: {
+      'date': ymd(day),
+      'mealType': 'lunch',
+      'categories': <String>[],
+      'items': ['Veg Pulao'],
+    });
+
+    final gen = await _send(
+        http,
+        'POST',
+        '$base/api/purchase-schedule/generate'
+            '?start=${ymd(day)}&end=${ymd(day.add(const Duration(days: 1)))}',
+        token: adminToken);
+    expect(gen.status, 200);
+    expect(gen.json['created'], 1);
+
+    final list = await _send(http, 'GET', '$base/api/purchase-schedule',
+        token: adminToken);
+    expect((jsonDecode(list.body) as List).single['ingredientName'], 'Rice');
+
+    // Idempotent: a second run over the same range adds nothing.
+    final again = await _send(
+        http,
+        'POST',
+        '$base/api/purchase-schedule/generate'
+            '?start=${ymd(day)}&end=${ymd(day.add(const Duration(days: 1)))}',
+        token: adminToken);
+    expect(again.json['created'], 0);
+  });
+
   test('grace allowance lets a zero balance go negative, then hard-stops',
       () async {
     await _send(http, 'PATCH', '$base/api/settings', token: adminToken, body: {

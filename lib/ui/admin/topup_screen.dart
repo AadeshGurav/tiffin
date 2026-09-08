@@ -7,6 +7,7 @@ import '../../app/providers.dart';
 import '../../domain/ledger.dart';
 import '../../domain/member.dart';
 import '../../domain/settings.dart';
+import '../shared_widgets/member_picker.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
@@ -143,20 +144,17 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
           builder: (list) => ListView(
             padding: const EdgeInsets.all(NbSpace.lg),
             children: [
-              NbSurface(
-                child: DropdownButtonFormField<Member>(
-                  initialValue: _member,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'MEMBER'),
-                  items: [
-                    for (final m in list)
-                      DropdownMenuItem(
-                        value: m,
-                        child: Text('${m.name} · ${m.type}'),
-                      ),
-                  ],
-                  onChanged: (m) => setState(() => _member = m),
-                ),
+              NbMemberField(
+                label: 'MEMBER',
+                value: _member,
+                members: list,
+                onSelected: (m) {
+                  setState(() => _member = m);
+                  if (list.every((x) => x.id != m.id)) {
+                    ref.invalidate(_membersProvider);
+                  }
+                },
+                onCreate: ref.read(backendProvider).createMember,
               ),
               const SizedBox(height: NbSpace.md),
               _UnitRow(

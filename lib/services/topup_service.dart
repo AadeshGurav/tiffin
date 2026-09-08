@@ -148,6 +148,64 @@ class TopupService {
     _log.info('payment_confirmed topup_id=$topupId');
   }
 
+  /// Reverses a top-up: subtracts the units it credited back off the member's
+  /// current balance and flags the row. The row is kept for audit, never
+  /// deleted (mirrors [ScanService.reverseScan], PRD §6.3).
+  ///
+  /// Refuses when the member has already spent into those units — that is a
+  /// refund, not a reversal, and the balance would otherwise go negative.
+  Future<ReversalResult> reverse(int topupId, String reversedBy) async {
+    final row = await (_db.select(_db.topups)
+          ..where((t) => t.id.equals(topupId)))
+        .getSingleOrNull();
+    if (row == null) {
+      return const ReversalResult(success: false, message: 'Top-up not found.');
+    }
+    if (row.reversed) {
+      return const ReversalResult(
+          success: false, message: 'This top-up is already reversed.');
+    }
+
+    final member = await (_db.select(_db.members)
+          ..where((m) => m.id.equals(row.memberId)))
+        .getSingleOrNull();
+    if (member == null) {
+      return const ReversalResult(success: false, message: 'Member not found.');
+    }
+    if (member.lunchBalance < row.lunchUnits ||
+        member.breakfastBalance < row.breakfastUnits ||
+        member.brunchBalance < row.brunchUnits) {
+      return const ReversalResult(
+        success: false,
+        message: 'Some of these units have already been used. '
+            'Process a refund instead.',
+      );
+    }
+
+    final now = DateTime.now().toUtc();
+    await _db.transaction(() async {
+      await (_db.update(_db.members)..where((m) => m.id.equals(member.id)))
+          .write(MembersCompanion(
+        lunchBalance: Value(member.lunchBalance - row.lunchUnits),
+        breakfastBalance: Value(member.breakfastBalance - row.breakfastUnits),
+        brunchBalance: Value(member.brunchBalance - row.brunchUnits),
+        updatedAt: Value(now),
+      ));
+      await (_db.update(_db.topups)..where((t) => t.id.equals(topupId))).write(
+        TopupsCompanion(
+          reversed: const Value(true),
+          reversedAt: Value(now),
+          reversedBy: Value(reversedBy),
+        ),
+      );
+    });
+
+    _log.info('reversed topup_id=$topupId member_id=${member.id} '
+        'by=$reversedBy');
+    return const ReversalResult(
+        success: true, message: 'Top-up reversed and balance corrected.');
+  }
+
   /// Raw bytes of the stored bill PDF, for the API to stream.
   Future<Uint8List> billPdf(int topupId) async {
     final row = await (_db.select(_db.topups)

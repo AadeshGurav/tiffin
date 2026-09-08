@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../app/providers.dart';
 import '../../domain/ledger.dart';
 import '../../domain/member.dart';
+import '../shared_widgets/member_picker.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
@@ -76,7 +77,7 @@ class RefundsScreen extends ConsumerWidget {
 
   Future<void> _form(BuildContext context, WidgetRef ref) async {
     final t = context.tokens;
-    final members = await ref.read(_activeMembersProvider.future);
+    final members = [...await ref.read(_activeMembersProvider.future)];
     if (!context.mounted || members.isEmpty) return;
     Member selected = members.first;
     final lunch = TextEditingController();
@@ -101,18 +102,21 @@ class RefundsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButton<Member>(
+                NbMemberField(
+                  label: 'Member',
                   value: selected,
-                  isExpanded: true,
-                  items: [
-                    for (final m in members)
-                      DropdownMenuItem(value: m, child: Text(m.name)),
-                  ],
-                  onChanged: (m) => setLocal(() {
-                    selected = m ?? selected;
+                  members: members,
+                  onSelected: (m) => setLocal(() {
+                    if (members.every((x) => x.id != m.id)) {
+                      members.add(m);
+                      ref.invalidate(_activeMembersProvider);
+                    }
+                    selected = m;
                     prefill();
                   }),
+                  onCreate: ref.read(backendProvider).createMember,
                 ),
+                const SizedBox(height: NbSpace.sm),
                 NbTextField(
                     label: 'Lunch units',
                     controller: lunch,

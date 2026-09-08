@@ -39,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -74,6 +74,13 @@ class AppDatabase extends _$AppDatabase {
             // Empty by default; SettingsService fills it on first read, so an
             // upgraded host keeps serving without a restart.
             await m.addColumn(schema.appSettings, schema.appSettings.hostId);
+          },
+          from4To5: (m, schema) async {
+            // Top-up reversal. Additive and defaulted (reversed = false), so an
+            // existing host's past top-ups read exactly as they did before.
+            await m.addColumn(schema.topups, schema.topups.reversed);
+            await m.addColumn(schema.topups, schema.topups.reversedAt);
+            await m.addColumn(schema.topups, schema.topups.reversedBy);
           },
           from2To3: (m, schema) async {
             // Host-enforced appearance. Additive and defaulted off, so an

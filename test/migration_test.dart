@@ -16,7 +16,7 @@ void main() {
 
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  const current = 4;
+  const current = 5;
 
   Future<String> timezoneOf(AppDatabase db) async =>
       (await db.select(db.appSettings).getSingle()).localTimezone;
@@ -40,7 +40,7 @@ void main() {
     return db;
   }
 
-  for (final from in [1, 2, 3]) {
+  for (final from in [1, 2, 3, 4]) {
     test('v$from -> v$current keeps the schema valid and the row intact',
         () async {
       final db = await migrated(from);
@@ -59,6 +59,33 @@ void main() {
       await db.close();
     });
   }
+
+  test('v4 -> v5 adds top-up reversal columns, defaulting to not-reversed',
+      () async {
+    final db = await migrated(4);
+    final now = DateTime.now().toUtc();
+    final memberId = await db.into(db.members).insert(MembersCompanion.insert(
+          type: 'staff',
+          name: 'Reversal Test',
+          qrCodeId: 'qr-rev-test',
+          createdAt: now,
+          updatedAt: now,
+        ));
+    final topupId = await db.into(db.topups).insert(TopupsCompanion.insert(
+          memberId: memberId,
+          amount: 100,
+          paymentMethod: 'cash',
+          paymentStatus: 'confirmed',
+          createdBy: 'tester',
+          createdAt: now,
+        ));
+    final row = await (db.select(db.topups)..where((t) => t.id.equals(topupId)))
+        .getSingle();
+    expect(row.reversed, isFalse);
+    expect(row.reversedAt, null);
+    expect(row.reversedBy, null);
+    await db.close();
+  });
 
   test('v1 -> v3 moves an untouched UTC default to Asia/Kolkata', () async {
     final db = await migrated(1);

@@ -11,7 +11,7 @@ reversal, billing) are unchanged from v1; see `docs/PRD.md` §5–§8.
 
 | Role | Who | Can do |
 |---|---|---|
-| **Admin** | The contractor | Everything: members, top-ups & billing, QR codes, menu planning, ingredients/recipes/purchase schedule, expenses, refunds, settings, scan reversal, user accounts. |
+| **Admin** | The contractor | Everything: members, top-ups & billing, top-up history & reversal, QR codes, menu planning, ingredients/recipes/purchase schedule, expenses, refunds, settings, scan reversal, user accounts. |
 | **Counter** | Billing-counter staff | Scan, top-ups & billing, and the shared purchase schedule. Nothing else. |
 | **Scanner** | Meal-serving staff | Scan only. |
 
@@ -79,8 +79,9 @@ http://192.168.1.42:8710/
 
 Open that on any computer on the same Wi-Fi and sign in with an **admin** (or
 **counter**) account. It covers everything except scanning: members, top-ups
-& billing, scan log & reversal, menu calendar (month grid), categories,
-ingredients, recipes, purchase schedule, expenses, refunds, settings, users.
+& billing, top-up history & reversal, scan log & reversal, menu calendar
+(month grid), categories, ingredients, recipes, purchase schedule, expenses,
+refunds, settings, users.
 Bill PDFs open in a new tab. Use the plain `http://` URL — it's faster than
 the HTTPS one.
 
@@ -135,11 +136,19 @@ per day.
 
 ### 3.2 Top-up & bill (counter / admin)
 
-**Top-up & bill** → pick the member → set units per meal type with +/− → pick
-**Cash** or **UPI**. The amount is calculated from the unit prices in
-Settings — you never type it. **Charge & generate bill** credits the balance
-immediately and shows the bill. For UPI it also shows a payment QR for the
-payer to scan; once the money lands, tap **Mark received**.
+**Top-up & bill** → tap the member field to open a searchable picker (name,
+class, roll number or staff ID). Not on the list yet? **+ New member** adds a
+walk-up member without leaving the screen. Then set units per meal type with
++/− → pick **Cash** or **UPI**. The amount is calculated from the unit prices
+in Settings — you never type it. **Charge & generate bill** credits the
+balance immediately and shows the bill. For UPI it also shows a payment QR for
+the payer to scan; once the money lands, tap **Mark received**.
+
+**Top-up history** lists every top-up, newest first. **Reverse** on a top-up
+subtracts the units it credited back off the member and records the reversal
+(who, when). The row stays, marked reversed — it is never deleted. A reversal
+is refused once any of those units have been used; process a **Refund**
+instead.
 
 ### 3.3 Members (admin)
 
@@ -157,13 +166,17 @@ row stays in the log, marked reversed.
 ### 3.5 Menu, ingredients, purchase schedule (admin; counter co-manages the schedule)
 
 - **Menu categories** — your own list (Jain, Normal, Staff…).
-- **Menu calendar** — log what's served per date/meal, tagged with categories.
+- **Menu calendar** — tap a day, then **Add**: pick the meal, type the items
+  (comma-separated), and optionally tag categories. A meal plus its items is
+  enough — categories are optional, and you can create one with **New
+  category** right in the dialog.
 - **Ingredients** / **Recipes** — a recipe links a dish name (matched against
   menu items, case-insensitive) to ingredients with free-text quantity notes.
 - **Purchase schedule** — the ↻ / generate action builds a shopping list from
   the menu calendar for a date range (safe to re-run — it never duplicates or
-  un-checks anything). Admin and counter can check items off and add ad-hoc
-  items.
+  un-checks anything). Admin and counter can check items off and add one-off
+  items with the **+** button; if you have no ingredients yet, the same dialog
+  lets you create the first one.
 
 ### 3.6 Expenses, refunds (admin)
 

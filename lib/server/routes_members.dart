@@ -138,6 +138,14 @@ Router memberAndLedgerRoutes(HostContainer c) {
     return jsonOk({'success': true});
   });
 
+  router.post('/topups/<id>/reverse', (Request request, String id) async {
+    requireRole(request, rolesAdmin);
+    final caller = callerOf(request);
+    final result =
+        await c.topups.reverse(pathId(id, entity: 'top-up'), caller.username);
+    return jsonOk(result.toJson());
+  });
+
   router.get('/topups/<id>/bill', (Request request, String id) async {
     requireRole(request, rolesBilling);
     final bytes = await c.topups.billPdf(pathId(id, entity: 'top-up'));

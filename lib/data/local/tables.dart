@@ -93,6 +93,12 @@ class Topups extends Table {
 
   TextColumn get createdBy => text()();
   DateTimeColumn get createdAt => dateTime()();
+
+  /// A reversal restores the member's balance and flags the row; the row is
+  /// kept for audit, never deleted (mirrors [Scans]). PRD §6.3.
+  BoolColumn get reversed => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get reversedAt => dateTime().nullable()();
+  TextColumn get reversedBy => text().nullable()();
 }
 
 // --------------------------------------------------------------------------

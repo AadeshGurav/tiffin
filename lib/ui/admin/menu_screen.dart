@@ -132,22 +132,30 @@ class MenuScreen extends ConsumerWidget {
   Future<void> _addEntry(
       BuildContext context, WidgetRef ref, DateTime day) async {
     final t = context.tokens;
-    final categories = await ref.read(_categoriesProvider.future);
+    final categories = [...await ref.read(_categoriesProvider.future)];
     if (!context.mounted) return;
-    var date = day;
+    final date = day;
     var meal = MealType.lunch;
     final selectedCategories = <String>{};
     final items = TextEditingController();
+    String? error;
+
+    List<String> parseItems() => items.text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
 
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
           title: Text('Add · ${DateFormat('EEE, MMM d').format(date)}',
               style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DropdownButton<MealType>(
                   value: meal,
@@ -158,31 +166,61 @@ class MenuScreen extends ConsumerWidget {
                   ],
                   onChanged: (m) => setLocal(() => meal = m ?? meal),
                 ),
-                if (categories.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: NbSpace.sm),
-                    child: Text(
-                        'No categories yet — add some on the Menu categories '
-                        'page first.',
-                        style: t.text.label),
-                  )
-                else
-                  Wrap(
-                    spacing: NbSpace.sm,
-                    children: [
-                      for (final c in categories)
-                        FilterChip(
-                          label: Text(c.name),
-                          selected: selectedCategories.contains(c.name),
-                          onSelected: (v) => setLocal(() => v
-                              ? selectedCategories.add(c.name)
-                              : selectedCategories.remove(c.name)),
-                        ),
-                    ],
-                  ),
+                const SizedBox(height: NbSpace.sm),
+                Text('Categories (optional)', style: t.text.label),
+                const SizedBox(height: NbSpace.xs),
+                Wrap(
+                  spacing: NbSpace.sm,
+                  runSpacing: NbSpace.xs,
+                  children: [
+                    for (final c in categories)
+                      FilterChip(
+                        label: Text(c.name),
+                        selected: selectedCategories.contains(c.name),
+                        onSelected: (v) => setLocal(() => v
+                            ? selectedCategories.add(c.name)
+                            : selectedCategories.remove(c.name)),
+                      ),
+                    ActionChip(
+                      avatar: const Icon(Icons.add, size: 18),
+                      label: const Text('New category'),
+                      onPressed: () async {
+                        final name = await _promptCategoryName(dialogContext);
+                        if (name == null || !dialogContext.mounted) return;
+                        final created = await runGuarded(
+                          dialogContext,
+                          () async {
+                            final c = await ref
+                                .read(backendProvider)
+                                .createMenuCategory(name, null);
+                            categories
+                              ..add(c)
+                              ..sort((a, b) => a.name.compareTo(b.name));
+                            selectedCategories.add(c.name);
+                          },
+                          successMessage: 'Category added.',
+                        );
+                        if (created) {
+                          ref.invalidate(_categoriesProvider);
+                          setLocal(() {});
+                        }
+                      },
+                    ),
+                  ],
+                ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label: 'Items (comma-separated)', controller: items),
+                  label: 'Items (comma-separated)',
+                  controller: items,
+                  onChanged: (_) {
+                    if (error != null) setLocal(() => error = null);
+                  },
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: NbSpace.xs),
+                  Text(error!,
+                      style: t.text.label.copyWith(color: t.color.reject)),
+                ],
               ],
             ),
           ),
@@ -191,7 +229,15 @@ class MenuScreen extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context, false),
                 child: const Text('Cancel')),
             NbButton(
-                label: 'Add', onPressed: () => Navigator.pop(context, true)),
+              label: 'Add',
+              onPressed: () {
+                if (parseItems().isEmpty) {
+                  setLocal(() => error = 'Add at least one item.');
+                  return;
+                }
+                Navigator.pop(context, true);
+              },
+            ),
           ],
         ),
       ),
@@ -203,16 +249,36 @@ class MenuScreen extends ConsumerWidget {
             date: date,
             mealType: meal,
             categories: selectedCategories.toList(),
-            items: items.text
-                .split(',')
-                .map((s) => s.trim())
-                .where((s) => s.isNotEmpty)
-                .toList(),
+            items: parseItems(),
             createdBy: '',
           )),
       successMessage: 'Entry added.',
     );
     if (saved) ref.invalidate(_menuProvider);
+  }
+
+  Future<String?> _promptCategoryName(BuildContext context) {
+    final t = context.tokens;
+    final name = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('New category', style: t.text.heading),
+        content: NbTextField(label: 'Name', controller: name, autofocus: true),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          NbButton(
+            label: 'Create',
+            onPressed: () {
+              final v = name.text.trim();
+              if (v.isNotEmpty) Navigator.pop(context, v);
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -20,6 +20,7 @@ import 'reports_screen.dart';
 import 'refunds_screen.dart';
 import 'scan_log_screen.dart';
 import 'settings_screen.dart';
+import 'topup_history_screen.dart';
 import 'topup_screen.dart';
 import 'users_screen.dart';
 
@@ -47,6 +48,8 @@ class AdminDashboard extends ConsumerWidget {
           () => const ScanLogScreen()),
       _Dest('Top-up & bill', Icons.payments, NbTone.money,
           () => const TopUpScreen()),
+      _Dest('Top-up history', Icons.history_toggle_off, NbTone.money,
+          () => const TopupHistoryScreen()),
       _Dest('Expenses & revenue', Icons.receipt_long, NbTone.money,
           () => const ExpensesScreen()),
       _Dest('Refunds', Icons.undo, NbTone.money, () => const RefundsScreen()),

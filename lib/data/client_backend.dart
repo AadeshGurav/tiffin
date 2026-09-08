@@ -201,6 +201,10 @@ class ClientBackend implements Backend {
       _api.postJson('/topups/$id/confirm-payment', null);
 
   @override
+  Future<ReversalResult> reverseTopup(int id) async => ReversalResult.fromJson(
+      _obj(await _api.postJson('/topups/$id/reverse', null)));
+
+  @override
   Future<List<int>> topupBillPdf(int id) => _api.getBytes('/topups/$id/bill');
 
   @override

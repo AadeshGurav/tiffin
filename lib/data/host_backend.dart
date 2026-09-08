@@ -170,6 +170,12 @@ class HostBackend implements Backend {
   Future<void> confirmTopupPayment(int id) => _c.topups.confirmPayment(id);
 
   @override
+  Future<ReversalResult> reverseTopup(int id) {
+    _requireSession();
+    return _c.topups.reverse(id, _username);
+  }
+
+  @override
   Future<List<int>> topupBillPdf(int id) => _c.topups.billPdf(id);
 
   @override

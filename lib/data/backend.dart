@@ -60,6 +60,10 @@ abstract interface class Backend {
   Future<List<Topup>> listTopups({int? memberId, int limit});
   Future<Topup> createTopup(TopupDraft draft);
   Future<void> confirmTopupPayment(int id);
+
+  /// Reverses a top-up and corrects the member's balance. Audit-kept — the
+  /// row stays, flagged (PRD §6.3). Admin only.
+  Future<ReversalResult> reverseTopup(int id);
   Future<List<int>> topupBillPdf(int id);
   Future<List<int>> topupUpiQrPng(int id);
 

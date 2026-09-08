@@ -218,6 +218,9 @@ class Topup {
     this.hasUpiQr = false,
     required this.createdBy,
     required this.createdAt,
+    this.reversed = false,
+    this.reversedAt,
+    this.reversedBy,
   });
 
   factory Topup.fromJson(Map<String, dynamic> j) => Topup(
@@ -233,6 +236,11 @@ class Topup {
         hasUpiQr: j['hasUpiQr'] as bool? ?? false,
         createdBy: j['createdBy'] as String,
         createdAt: DateTime.parse(j['createdAt'] as String),
+        reversed: j['reversed'] as bool? ?? false,
+        reversedAt: j['reversedAt'] == null
+            ? null
+            : DateTime.parse(j['reversedAt'] as String),
+        reversedBy: j['reversedBy'] as String?,
       );
 
   final int id;
@@ -247,6 +255,9 @@ class Topup {
   final bool hasUpiQr;
   final String createdBy;
   final DateTime createdAt;
+  final bool reversed;
+  final DateTime? reversedAt;
+  final String? reversedBy;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -261,6 +272,9 @@ class Topup {
         'hasUpiQr': hasUpiQr,
         'createdBy': createdBy,
         'createdAt': createdAt.toUtc().toIso8601String(),
+        'reversed': reversed,
+        'reversedAt': reversedAt?.toUtc().toIso8601String(),
+        'reversedBy': reversedBy,
       };
 }
 
