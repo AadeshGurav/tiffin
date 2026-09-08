@@ -217,8 +217,11 @@ Settings is a short menu of rows, not one long form. Each opens its own screen:
 - **Hosting & LAN** *(host only)* — start/stop serving, URLs, certificate.
 - **Reports** *(host only)* — see 3.11.
 - **Backup & restore** *(host only)* — see 3.11.
+- **Sign out** — ends this session on this device.
 - **Switch device role** — host ↔ client; signs you out, touches no data.
 - **Reset all data** *(host only)* — wipes this host, no undo.
+
+Counter and scanner (no Settings screen) sign out from **⋮** in the top bar.
 
 ### 3.9 Users & access (admin — inside Settings)
 
@@ -227,7 +230,8 @@ You can't deactivate or delete your own account.
 
 ### 3.10 Appearance (everyone, per device)
 
-**⋮ ▸ Appearance** in the top bar, or **Settings ▸ Appearance**.
+Admin: **Settings ▸ Appearance**. Counter and scanner (no Settings screen of
+their own): **⋮ ▸ Appearance** in the top bar.
 
 - **Theme** — Neobrutal, Clean, Frost or Clay, each previewed live.
 - **Light or dark** — or follow the phone's own setting.

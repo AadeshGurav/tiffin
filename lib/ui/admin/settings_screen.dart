@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/session_memory.dart';
 import '../../core/app_mode.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/settings_row.dart';
@@ -91,6 +92,13 @@ class SettingsScreen extends ConsumerWidget {
           ],
           _group(t, 'Device'),
           SettingsRow(
+            icon: Icons.logout,
+            title: 'Sign out',
+            subtitle: 'End this session on this device.',
+            onTap: () => _confirmSignOut(context, ref),
+          ),
+          const SizedBox(height: NbSpace.sm),
+          SettingsRow(
             icon: Icons.swap_horiz,
             title: 'Switch device role',
             subtitle: 'Host or client. Signs you out; data is untouched.',
@@ -116,6 +124,25 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(top: NbSpace.lg, bottom: NbSpace.sm),
         child: Text(label.toUpperCase(), style: t.text.heading),
       );
+
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You will need to sign in again on this device.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Sign out')),
+        ],
+      ),
+    );
+    if (ok == true) await ref.read(sessionMemoryProvider).signOut();
+  }
 
   Future<void> _confirmSwitchRole(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(

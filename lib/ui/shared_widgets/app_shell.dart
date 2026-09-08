@@ -12,13 +12,24 @@ import 'motion.dart';
 
 enum _ShellAction { appearance, signOut }
 
-/// App bar shared by every signed-in screen: the branding title, the
-/// notification bell (PRD §6.5.2), and sign-out.
+/// App bar shared by every signed-in home screen: the branding title, the
+/// notification bell (PRD §6.5.2), and — for roles without a Settings screen —
+/// an overflow with Appearance and sign-out.
 class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  const NbAppBar({super.key, required this.title, this.actions});
+  const NbAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.showMoreMenu = true,
+  });
 
   final String title;
   final List<Widget>? actions;
+
+  /// The admin turns this off: Appearance and Sign out are rows in its
+  /// Settings screen, so the overflow would just be a second path. Counter and
+  /// scanner have no Settings, so they keep it.
+  final bool showMoreMenu;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -30,39 +41,35 @@ class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
       actions: [
         ...?actions,
         const _NotificationBell(),
-        // Appearance and sign-out live in an overflow rather than as two more
-        // icons: the scan screen already carries torch and camera, and four
-        // adjacent icon targets is where mis-taps start (§11.6.5). It also
-        // gives every role a way to reach Appearance — scanner and counter
-        // have no Settings screen of their own.
-        PopupMenuButton<_ShellAction>(
-          icon: const Icon(Icons.more_vert),
-          tooltip: 'More',
-          onSelected: (action) => switch (action) {
-            _ShellAction.appearance => Navigator.of(context).push(
-                tiffinRoute<void>(context, () => const AppearanceScreen()),
+        if (showMoreMenu)
+          PopupMenuButton<_ShellAction>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'More',
+            onSelected: (action) => switch (action) {
+              _ShellAction.appearance => Navigator.of(context).push(
+                  tiffinRoute<void>(context, () => const AppearanceScreen()),
+                ),
+              _ShellAction.signOut => ref.read(sessionMemoryProvider).signOut(),
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: _ShellAction.appearance,
+                child: ListTile(
+                  leading: Icon(Icons.palette_outlined),
+                  title: Text('Appearance'),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            _ShellAction.signOut => ref.read(sessionMemoryProvider).signOut(),
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(
-              value: _ShellAction.appearance,
-              child: ListTile(
-                leading: Icon(Icons.palette_outlined),
-                title: Text('Appearance'),
-                contentPadding: EdgeInsets.zero,
+              PopupMenuItem(
+                value: _ShellAction.signOut,
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Sign out'),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: _ShellAction.signOut,
-              child: ListTile(
-                leading: Icon(Icons.logout),
-                title: Text('Sign out'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }

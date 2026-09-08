@@ -61,7 +61,7 @@ class AdminDashboard extends ConsumerWidget {
         .push(tiffinRoute<void>(context, () => const HostingScreen()));
 
     return Scaffold(
-      appBar: NbAppBar(title: 'Admin · $username'),
+      appBar: NbAppBar(title: 'Admin · $username', showMoreMenu: false),
       body: Column(
         children: [
           if (isHost && !serving)
