@@ -4,27 +4,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
 import '../../core/app_mode.dart';
+import '../admin/backup_screen.dart';
+import '../admin/hosting_screen.dart';
+import '../admin/menu_categories_screen.dart';
+import '../admin/reports_screen.dart';
+import '../admin/settings_config_screen.dart';
+import '../admin/users_screen.dart';
+import '../shared_widgets/motion.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/settings_row.dart';
-import '../settings/appearance_screen.dart';
 import '../theme/tokens.dart';
-import '../shared_widgets/motion.dart';
-import 'backup_screen.dart';
-import 'hosting_screen.dart';
-import 'menu_categories_screen.dart';
-import 'reports_screen.dart';
-import 'settings_config_screen.dart';
-import 'users_screen.dart';
+import 'appearance_screen.dart';
 
-/// Settings hub (PRD §6.8). A short menu of grouped destinations — the actual
-/// forms and tools each live on their own screen, so nothing here is a wall of
-/// fields.
+/// The one Settings screen for every role. A short menu of grouped rows; the
+/// forms and tools each live behind their own screen. Admins see the full set;
+/// counter and scanner see just Appearance and Sign out — same layout, so
+/// there's one visual language for "where the account/preference stuff lives"
+/// instead of a popup for some roles and a screen for others.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
     final isHost = ref.watch(currentModeProvider) == AppMode.host;
     final serving = isHost && ref.watch(hostRunningProvider);
 
@@ -36,36 +39,40 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
-          _group(t, 'Canteen'),
-          SettingsRow(
-            icon: Icons.tune,
-            title: 'Canteen configuration',
-            subtitle: 'Prices, meal windows, timezone, grace, reminders, UPI.',
-            onTap: () => go(const SettingsConfigScreen()),
-          ),
-          const SizedBox(height: NbSpace.sm),
-          SettingsRow(
-            icon: Icons.admin_panel_settings,
-            title: 'Users & access',
-            subtitle: 'Login accounts and roles.',
-            onTap: () => go(const UsersScreen()),
-          ),
-          const SizedBox(height: NbSpace.sm),
-          SettingsRow(
-            icon: Icons.category,
-            title: 'Menu categories',
-            subtitle: 'The Jain / Normal / Staff… list menu entries are tagged '
-                'with. Also editable from the menu planner.',
-            onTap: () => go(const MenuCategoriesScreen()),
-          ),
-          const SizedBox(height: NbSpace.sm),
+          if (isAdmin) ...[
+            _group(t, 'Canteen'),
+            SettingsRow(
+              icon: Icons.tune,
+              title: 'Canteen configuration',
+              subtitle:
+                  'Prices, meal windows, timezone, grace, reminders, UPI.',
+              onTap: () => go(const SettingsConfigScreen()),
+            ),
+            const SizedBox(height: NbSpace.sm),
+            SettingsRow(
+              icon: Icons.admin_panel_settings,
+              title: 'Users & access',
+              subtitle: 'Login accounts and roles.',
+              onTap: () => go(const UsersScreen()),
+            ),
+            const SizedBox(height: NbSpace.sm),
+            SettingsRow(
+              icon: Icons.category,
+              title: 'Menu categories',
+              subtitle:
+                  'The Jain / Normal / Staff… list menu entries are tagged '
+                  'with. Also editable from the menu planner.',
+              onTap: () => go(const MenuCategoriesScreen()),
+            ),
+          ],
+          _group(t, 'Display'),
           SettingsRow(
             icon: Icons.palette_outlined,
             title: 'Appearance',
             subtitle: 'Theme, light/dark, motion.',
             onTap: () => go(const AppearanceScreen()),
           ),
-          if (isHost) ...[
+          if (isAdmin && isHost) ...[
             _group(t, 'This host'),
             SettingsRow(
               icon: serving ? Icons.wifi_tethering : Icons.wifi_off,
@@ -97,14 +104,16 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'End this session on this device.',
             onTap: () => _confirmSignOut(context, ref),
           ),
-          const SizedBox(height: NbSpace.sm),
-          SettingsRow(
-            icon: Icons.swap_horiz,
-            title: 'Switch device role',
-            subtitle: 'Host or client. Signs you out; data is untouched.',
-            onTap: () => _confirmSwitchRole(context, ref),
-          ),
-          if (isHost) ...[
+          if (isAdmin) ...[
+            const SizedBox(height: NbSpace.sm),
+            SettingsRow(
+              icon: Icons.swap_horiz,
+              title: 'Switch device role',
+              subtitle: 'Host or client. Signs you out; data is untouched.',
+              onTap: () => _confirmSwitchRole(context, ref),
+            ),
+          ],
+          if (isAdmin && isHost) ...[
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.delete_forever,

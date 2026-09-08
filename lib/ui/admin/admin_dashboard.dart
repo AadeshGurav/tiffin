@@ -16,8 +16,8 @@ import 'menu_screen.dart';
 import 'purchase_schedule_screen.dart';
 import 'refunds_screen.dart';
 import 'scan_log_screen.dart';
-import 'settings_screen.dart';
 import 'topup_screen.dart';
+import '../settings/settings_screen.dart';
 
 /// Admin home — a flat grid of destinations (Hick's Law: staged, not one long
 /// menu). Restrained neobrutalism intensity, this is a navigation surface not
@@ -61,7 +61,7 @@ class AdminDashboard extends ConsumerWidget {
         .push(tiffinRoute<void>(context, () => const HostingScreen()));
 
     return Scaffold(
-      appBar: NbAppBar(title: 'Admin · $username', showMoreMenu: false),
+      appBar: NbAppBar(title: 'Admin · $username', showSettingsButton: false),
       body: Column(
         children: [
           if (isHost && !serving)

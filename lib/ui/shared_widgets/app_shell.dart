@@ -2,34 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
-import '../../app/session_memory.dart';
 import '../../domain/ops.dart';
-import '../settings/appearance_screen.dart';
+import '../settings/settings_screen.dart';
 import '../theme/tokens.dart';
 import 'frosted_panel.dart';
 import 'nb_feedback.dart';
 import 'motion.dart';
 
-enum _ShellAction { appearance, signOut }
-
 /// App bar shared by every signed-in home screen: the branding title, the
-/// notification bell (PRD §6.5.2), and — for roles without a Settings screen —
-/// an overflow with Appearance and sign-out.
+/// notification bell (PRD §6.5.2), and — for roles without a Settings tile on
+/// their home — a Settings button.
 class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const NbAppBar({
     super.key,
     required this.title,
     this.actions,
-    this.showMoreMenu = true,
+    this.showSettingsButton = true,
   });
 
   final String title;
   final List<Widget>? actions;
 
-  /// The admin turns this off: Appearance and Sign out are rows in its
-  /// Settings screen, so the overflow would just be a second path. Counter and
-  /// scanner have no Settings, so they keep it.
-  final bool showMoreMenu;
+  /// The admin turns this off — its dashboard already has a Settings tile.
+  /// Counter and scanner don't, so they get the button here; it opens the
+  /// same [SettingsScreen], which shows only Appearance and Sign out for
+  /// their role.
+  final bool showSettingsButton;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -41,34 +39,13 @@ class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
       actions: [
         ...?actions,
         const _NotificationBell(),
-        if (showMoreMenu)
-          PopupMenuButton<_ShellAction>(
-            icon: const Icon(Icons.more_vert),
-            tooltip: 'More',
-            onSelected: (action) => switch (action) {
-              _ShellAction.appearance => Navigator.of(context).push(
-                  tiffinRoute<void>(context, () => const AppearanceScreen()),
-                ),
-              _ShellAction.signOut => ref.read(sessionMemoryProvider).signOut(),
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _ShellAction.appearance,
-                child: ListTile(
-                  leading: Icon(Icons.palette_outlined),
-                  title: Text('Appearance'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              PopupMenuItem(
-                value: _ShellAction.signOut,
-                child: ListTile(
-                  leading: Icon(Icons.logout),
-                  title: Text('Sign out'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+        if (showSettingsButton)
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.of(context).push(
+              tiffinRoute<void>(context, () => const SettingsScreen()),
+            ),
           ),
       ],
     );
