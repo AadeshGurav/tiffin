@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../app/providers.dart';
 import '../../core/role.dart';
 import '../../domain/inventory.dart';
+import '../shared_widgets/ingredient_quick_add.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
@@ -235,8 +236,9 @@ class PurchaseScheduleScreen extends ConsumerWidget {
     // No ingredients yet used to make this button do nothing at all. Offer to
     // create the first one right here instead of a dead tap.
     if (ingredients.isEmpty) {
-      final created = await _promptNewIngredient(context, ref);
+      final created = await showQuickAddIngredient(context, ref);
       if (created == null || !context.mounted) return;
+      ref.invalidate(ingredientsProvider);
       ingredients.add(created);
     }
 
@@ -273,8 +275,9 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                       tooltip: 'New ingredient',
                       onPressed: () async {
                         final made =
-                            await _promptNewIngredient(dialogContext, ref);
+                            await showQuickAddIngredient(dialogContext, ref);
                         if (made == null) return;
+                        ref.invalidate(ingredientsProvider);
                         setLocal(() {
                           ingredients.add(made);
                           selected = made;
@@ -309,50 +312,6 @@ class PurchaseScheduleScreen extends ConsumerWidget {
       successMessage: 'Item added.',
     );
     if (saved) ref.invalidate(_scheduleProvider);
-  }
-
-  /// A small name + unit form that creates an [Ingredient] and returns it, so
-  /// the purchase list is usable before the Ingredients screen has been
-  /// visited.
-  Future<Ingredient?> _promptNewIngredient(
-      BuildContext context, WidgetRef ref) async {
-    final t = context.tokens;
-    final name = TextEditingController();
-    final unit = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('New ingredient', style: t.text.heading),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NbTextField(label: 'Name', controller: name, autofocus: true),
-            const SizedBox(height: NbSpace.sm),
-            NbTextField(label: 'Unit (kg, litre, pcs…)', controller: unit),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          NbButton(
-              label: 'Create', onPressed: () => Navigator.pop(context, true)),
-        ],
-      ),
-    );
-    if (ok != true || !context.mounted) return null;
-    Ingredient? made;
-    final done = await runGuarded(
-      context,
-      () async {
-        made = await ref
-            .read(backendProvider)
-            .createIngredient(name.text.trim(), unit.text.trim());
-      },
-      successMessage: 'Ingredient added.',
-    );
-    if (done) ref.invalidate(ingredientsProvider);
-    return done ? made : null;
   }
 
   Widget _dateRow(BuildContext context, String label, DateTime value,

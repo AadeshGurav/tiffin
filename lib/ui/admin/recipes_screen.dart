@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../domain/inventory.dart';
+import '../shared_widgets/ingredient_quick_add.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
@@ -68,7 +69,7 @@ class RecipesScreen extends ConsumerWidget {
   Future<void> _form(
       BuildContext context, WidgetRef ref, Recipe? existing) async {
     final t = context.tokens;
-    final allIngredients = await ref.read(ingredientsProvider.future);
+    final allIngredients = [...await ref.read(ingredientsProvider.future)];
     if (!context.mounted) return;
     final dish = TextEditingController(text: existing?.dishName ?? '');
     final lines = <({int ingredientId, TextEditingController note})>[
@@ -88,64 +89,88 @@ class RecipesScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => StatefulBuilder(
-        builder: (context, setLocal) => AlertDialog(
-          title: Text(existing == null ? 'New recipe' : existing.dishName,
-              style: t.text.heading),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NbTextField(label: 'Dish name', controller: dish),
-                const SizedBox(height: NbSpace.md),
-                for (var i = 0; i < lines.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: NbSpace.sm),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButton<int>(
-                            value: lines[i].ingredientId,
-                            isExpanded: true,
-                            items: [
-                              for (final ing in allIngredients)
-                                DropdownMenuItem(
-                                    value: ing.id, child: Text(ing.name)),
-                            ],
-                            onChanged: (v) => setLocal(() => lines[i] = (
-                                  ingredientId: v ?? lines[i].ingredientId,
-                                  note: lines[i].note
-                                )),
+        builder: (context, setLocal) {
+          // Create an ingredient without leaving the recipe form, then drop a
+          // line in for it — the "Add ingredient" button was dead whenever no
+          // ingredients existed yet.
+          Future<void> addNewIngredient() async {
+            final made = await showQuickAddIngredient(context, ref);
+            if (made == null || !context.mounted) return;
+            ref.invalidate(ingredientsProvider);
+            setLocal(() {
+              allIngredients.add(made);
+              lines.add((ingredientId: made.id, note: TextEditingController()));
+            });
+          }
+
+          return AlertDialog(
+            title: Text(existing == null ? 'New recipe' : existing.dishName,
+                style: t.text.heading),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NbTextField(label: 'Dish name', controller: dish),
+                  const SizedBox(height: NbSpace.md),
+                  for (var i = 0; i < lines.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: NbSpace.sm),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<int>(
+                              value: lines[i].ingredientId,
+                              isExpanded: true,
+                              items: [
+                                for (final ing in allIngredients)
+                                  DropdownMenuItem(
+                                      value: ing.id, child: Text(ing.name)),
+                              ],
+                              onChanged: (v) => setLocal(() => lines[i] = (
+                                    ingredientId: v ?? lines[i].ingredientId,
+                                    note: lines[i].note
+                                  )),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: NbSpace.sm),
-                        Expanded(
-                          child: NbTextField(
-                              label: 'qty note', controller: lines[i].note),
-                        ),
-                      ],
+                          const SizedBox(width: NbSpace.sm),
+                          Expanded(
+                            child: NbTextField(
+                                label: 'qty note', controller: lines[i].note),
+                          ),
+                        ],
+                      ),
                     ),
+                  Wrap(
+                    children: [
+                      TextButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add row'),
+                        onPressed: allIngredients.isEmpty
+                            ? addNewIngredient
+                            : () => setLocal(() => lines.add((
+                                  ingredientId: allIngredients.first.id,
+                                  note: TextEditingController()
+                                ))),
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('New ingredient'),
+                        onPressed: addNewIngredient,
+                      ),
+                    ],
                   ),
-                TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add ingredient'),
-                  onPressed: allIngredients.isEmpty
-                      ? null
-                      : () => setLocal(() => lines.add((
-                            ingredientId: allIngredients.first.id,
-                            note: TextEditingController()
-                          ))),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
-            NbButton(
-                label: 'Save', onPressed: () => Navigator.pop(context, true)),
-          ],
-        ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel')),
+              NbButton(
+                  label: 'Save', onPressed: () => Navigator.pop(context, true)),
+            ],
+          );
+        },
       ),
     );
     if (ok != true || !context.mounted) return;
