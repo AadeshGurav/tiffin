@@ -8,8 +8,8 @@ import '../data/local/mappers.dart';
 import '../domain/inventory.dart';
 
 /// Recipes — a port of v1 `app/routers/recipes.py` (PRD §6.5.1). A dish name
-/// (matched case-insensitively against menu items) linked to ingredients with
-/// free-text quantity notes.
+/// (matched case-insensitively against menu items) linked to the ingredients
+/// it needs, each with a numeric quantity in that ingredient's own unit.
 class RecipeService {
   RecipeService(this._db);
 
@@ -30,6 +30,7 @@ class RecipeService {
       throw const ValidationException(
           'A recipe needs at least one ingredient.');
     }
+    _rejectNonPositiveQuantities(draft.ingredients);
     await _validateIngredientIds(draft.ingredients.map((i) => i.ingredientId));
 
     final now = DateTime.now().toUtc();
@@ -63,6 +64,7 @@ class RecipeService {
       throw const ValidationException('Nothing to update.');
     }
     if (ingredients != null) {
+      _rejectNonPositiveQuantities(ingredients);
       await _validateIngredientIds(ingredients.map((i) => i.ingredientId));
     }
     final companion = RecipesCompanion(
@@ -94,6 +96,13 @@ class RecipeService {
     final n =
         await (_db.delete(_db.recipes)..where((r) => r.id.equals(id))).go();
     if (n == 0) throw const NotFoundException('Recipe not found.');
+  }
+
+  void _rejectNonPositiveQuantities(List<RecipeIngredient> lines) {
+    if (lines.any((l) => l.quantity <= 0)) {
+      throw const ValidationException(
+          'Every ingredient needs a quantity greater than zero.');
+    }
   }
 
   Future<void> _validateIngredientIds(Iterable<int> ids) async {

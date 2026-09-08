@@ -244,7 +244,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
 
     Ingredient selected = ingredients.first;
     var date = DateTime.now();
-    final note = TextEditingController();
+    final qty = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -289,7 +289,23 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                 _dateRow(
                     context, 'Date', date, (d) => setLocal(() => date = d)),
                 const SizedBox(height: NbSpace.sm),
-                NbTextField(label: 'Quantity note', controller: note),
+                Row(
+                  children: [
+                    Expanded(
+                      child: NbTextField(
+                        label: 'Quantity',
+                        controller: qty,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                      ),
+                    ),
+                    const SizedBox(width: NbSpace.sm),
+                    Padding(
+                      padding: const EdgeInsets.only(top: NbSpace.md),
+                      child: Text(selected.unit, style: t.text.label),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -304,11 +320,15 @@ class PurchaseScheduleScreen extends ConsumerWidget {
       ),
     );
     if (ok != true || !context.mounted) return;
+    final n = double.tryParse(qty.text.trim());
+    final label = n == null || n <= 0
+        ? qty.text.trim()
+        : '${formatQuantity(n)} ${selected.unit}';
     final saved = await runGuarded(
       context,
       () => ref
           .read(backendProvider)
-          .addManualPurchaseItem(date, selected.id, note.text.trim()),
+          .addManualPurchaseItem(date, selected.id, label),
       successMessage: 'Item added.',
     );
     if (saved) ref.invalidate(_scheduleProvider);

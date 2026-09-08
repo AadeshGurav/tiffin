@@ -16,7 +16,7 @@ void main() {
 
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  const current = 5;
+  const current = 6;
 
   Future<String> timezoneOf(AppDatabase db) async =>
       (await db.select(db.appSettings).getSingle()).localTimezone;
@@ -40,7 +40,7 @@ void main() {
     return db;
   }
 
-  for (final from in [1, 2, 3, 4]) {
+  for (final from in [1, 2, 3, 4, 5]) {
     test('v$from -> v$current keeps the schema valid and the row intact',
         () async {
       final db = await migrated(from);
@@ -84,6 +84,33 @@ void main() {
     expect(row.reversed, isFalse);
     expect(row.reversedAt, null);
     expect(row.reversedBy, null);
+    await db.close();
+  });
+
+  test('v5 -> v6 turns a recipe quantity note into a number', () async {
+    final schema = await verifier.schemaAt(5);
+    final seed = schema.newConnection();
+    await seed.executor.ensureOpen(_SeedUser(5));
+    // DateTime columns persist as unix-second integers here, so raw inserts
+    // pass 0 rather than an ISO string.
+    await seed.executor
+        .runCustom("INSERT INTO app_settings (id, app_name) VALUES (0, 'T')");
+    await seed.executor.runCustom(
+        'INSERT INTO ingredients (id, name, unit, created_at, updated_at) '
+        "VALUES (1, 'Rice', 'kg', 0, 0)");
+    await seed.executor.runCustom(
+      'INSERT INTO recipes (id, dish_name, dish_name_lower, ingredients_json, '
+      "created_at, updated_at) VALUES (1, 'Veg Pulao', 'veg pulao', ?, 0, 0)",
+      ['[{"ingredientId":1,"quantityNote":"2kg per 50 servings"}]'],
+    );
+    await seed.executor.close();
+
+    final db = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, current);
+
+    final recipe = await db.select(db.recipes).getSingle();
+    expect(recipe.ingredientsJson, contains('"quantity":2'));
+    expect(recipe.ingredientsJson, isNot(contains('quantityNote')));
     await db.close();
   });
 

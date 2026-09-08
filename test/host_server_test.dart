@@ -210,7 +210,7 @@ void main() {
     await _send(http, 'POST', '$base/api/recipes', token: adminToken, body: {
       'dishName': 'Veg Pulao',
       'ingredients': [
-        {'ingredientId': riceId, 'quantityNote': '2 kg'}
+        {'ingredientId': riceId, 'quantity': 2}
       ],
     });
 
@@ -233,7 +233,10 @@ void main() {
 
     final list = await _send(http, 'GET', '$base/api/purchase-schedule',
         token: adminToken);
-    expect((jsonDecode(list.body) as List).single['ingredientName'], 'Rice');
+    final item = (jsonDecode(list.body) as List).single as Map<String, dynamic>;
+    expect(item['ingredientName'], 'Rice');
+    // Quantity is rendered from the recipe number + the ingredient's unit.
+    expect(item['quantityNote'], '2 kg');
 
     // Idempotent: a second run over the same range adds nothing.
     final again = await _send(

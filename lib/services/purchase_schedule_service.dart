@@ -81,7 +81,8 @@ class PurchaseScheduleService {
                   ingredientId: ri.ingredientId,
                   ingredientName: ingredient.name,
                   ingredientUnit: ingredient.unit,
-                  quantityNote: ri.quantityNote,
+                  quantityNote:
+                      '${formatQuantity(ri.quantity)} ${ingredient.unit}',
                   source: 'auto',
                   createdAt: now,
                   updatedAt: now,

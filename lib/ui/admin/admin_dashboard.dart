@@ -10,19 +10,17 @@ import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import 'expenses_screen.dart';
 import 'hosting_screen.dart';
-import 'ingredients_screen.dart';
+import 'kitchen_setup_screen.dart';
 import 'members_screen.dart';
 import 'menu_categories_screen.dart';
 import 'menu_screen.dart';
 import 'purchase_schedule_screen.dart';
-import 'recipes_screen.dart';
 import 'reports_screen.dart';
 import 'refunds_screen.dart';
 import 'scan_log_screen.dart';
 import 'settings_screen.dart';
 import 'topup_history_screen.dart';
 import 'topup_screen.dart';
-import 'users_screen.dart';
 
 /// Admin home — a flat grid of destinations (Hick's Law: staged, not one long
 /// menu). Restrained neobrutalism intensity, this is a navigation surface not
@@ -36,9 +34,10 @@ class AdminDashboard extends ConsumerWidget {
     final username = ref.watch(sessionProvider)?.username ?? '';
     final isHost = ref.watch(currentModeProvider) == AppMode.host;
     final serving = isHost && ref.watch(hostRunningProvider);
-    // Grouped by domain, and coloured by it: fourteen identical boxes are a
+    // Grouped by domain, and coloured by it: a dozen identical boxes are a
     // wall to scan, four colour families are four places to look. The tone
     // never carries state, so nothing is lost if it isn't seen (§12.2).
+    // Users and Hosting live inside Settings, not as their own tiles.
     final destinations = <_Dest>[
       _Dest('Scan', Icons.qr_code_scanner, NbTone.members,
           () => const ScannerScreen()),
@@ -57,22 +56,15 @@ class AdminDashboard extends ConsumerWidget {
           () => const MenuScreen()),
       _Dest('Menu categories', Icons.category, NbTone.kitchen,
           () => const MenuCategoriesScreen()),
-      _Dest('Ingredients', Icons.egg_alt, NbTone.kitchen,
-          () => const IngredientsScreen()),
-      _Dest('Recipes', Icons.menu_book, NbTone.kitchen,
-          () => const RecipesScreen()),
+      _Dest('Kitchen setup', Icons.soup_kitchen, NbTone.kitchen,
+          () => const KitchenSetupScreen()),
       _Dest('Purchase schedule', Icons.shopping_cart, NbTone.kitchen,
           () => const PurchaseScheduleScreen()),
       _Dest('Settings', Icons.settings, NbTone.system,
           () => const SettingsScreen()),
-      _Dest('Users', Icons.admin_panel_settings, NbTone.system,
-          () => const UsersScreen()),
       if (isHost)
         _Dest('Reports & backup', Icons.table_view, NbTone.system,
             () => const ReportsScreen()),
-      if (isHost)
-        _Dest('Hosting & LAN', Icons.wifi_tethering, NbTone.system,
-            () => const HostingScreen()),
     ];
 
     void openHosting() => Navigator.of(context)

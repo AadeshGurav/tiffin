@@ -13,6 +13,7 @@ import '../shared_widgets/nb_text_field.dart';
 import '../settings/appearance_screen.dart';
 import '../theme/tokens.dart';
 import 'hosting_screen.dart';
+import 'users_screen.dart';
 import '../shared_widgets/motion.dart';
 
 final _settingsProvider = FutureProvider.autoDispose<SettingsSnapshot>(
@@ -143,6 +144,28 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
           ),
           const SizedBox(height: NbSpace.sm),
         ],
+        NbSurface(
+          onTap: () => Navigator.of(context)
+              .push(tiffinRoute<void>(context, () => const UsersScreen())),
+          child: Row(
+            children: [
+              Icon(Icons.admin_panel_settings, color: t.color.ink),
+              const SizedBox(width: NbSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('USERS & ACCESS', style: t.text.label),
+                    Text('Add or edit login accounts and roles.',
+                        style: t.text.body),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: t.color.ink),
+            ],
+          ),
+        ),
+        const SizedBox(height: NbSpace.sm),
         _section(t, 'Branding'),
         NbTextField(label: 'App name', controller: _appName),
         _section(t, 'Unit prices (Rs.)'),

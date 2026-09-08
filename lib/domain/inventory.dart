@@ -35,23 +35,37 @@ class Ingredient {
       };
 }
 
-/// One line of a recipe: an ingredient plus a free-text quantity note (PRD
-/// §6.5.1 — deliberately not a precise per-serving model).
+/// One line of a recipe: an ingredient plus how much of it, counted in that
+/// ingredient's own unit (PRD §6.5.1). `quantity` is a plain number — the unit
+/// lives on the [Ingredient], so a line renders as e.g. "Rice — 2 kg".
 class RecipeIngredient {
-  const RecipeIngredient(
-      {required this.ingredientId, required this.quantityNote});
+  const RecipeIngredient({required this.ingredientId, required this.quantity});
 
   factory RecipeIngredient.fromJson(Map<String, dynamic> j) => RecipeIngredient(
         ingredientId: j['ingredientId'] as int,
-        quantityNote: j['quantityNote'] as String,
+        // Tolerate the pre-v6 shape ({quantityNote: "2kg per 50"}) in case a
+        // row slips through unmigrated — take the leading number.
+        quantity: (j['quantity'] as num?)?.toDouble() ??
+            _leadingNumber(j['quantityNote'] as String?),
       );
 
   final int ingredientId;
-  final String quantityNote;
+  final double quantity;
 
   Map<String, dynamic> toJson() =>
-      {'ingredientId': ingredientId, 'quantityNote': quantityNote};
+      {'ingredientId': ingredientId, 'quantity': quantity};
+
+  static double _leadingNumber(String? note) {
+    if (note == null) return 1;
+    final match = RegExp(r'\d+(\.\d+)?').firstMatch(note);
+    return match == null ? 1 : (double.tryParse(match.group(0)!) ?? 1);
+  }
 }
+
+/// Formats a quantity for display without a trailing ".0" on whole numbers:
+/// 2.0 -> "2", 1.5 -> "1.5".
+String formatQuantity(double q) =>
+    q == q.roundToDouble() ? q.toStringAsFixed(0) : q.toString();
 
 class Recipe {
   const Recipe({

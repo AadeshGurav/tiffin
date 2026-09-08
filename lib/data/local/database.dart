@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -39,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -94,8 +95,46 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(
                 schema.appSettings, schema.appSettings.appearanceMotion);
           },
+          from5To6: (m, schema) async {
+            // Recipe ingredient lines moved from a free-text note
+            // ("2kg per 50 servings") to a numeric quantity in the
+            // ingredient's own unit. No column changes — the lines live in a
+            // JSON blob — so convert the blob in place: pull the leading
+            // number out of each note, defaulting to 1 when there isn't one.
+            final rows =
+                await customSelect('SELECT id, ingredients_json FROM recipes')
+                    .get();
+            for (final row in rows) {
+              final id = row.read<int>('id');
+              final lines = (jsonDecode(row.read<String>('ingredients_json'))
+                      as List<dynamic>)
+                  .cast<Map<String, dynamic>>();
+              final converted = [
+                for (final line in lines)
+                  {
+                    'ingredientId': line['ingredientId'],
+                    'quantity': line.containsKey('quantity')
+                        ? (line['quantity'] as num).toDouble()
+                        : _leadingNumber(line['quantityNote'] as String?),
+                  }
+              ];
+              await customStatement(
+                'UPDATE recipes SET ingredients_json = ? WHERE id = ?',
+                [jsonEncode(converted), id],
+              );
+            }
+          },
         ),
       );
+
+  /// Leading number in a free-text quantity note ("2kg per 50" -> 2.0), used
+  /// once by the v5->v6 migration. Falls back to 1 so a converted recipe line
+  /// still means "some of this ingredient", never zero.
+  static double _leadingNumber(String? note) {
+    if (note == null) return 1;
+    final match = RegExp(r'\d+(\.\d+)?').firstMatch(note);
+    return match == null ? 1 : (double.tryParse(match.group(0)!) ?? 1);
+  }
 
   Future<void> _seedSettingsRow() => into(appSettings).insert(
         const AppSettingsCompanion(id: Value(0)),

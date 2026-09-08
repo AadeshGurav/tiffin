@@ -11,7 +11,7 @@ reversal, billing) are unchanged from v1; see `docs/PRD.md` §5–§8.
 
 | Role | Who | Can do |
 |---|---|---|
-| **Admin** | The contractor | Everything: members, top-ups & billing, top-up history & reversal, QR codes, menu planning, ingredients/recipes/purchase schedule, expenses, refunds, settings, scan reversal, user accounts. |
+| **Admin** | The contractor | Everything: members, top-ups & billing, top-up history & reversal, QR codes, menu planning, kitchen setup (ingredients + recipes), purchase schedule, expenses, refunds, settings, scan reversal, user accounts. |
 | **Counter** | Billing-counter staff | Scan, top-ups & billing, and the shared purchase schedule. Nothing else. |
 | **Scanner** | Meal-serving staff | Scan only. |
 
@@ -163,20 +163,30 @@ never changes, so reprinting a lost card is safe.
 configured window (Settings → reversal window) restores the unit. The scan
 row stays in the log, marked reversed.
 
-### 3.5 Menu, ingredients, purchase schedule (admin; counter co-manages the schedule)
+### 3.5 Menu, kitchen setup, purchase schedule (admin; counter co-manages the schedule)
 
 - **Menu categories** — your own list (Jain, Normal, Staff…).
 - **Menu calendar** — tap a day, then **Add**: pick the meal, type the items
   (comma-separated), and optionally tag categories. A meal plus its items is
   enough — categories are optional, and you can create one with **New
   category** right in the dialog.
-- **Ingredients** / **Recipes** — a recipe links a dish name (matched against
-  menu items, case-insensitive) to ingredients with free-text quantity notes.
-- **Purchase schedule** — the ↻ / generate action builds a shopping list from
-  the menu calendar for a date range (safe to re-run — it never duplicates or
-  un-checks anything). Admin and counter can check items off and add one-off
-  items with the **+** button; if you have no ingredients yet, the same dialog
-  lets you create the first one.
+- **Kitchen setup** — two tabs, done once at setup:
+  - **Ingredients** — your master shopping list. Each has a name and the
+    **unit** you buy it in, chosen from a short list (kg, litre, packet…) or
+    **Custom**.
+  - **Recipes** — "when the menu says *Veg Pulao*, that needs Rice 2, Onion
+    1…". A dish name linked to the ingredients it uses, each with a **quantity
+    number** in that ingredient's unit. You can create a missing ingredient
+    without leaving the recipe form.
+- **Purchase schedule** — the ↻ / generate action reads the menu calendar for
+  a date range, looks up each dish's recipe, and rolls the ingredients into a
+  dated shopping checklist (safe to re-run — it never duplicates or un-checks
+  anything). If it adds nothing it tells you which link is missing. Admin and
+  counter can check items off and add one-off items with the **+** button
+  (pick the ingredient, type a quantity — its unit is shown).
+
+**The chain:** Menu calendar (what's cooked) + Recipes (what each dish needs)
+→ Purchase schedule (what to buy).
 
 ### 3.6 Expenses, refunds (admin)
 
@@ -195,9 +205,11 @@ and purchase-due reminders. Dismissing one only hides it for you.
 
 All runtime config, no reinstall: app name, unit prices, meal windows,
 timezone, grace allowance, scan-reversal window, reminder lead times, UPI ID
-and payee name.
+and payee name. **Users & access** and, on the host, **Hosting & LAN** are
+rows at the top of this screen — they no longer have their own dashboard
+tiles.
 
-### 3.9 Users (admin)
+### 3.9 Users & access (admin — inside Settings)
 
 Add accounts, change usernames, change roles, reset passwords, deactivate.
 You can't deactivate or delete your own account.
