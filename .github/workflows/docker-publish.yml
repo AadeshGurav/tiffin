@@ -30,7 +30,7 @@ jobs:
         # the repo's actual casing (e.g. AadeshGurav/canteen-coupon-system).
         run: echo "name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-qemu-action@v3 # enables the arm64 leg of the multi-arch build below
+      - uses: docker/setup-qemu-action@v4 # enables the arm64 leg of the multi-arch build below
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
