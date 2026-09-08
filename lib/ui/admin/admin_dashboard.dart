@@ -12,13 +12,11 @@ import 'expenses_screen.dart';
 import 'hosting_screen.dart';
 import 'kitchen_setup_screen.dart';
 import 'members_screen.dart';
-import 'menu_categories_screen.dart';
 import 'menu_screen.dart';
 import 'purchase_schedule_screen.dart';
 import 'refunds_screen.dart';
 import 'scan_log_screen.dart';
 import 'settings_screen.dart';
-import 'topup_history_screen.dart';
 import 'topup_screen.dart';
 
 /// Admin home — a flat grid of destinations (Hick's Law: staged, not one long
@@ -46,15 +44,11 @@ class AdminDashboard extends ConsumerWidget {
           () => const ScanLogScreen()),
       _Dest('Top-up & bill', Icons.payments, NbTone.money,
           () => const TopUpScreen()),
-      _Dest('Top-up history', Icons.history_toggle_off, NbTone.money,
-          () => const TopupHistoryScreen()),
       _Dest('Expenses & revenue', Icons.receipt_long, NbTone.money,
           () => const ExpensesScreen()),
       _Dest('Refunds', Icons.undo, NbTone.money, () => const RefundsScreen()),
       _Dest('Menu calendar', Icons.calendar_month, NbTone.kitchen,
           () => const MenuScreen()),
-      _Dest('Menu categories', Icons.category, NbTone.kitchen,
-          () => const MenuCategoriesScreen()),
       _Dest('Kitchen setup', Icons.soup_kitchen, NbTone.kitchen,
           () => const KitchenSetupScreen()),
       _Dest('Purchase schedule', Icons.shopping_cart, NbTone.kitchen,

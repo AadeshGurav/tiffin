@@ -11,6 +11,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import 'menu_categories_screen.dart';
 
 final _monthProvider = StateProvider.autoDispose<DateTime>(
     (_) => DateTime(DateTime.now().year, DateTime.now().month));
@@ -48,6 +49,14 @@ class MenuScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Menu calendar'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.category),
+            tooltip: 'Manage categories',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const MenuCategoriesScreen())),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(44),
           child: Row(

@@ -98,3 +98,16 @@ spreadsheet for people, and a restore-capable machine backup).
 **Consequences.** Four files where there were two; each is well under the
 size limit and single-purpose. No behaviour change to what any of the forms
 do.
+
+## 6. Two more dashboard tiles folded in
+
+- **Top-up history** was its own tile opening its own screen. It's the same
+  subject as taking a payment, so `TopUpScreen` is now a two-tab screen
+  (Charge / History); the old `TopupHistoryScreen` became `TopupHistoryTab`
+  (body only).
+- **Menu categories** was a tile for a small CRUD list. Removed; reachable
+  from the Menu calendar's app-bar (**⊞**) and from Settings ▸ Menu
+  categories. Inline "New category" in the add-entry dialog already covered
+  the common case.
+
+The dashboard is down to eleven tiles, all daily-work destinations.

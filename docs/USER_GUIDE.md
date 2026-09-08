@@ -144,11 +144,11 @@ in Settings — you never type it. **Charge & generate bill** credits the
 balance immediately and shows the bill. For UPI it also shows a payment QR for
 the payer to scan; once the money lands, tap **Mark received**.
 
-**Top-up history** lists every top-up, newest first. **Reverse** on a top-up
-subtracts the units it credited back off the member and records the reversal
-(who, when). The row stays, marked reversed — it is never deleted. A reversal
-is refused once any of those units have been used; process a **Refund**
-instead.
+The **History** tab (same screen) lists every top-up, newest first.
+**Reverse** on a top-up subtracts the units it credited back off the member
+and records the reversal (who, when). The row stays, marked reversed — it is
+never deleted. A reversal is refused once any of those units have been used;
+process a **Refund** instead.
 
 ### 3.3 Members (admin)
 
@@ -165,11 +165,13 @@ row stays in the log, marked reversed.
 
 ### 3.5 Menu, kitchen setup, purchase schedule (admin; counter co-manages the schedule)
 
-- **Menu categories** — your own list (Jain, Normal, Staff…).
 - **Menu calendar** — tap a day, then **Add**: pick the meal, type the items
   (comma-separated), and optionally tag categories. A meal plus its items is
   enough — categories are optional, and you can create one with **New
-  category** right in the dialog.
+  category** right in the dialog. The **⊞ categories** button in the top bar
+  opens the full list (rename / delete); it's also under **Settings ▸ Menu
+  categories**. Your own list — Jain, Normal, Staff…
+
 - **Kitchen setup** — two tabs, done once at setup:
   - **Ingredients** — your master shopping list. Each has a name and the
     **unit** you buy it in, chosen from a short list (kg, litre, packet…) or
@@ -209,6 +211,8 @@ Settings is a short menu of rows, not one long form. Each opens its own screen:
   grace allowance, scan-reversal window, reminder lead times, UPI. All runtime,
   no reinstall; one **Save** button, kept in reach at the bottom.
 - **Users & access** — see 3.9.
+- **Menu categories** — the tag list for menu entries (also editable from the
+  menu planner's top bar).
 - **Appearance** — see 3.10.
 - **Hosting & LAN** *(host only)* — start/stop serving, URLs, certificate.
 - **Reports** *(host only)* — see 3.11.

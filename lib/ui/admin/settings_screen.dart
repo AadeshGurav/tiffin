@@ -10,6 +10,7 @@ import '../theme/tokens.dart';
 import '../shared_widgets/motion.dart';
 import 'backup_screen.dart';
 import 'hosting_screen.dart';
+import 'menu_categories_screen.dart';
 import 'reports_screen.dart';
 import 'settings_config_screen.dart';
 import 'users_screen.dart';
@@ -47,6 +48,14 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Users & access',
             subtitle: 'Login accounts and roles.',
             onTap: () => go(const UsersScreen()),
+          ),
+          const SizedBox(height: NbSpace.sm),
+          SettingsRow(
+            icon: Icons.category,
+            title: 'Menu categories',
+            subtitle: 'The Jain / Normal / Staff… list menu entries are tagged '
+                'with. Also editable from the menu planner.',
+            onTap: () => go(const MenuCategoriesScreen()),
           ),
           const SizedBox(height: NbSpace.sm),
           SettingsRow(

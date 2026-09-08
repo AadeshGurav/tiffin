@@ -12,23 +12,48 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
+import 'topup_history_screen.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>(
     (ref) => ref.watch(backendProvider).listMembers(status: 'active'));
 final _settingsProvider = FutureProvider.autoDispose<SettingsSnapshot>(
     (ref) => ref.watch(backendProvider).getSettings());
 
-/// Top-up & billing (PRD §6.3): pick a member, enter units, pick cash/UPI. The
-/// amount is computed from unit prices — never typed. Submit is disabled while
-/// every unit is zero. Full-intensity CTA.
-class TopUpScreen extends ConsumerStatefulWidget {
+/// Top-up & billing (PRD §6.3). Two tabs: **Charge** takes a payment, **History**
+/// lists past top-ups and reverses them. History used to be its own dashboard
+/// tile — it's the same subject, so it's a tab here now.
+class TopUpScreen extends StatelessWidget {
   const TopUpScreen({super.key});
 
   @override
-  ConsumerState<TopUpScreen> createState() => _TopUpScreenState();
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Top-up & bill'),
+          bottom: const TabBar(
+            tabs: [Tab(text: 'Charge'), Tab(text: 'History')],
+          ),
+        ),
+        body: const TabBarView(
+          children: [_ChargeTab(), TopupHistoryTab()],
+        ),
+      ),
+    );
+  }
 }
 
-class _TopUpScreenState extends ConsumerState<TopUpScreen> {
+/// Pick a member, enter units, pick cash/UPI. The amount is computed from unit
+/// prices — never typed. Submit is disabled while every unit is zero.
+class _ChargeTab extends ConsumerStatefulWidget {
+  const _ChargeTab();
+
+  @override
+  ConsumerState<_ChargeTab> createState() => _ChargeTabState();
+}
+
+class _ChargeTabState extends ConsumerState<_ChargeTab> {
   Member? _member;
   int _lunch = 0, _breakfast = 0, _brunch = 0;
   PaymentMethod _method = PaymentMethod.cash;
@@ -124,86 +149,82 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
     final members = ref.watch(_membersProvider);
     final settings = ref.watch(_settingsProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Top-up & bill')),
-      body: AsyncView<SettingsSnapshot>(
-        value: settings,
-        onRetry: () => ref.invalidate(_settingsProvider),
-        loadingLabel: 'Loading prices…',
-        builder: (s) => AsyncView<List<Member>>(
-          value: members,
-          onRetry: () => ref.invalidate(_membersProvider),
-          loadingLabel: 'Loading members…',
-          empty: const NbEmpty(
-            icon: Icons.person_off_outlined,
-            title: 'No active members',
-            quips: [
-              'Add someone on the Members page first, then come back to top up.',
-            ],
-          ),
-          builder: (list) => ListView(
-            padding: const EdgeInsets.all(NbSpace.lg),
-            children: [
-              NbMemberField(
-                label: 'MEMBER',
-                value: _member,
-                members: list,
-                onSelected: (m) {
-                  setState(() => _member = m);
-                  if (list.every((x) => x.id != m.id)) {
-                    ref.invalidate(_membersProvider);
-                  }
-                },
-                onCreate: ref.read(backendProvider).createMember,
-              ),
-              const SizedBox(height: NbSpace.md),
-              _UnitRow(
-                label: 'Lunch  (Rs. ${s.unitPrices.lunch.toStringAsFixed(0)})',
-                value: _lunch,
-                onChanged: (v) => setState(() => _lunch = v),
-              ),
-              _UnitRow(
-                label:
-                    'Breakfast  (Rs. ${s.unitPrices.breakfast.toStringAsFixed(0)})',
-                value: _breakfast,
-                onChanged: (v) => setState(() => _breakfast = v),
-              ),
-              _UnitRow(
-                label:
-                    'Brunch  (Rs. ${s.unitPrices.brunch.toStringAsFixed(0)})',
-                value: _brunch,
-                onChanged: (v) => setState(() => _brunch = v),
-              ),
-              const SizedBox(height: NbSpace.md),
-              SegmentedButton<PaymentMethod>(
-                segments: const [
-                  ButtonSegment(value: PaymentMethod.cash, label: Text('Cash')),
-                  ButtonSegment(value: PaymentMethod.upi, label: Text('UPI')),
+    return AsyncView<SettingsSnapshot>(
+      value: settings,
+      onRetry: () => ref.invalidate(_settingsProvider),
+      loadingLabel: 'Loading prices…',
+      builder: (s) => AsyncView<List<Member>>(
+        value: members,
+        onRetry: () => ref.invalidate(_membersProvider),
+        loadingLabel: 'Loading members…',
+        empty: const NbEmpty(
+          icon: Icons.person_off_outlined,
+          title: 'No active members',
+          quips: [
+            'Add someone on the Members page first, then come back to top up.',
+          ],
+        ),
+        builder: (list) => ListView(
+          padding: const EdgeInsets.all(NbSpace.lg),
+          children: [
+            NbMemberField(
+              label: 'MEMBER',
+              value: _member,
+              members: list,
+              onSelected: (m) {
+                setState(() => _member = m);
+                if (list.every((x) => x.id != m.id)) {
+                  ref.invalidate(_membersProvider);
+                }
+              },
+              onCreate: ref.read(backendProvider).createMember,
+            ),
+            const SizedBox(height: NbSpace.md),
+            _UnitRow(
+              label: 'Lunch  (Rs. ${s.unitPrices.lunch.toStringAsFixed(0)})',
+              value: _lunch,
+              onChanged: (v) => setState(() => _lunch = v),
+            ),
+            _UnitRow(
+              label:
+                  'Breakfast  (Rs. ${s.unitPrices.breakfast.toStringAsFixed(0)})',
+              value: _breakfast,
+              onChanged: (v) => setState(() => _breakfast = v),
+            ),
+            _UnitRow(
+              label: 'Brunch  (Rs. ${s.unitPrices.brunch.toStringAsFixed(0)})',
+              value: _brunch,
+              onChanged: (v) => setState(() => _brunch = v),
+            ),
+            const SizedBox(height: NbSpace.md),
+            SegmentedButton<PaymentMethod>(
+              segments: const [
+                ButtonSegment(value: PaymentMethod.cash, label: Text('Cash')),
+                ButtonSegment(value: PaymentMethod.upi, label: Text('UPI')),
+              ],
+              selected: {_method},
+              onSelectionChanged: (v) => setState(() => _method = v.first),
+            ),
+            const SizedBox(height: NbSpace.lg),
+            NbSurface(
+              intensity: NbIntensity.full,
+              background: t.color.surfaceMuted,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('TOTAL', style: t.text.label),
+                  Text('Rs. ${_amount(s).toStringAsFixed(2)}',
+                      style: t.text.heading),
                 ],
-                selected: {_method},
-                onSelectionChanged: (v) => setState(() => _method = v.first),
               ),
-              const SizedBox(height: NbSpace.lg),
-              NbSurface(
-                intensity: NbIntensity.full,
-                background: t.color.surfaceMuted,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('TOTAL', style: t.text.label),
-                    Text('Rs. ${_amount(s).toStringAsFixed(2)}',
-                        style: t.text.heading),
-                  ],
-                ),
-              ),
-              const SizedBox(height: NbSpace.md),
-              NbButton(
-                label: 'Charge & generate bill',
-                busy: _busy,
-                onPressed: _canSubmit ? () => _submit(s) : null,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: NbSpace.md),
+            NbButton(
+              label: 'Charge & generate bill',
+              busy: _busy,
+              onPressed: _canSubmit ? () => _submit(s) : null,
+            ),
+          ],
         ),
       ),
     );

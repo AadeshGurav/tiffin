@@ -22,11 +22,12 @@ final _historyProvider = FutureProvider.autoDispose<_History>((ref) async {
   );
 });
 
-/// Top-up history + reversal (client's point 2). A reversal restores the
-/// member's balance and flags the row; the row is kept for audit, never
-/// deleted — the same treatment as a reversed scan.
-class TopupHistoryScreen extends ConsumerWidget {
-  const TopupHistoryScreen({super.key});
+/// Top-up history + reversal (client's point 2), the "History" tab of the
+/// Top-up & bill screen. A reversal restores the member's balance and flags
+/// the row; the row is kept for audit, never deleted — the same treatment as
+/// a reversed scan.
+class TopupHistoryTab extends ConsumerWidget {
+  const TopupHistoryTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,64 +35,60 @@ class TopupHistoryScreen extends ConsumerWidget {
     final history = ref.watch(_historyProvider);
     final fmt = DateFormat('MMM d, y · HH:mm');
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Top-up history')),
-      body: AsyncView<_History>(
-        value: history,
-        onRetry: () => ref.invalidate(_historyProvider),
-        loadingLabel: 'Loading top-ups…',
-        empty: const NbEmpty(
-          icon: Icons.payments_outlined,
-          title: 'No top-ups yet',
-          quips: ['Charge a member on the Top-up & bill screen first.'],
-        ),
-        builder: (data) => ListView.separated(
-          padding: const EdgeInsets.all(NbSpace.md),
-          itemCount: data.topups.length,
-          separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
-          itemBuilder: (_, i) {
-            final tp = data.topups[i];
-            final name =
-                data.membersById[tp.memberId]?.name ?? 'Member #${tp.memberId}';
-            return NbSurface(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text(name, style: t.text.body)),
-                      if (tp.reversed)
-                        Text('REVERSED',
-                            style:
-                                t.text.label.copyWith(color: t.color.reject)),
-                    ],
-                  ),
-                  Text(
-                      'L${tp.lunchUnits} B${tp.breakfastUnits} '
-                      'Br${tp.brunchUnits}  ·  Rs. ${tp.amount.toStringAsFixed(2)}'
-                      '  ·  ${tp.paymentMethod.wire.toUpperCase()} '
-                      '(${tp.paymentStatus})',
-                      style: t.text.label),
-                  Text(
-                      '${fmt.format(tp.createdAt.toLocal())} · by ${tp.createdBy}',
-                      style: t.text.label),
-                  if (tp.reversed && tp.reversedAt != null)
-                    Text(
-                        'Reversed ${fmt.format(tp.reversedAt!.toLocal())}'
-                        '${tp.reversedBy == null ? '' : ' · by ${tp.reversedBy}'}',
-                        style: t.text.label.copyWith(color: t.color.reject)),
-                  if (!tp.reversed) ...[
-                    const SizedBox(height: NbSpace.sm),
-                    NbButton.secondary(
-                      label: 'Reverse',
-                      onPressed: () => _confirmReverse(context, ref, tp, name),
-                    ),
+    return AsyncView<_History>(
+      value: history,
+      onRetry: () => ref.invalidate(_historyProvider),
+      loadingLabel: 'Loading top-ups…',
+      empty: const NbEmpty(
+        icon: Icons.payments_outlined,
+        title: 'No top-ups yet',
+        quips: ['Charge a member on the Top-up & bill screen first.'],
+      ),
+      builder: (data) => ListView.separated(
+        padding: const EdgeInsets.all(NbSpace.md),
+        itemCount: data.topups.length,
+        separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+        itemBuilder: (_, i) {
+          final tp = data.topups[i];
+          final name =
+              data.membersById[tp.memberId]?.name ?? 'Member #${tp.memberId}';
+          return NbSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(name, style: t.text.body)),
+                    if (tp.reversed)
+                      Text('REVERSED',
+                          style: t.text.label.copyWith(color: t.color.reject)),
                   ],
+                ),
+                Text(
+                    'L${tp.lunchUnits} B${tp.breakfastUnits} '
+                    'Br${tp.brunchUnits}  ·  Rs. ${tp.amount.toStringAsFixed(2)}'
+                    '  ·  ${tp.paymentMethod.wire.toUpperCase()} '
+                    '(${tp.paymentStatus})',
+                    style: t.text.label),
+                Text(
+                    '${fmt.format(tp.createdAt.toLocal())} · by ${tp.createdBy}',
+                    style: t.text.label),
+                if (tp.reversed && tp.reversedAt != null)
+                  Text(
+                      'Reversed ${fmt.format(tp.reversedAt!.toLocal())}'
+                      '${tp.reversedBy == null ? '' : ' · by ${tp.reversedBy}'}',
+                      style: t.text.label.copyWith(color: t.color.reject)),
+                if (!tp.reversed) ...[
+                  const SizedBox(height: NbSpace.sm),
+                  NbButton.secondary(
+                    label: 'Reverse',
+                    onPressed: () => _confirmReverse(context, ref, tp, name),
+                  ),
                 ],
-              ),
-            );
-          },
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
