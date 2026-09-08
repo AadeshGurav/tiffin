@@ -15,7 +15,6 @@ import 'members_screen.dart';
 import 'menu_categories_screen.dart';
 import 'menu_screen.dart';
 import 'purchase_schedule_screen.dart';
-import 'reports_screen.dart';
 import 'refunds_screen.dart';
 import 'scan_log_screen.dart';
 import 'settings_screen.dart';
@@ -37,7 +36,7 @@ class AdminDashboard extends ConsumerWidget {
     // Grouped by domain, and coloured by it: a dozen identical boxes are a
     // wall to scan, four colour families are four places to look. The tone
     // never carries state, so nothing is lost if it isn't seen (§12.2).
-    // Users and Hosting live inside Settings, not as their own tiles.
+    // Settings owns the rare stuff — users, hosting, reports, backup.
     final destinations = <_Dest>[
       _Dest('Scan', Icons.qr_code_scanner, NbTone.members,
           () => const ScannerScreen()),
@@ -62,9 +61,6 @@ class AdminDashboard extends ConsumerWidget {
           () => const PurchaseScheduleScreen()),
       _Dest('Settings', Icons.settings, NbTone.system,
           () => const SettingsScreen()),
-      if (isHost)
-        _Dest('Reports & backup', Icons.table_view, NbTone.system,
-            () => const ReportsScreen()),
     ];
 
     void openHosting() => Navigator.of(context)

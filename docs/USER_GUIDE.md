@@ -52,8 +52,8 @@ You can change a device's role later from the ↔ icon in the top bar.
 
 ### 2.2 Managing the host (Admin ▸ Hosting & LAN)
 
-Sign in on the host as **admin** and open **Hosting & LAN** (also a card at
-the top of **Settings**). It shows:
+Sign in on the host as **admin** and open **Settings ▸ Hosting & LAN**. It
+shows:
 
 - whether the server is **serving**, and the exact URL(s) other devices use;
 - **Stop / Restart** serving (rarely needed — it auto-starts);
@@ -203,11 +203,18 @@ and purchase-due reminders. Dismissing one only hides it for you.
 
 ### 3.8 Settings (admin)
 
-All runtime config, no reinstall: app name, unit prices, meal windows,
-timezone, grace allowance, scan-reversal window, reminder lead times, UPI ID
-and payee name. **Users & access** and, on the host, **Hosting & LAN** are
-rows at the top of this screen — they no longer have their own dashboard
-tiles.
+Settings is a short menu of rows, not one long form. Each opens its own screen:
+
+- **Canteen configuration** — app name, unit prices, meal windows, timezone,
+  grace allowance, scan-reversal window, reminder lead times, UPI. All runtime,
+  no reinstall; one **Save** button, kept in reach at the bottom.
+- **Users & access** — see 3.9.
+- **Appearance** — see 3.10.
+- **Hosting & LAN** *(host only)* — start/stop serving, URLs, certificate.
+- **Reports** *(host only)* — see 3.11.
+- **Backup & restore** *(host only)* — see 3.11.
+- **Switch device role** — host ↔ client; signs you out, touches no data.
+- **Reset all data** *(host only)* — wipes this host, no undo.
 
 ### 3.9 Users & access (admin — inside Settings)
 
@@ -229,13 +236,13 @@ host's look, and say so rather than quietly ignoring taps.
 
 The same screen lists **saved logins** and clears them.
 
-### 3.11 Reports & backup (admin, host only)
+### 3.11 Reports, and Backup & restore (admin, host only — two screens under Settings)
 
-**Spreadsheet report** — an `.xlsx` for Excel or Google Sheets, with a tab per
-area (summary, members, balances, scans, top-ups, refunds, expenses, menu).
-Pick a date range and which tabs you want, then it goes out through the normal
-share sheet. It is for reading and printing; it is *not* a way to put data
-back.
+**Reports** — an `.xlsx` for Excel or Google Sheets, with a tab per area
+(summary, members, balances, scans, top-ups, refunds, expenses, menu). Pick a
+date range and which tabs you want, then it goes out through the normal share
+sheet. It is for reading and printing; it is *not* a way to put data back —
+that is what **Backup & restore** is for.
 
 **Backup** — a complete copy of the canteen in one `.tiffin` file: members,
 balances, history, settings and accounts. Use it to move to a new phone, or to

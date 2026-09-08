@@ -71,3 +71,30 @@ UI just constrains what goes in.
 Both are configuration, touched rarely. Hosting was already linked from
 Settings (with a redundant tile); Users gets a row there too. Dashboard tiles
 removed. No code beyond navigation.
+
+## 5. Settings became a hub; Reports and Backup split apart
+
+**Context.** `SettingsScreen` had grown to ~400 lines and one `ListView` with
+~10 stacked sections plus a `Save` button stranded mid-scroll. "Reports &
+backup" was a single screen doing two unrelated jobs (an export-only
+spreadsheet for people, and a restore-capable machine backup).
+
+**Decision.**
+- Settings is now a short menu of `SettingsRow`s (icon, title, one-line
+  description, chevron), grouped Canteen / This host / Device. The config
+  form moved wholesale to `SettingsConfigScreen` with its `Save` pinned to a
+  bottom bar.
+- `ReportsScreen` keeps only the spreadsheet. `BackupScreen` is new and holds
+  export + restore (and the typed-`REPLACE` confirm dialog). Both are rows
+  under Settings ▸ *This host*; the dashboard's "Reports & backup" tile is
+  gone.
+
+**Alternatives rejected.**
+- *Collapsible sections on one screen.* Still one giant file and one save
+  scope; expand/collapse state is fiddly on a form.
+- *Splitting the config form into four sub-screens.* Four save buttons or a
+  shared draft object — more moving parts than the cramming was worth.
+
+**Consequences.** Four files where there were two; each is well under the
+size limit and single-purpose. No behaviour change to what any of the forms
+do.
