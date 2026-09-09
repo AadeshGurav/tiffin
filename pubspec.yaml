@@ -4,7 +4,7 @@ description: >-
   as either the LAN host (embedded server + on-device database) or a client,
   from the same APK. See docs/PRD.md §13–§14.
 publish_to: none
-version: 2.0.0+1
+version: 2.1.0+2
 
 environment:
   sdk: ">=3.5.0 <4.0.0"

@@ -23,6 +23,7 @@ class NbMemberField extends StatelessWidget {
     required this.members,
     required this.onSelected,
     this.onCreate,
+    this.categories = const [],
   });
 
   final String label;
@@ -33,6 +34,9 @@ class NbMemberField extends StatelessWidget {
   /// Supplied by the screen (which holds the backend ref); null hides the
   /// "+ New member" shortcut.
   final QuickCreateMember? onCreate;
+
+  /// Menu-category names for the walk-up member's category picker.
+  final List<String> categories;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +49,7 @@ class NbMemberField extends StatelessWidget {
           members: members,
           selected: value,
           onCreate: onCreate,
+          categories: categories,
         );
         if (picked != null) onSelected(picked);
       },
@@ -88,6 +93,7 @@ Future<Member?> showMemberPicker({
   required List<Member> members,
   Member? selected,
   QuickCreateMember? onCreate,
+  List<String> categories = const [],
 }) {
   final t = context.tokens;
   return showModalBottomSheet<Member>(
@@ -100,7 +106,10 @@ Future<Member?> showMemberPicker({
     ),
     builder: (_) => FrostedPanel(
       child: _MemberPickerSheet(
-          members: members, selected: selected, onCreate: onCreate),
+          members: members,
+          selected: selected,
+          onCreate: onCreate,
+          categories: categories),
     ),
   );
 }
@@ -110,11 +119,13 @@ class _MemberPickerSheet extends StatefulWidget {
     required this.members,
     required this.selected,
     required this.onCreate,
+    required this.categories,
   });
 
   final List<Member> members;
   final Member? selected;
   final QuickCreateMember? onCreate;
+  final List<String> categories;
 
   @override
   State<_MemberPickerSheet> createState() => _MemberPickerSheetState();
@@ -146,7 +157,7 @@ class _MemberPickerSheetState extends State<_MemberPickerSheet> {
   }
 
   Future<void> _createNew() async {
-    final draft = await _showQuickAddForm(context);
+    final draft = await _showQuickAddForm(context, widget.categories);
     if (draft == null || !mounted) return;
     Member? made;
     final ok = await runGuarded(
@@ -237,9 +248,13 @@ class _MemberPickerSheetState extends State<_MemberPickerSheet> {
 
 /// A slim create-only form for the walk-up case. The full member form —
 /// editing, status, grace, delete — lives on the Members screen.
-Future<MemberDraft?> _showQuickAddForm(BuildContext context) {
+Future<MemberDraft?> _showQuickAddForm(
+    BuildContext context, List<String> categories) {
   final t = context.tokens;
   var type = 'student';
+  // Only offer a category picker once the admin has defined categories; a
+  // walk-up member otherwise falls to the default 'Normal'.
+  var category = categories.isEmpty ? 'Normal' : categories.first;
   final name = TextEditingController();
   final className = TextEditingController();
   final roll = TextEditingController();
@@ -271,6 +286,22 @@ Future<MemberDraft?> _showQuickAddForm(BuildContext context) {
                 NbTextField(label: 'Roll number', controller: roll),
               ] else
                 NbTextField(label: 'Staff ID', controller: staffId),
+              if (categories.isNotEmpty) ...[
+                const SizedBox(height: NbSpace.md),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('CATEGORY', style: t.text.label),
+                ),
+                DropdownButton<String>(
+                  value: category,
+                  isExpanded: true,
+                  items: [
+                    for (final c in categories)
+                      DropdownMenuItem(value: c, child: Text(c)),
+                  ],
+                  onChanged: (v) => setLocal(() => category = v ?? category),
+                ),
+              ],
             ],
           ),
         ),
@@ -290,6 +321,7 @@ Future<MemberDraft?> _showQuickAddForm(BuildContext context) {
                   className: type == 'student' ? className.text.trim() : null,
                   rollNumber: type == 'student' ? roll.text.trim() : null,
                   staffId: type == 'staff' ? staffId.text.trim() : null,
+                  category: category,
                 ),
               );
             },

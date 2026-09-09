@@ -78,6 +78,9 @@ class RefundsScreen extends ConsumerWidget {
   Future<void> _form(BuildContext context, WidgetRef ref) async {
     final t = context.tokens;
     final members = [...await ref.read(_activeMembersProvider.future)];
+    final categories = (await ref.read(menuCategoriesProvider.future))
+        .map((c) => c.name)
+        .toList();
     if (!context.mounted || members.isEmpty) return;
     Member selected = members.first;
     final lunch = TextEditingController();
@@ -115,6 +118,7 @@ class RefundsScreen extends ConsumerWidget {
                     prefill();
                   }),
                   onCreate: ref.read(backendProvider).createMember,
+                  categories: categories,
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(

@@ -178,6 +178,13 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
                 }
               },
               onCreate: ref.read(backendProvider).createMember,
+              categories: ref
+                      .watch(menuCategoriesProvider)
+                      .asData
+                      ?.value
+                      .map((c) => c.name)
+                      .toList() ??
+                  const [],
             ),
             const SizedBox(height: NbSpace.md),
             _UnitRow(

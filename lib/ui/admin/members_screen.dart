@@ -216,7 +216,9 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
   late final _grace = TextEditingController(
       text: widget.existing?.graceAllowanceOverride?.toString() ?? '');
   late String _status = widget.existing?.status ?? 'active';
-  late String _category = widget.existing?.category ?? 'Normal';
+  // null on a new member: _CategoryField picks a sensible default (the first
+  // real category, or the built-in 'Normal' when none are defined).
+  late String? _category = widget.existing?.category;
   bool _busy = false;
 
   bool get _isEdit => widget.existing != null;
@@ -247,7 +249,7 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
           className: _type == 'student' ? _className.text.trim() : null,
           rollNumber: _type == 'student' ? _rollNumber.text.trim() : null,
           staffId: _type == 'staff' ? _staffId.text.trim() : null,
-          category: _category,
+          category: _category ?? 'Normal',
           graceAllowanceOverride:
               _grace.text.isEmpty ? null : int.parse(_grace.text),
         ));
@@ -334,12 +336,14 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
   }
 }
 
-/// Dropdown of the menu categories (Jain / Normal / Staff …) plus whatever the
-/// member already has, so counting a scan against a category works.
+/// Dropdown of the menu categories (Jain / Staff …) the admin has defined,
+/// plus whatever this member already has. The built-in "Normal" only appears
+/// as a fallback when *no* categories have been created — once the admin has
+/// their own list, we don't inject one.
 class _CategoryField extends ConsumerWidget {
   const _CategoryField({required this.value, required this.onChanged});
 
-  final String value;
+  final String? value;
   final ValueChanged<String> onChanged;
 
   @override
@@ -347,23 +351,30 @@ class _CategoryField extends ConsumerWidget {
     final t = context.tokens;
     final fromMenu =
         ref.watch(menuCategoriesProvider).asData?.value ?? const [];
-    final names = {
-      value,
-      'Normal',
-      for (final c in fromMenu) c.name,
-    }.toList()
-      ..sort();
+
+    final options = [for (final c in fromMenu) c.name];
+    if (options.isEmpty) options.add('Normal');
+    // Don't lose an existing member's category if it's no longer in the list.
+    if (value != null && !options.contains(value)) options.add(value!);
+    options.sort();
+
+    final effective =
+        (value != null && options.contains(value)) ? value! : options.first;
+    if (effective != value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => onChanged(effective));
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('CATEGORY', style: t.text.label),
         DropdownButton<String>(
-          value: value,
+          value: effective,
           isExpanded: true,
           items: [
-            for (final n in names) DropdownMenuItem(value: n, child: Text(n)),
+            for (final n in options) DropdownMenuItem(value: n, child: Text(n)),
           ],
-          onChanged: (v) => onChanged(v ?? value),
+          onChanged: (v) => onChanged(v ?? effective),
         ),
       ],
     );

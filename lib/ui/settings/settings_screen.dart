@@ -150,7 +150,13 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (ok == true) await ref.read(sessionMemoryProvider).signOut();
+    if (ok != true) return;
+    await ref.read(sessionMemoryProvider).signOut();
+    // ModeGate swaps the *root* route's child to the login screen; the pushed
+    // Settings routes have to come off the stack for that to be visible.
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   Future<void> _confirmSwitchRole(BuildContext context, WidgetRef ref) async {
@@ -171,7 +177,11 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (ok == true) await ref.read(currentModeProvider.notifier).clear();
+    if (ok != true) return;
+    await ref.read(currentModeProvider.notifier).clear();
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   Future<void> _confirmReset(BuildContext context, WidgetRef ref) async {
