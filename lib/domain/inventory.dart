@@ -8,6 +8,8 @@ class Ingredient {
     required this.id,
     required this.name,
     required this.unit,
+    this.stockQty = 0,
+    this.lowStockAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -16,6 +18,8 @@ class Ingredient {
         id: j['id'] as int,
         name: j['name'] as String,
         unit: j['unit'] as String,
+        stockQty: (j['stockQty'] as num?)?.toDouble() ?? 0,
+        lowStockAt: (j['lowStockAt'] as num?)?.toDouble(),
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
@@ -23,13 +27,23 @@ class Ingredient {
   final int id;
   final String name;
   final String unit;
+
+  /// On-hand quantity in [unit].
+  final double stockQty;
+
+  /// Alert threshold in [unit]; null = no low-stock alert.
+  final double? lowStockAt;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isLow => lowStockAt != null && stockQty <= lowStockAt!;
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
         'unit': unit,
+        'stockQty': stockQty,
+        'lowStockAt': lowStockAt,
         'createdAt': createdAt.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };
@@ -132,6 +146,8 @@ class PurchaseScheduleItem {
     required this.purchased,
     this.purchasedBy,
     this.purchasedAt,
+    this.purchasedQty,
+    this.purchasedCost,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -150,6 +166,8 @@ class PurchaseScheduleItem {
         purchasedAt: j['purchasedAt'] == null
             ? null
             : DateTime.parse(j['purchasedAt'] as String),
+        purchasedQty: (j['purchasedQty'] as num?)?.toDouble(),
+        purchasedCost: (j['purchasedCost'] as num?)?.toDouble(),
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
@@ -164,6 +182,8 @@ class PurchaseScheduleItem {
   final bool purchased;
   final String? purchasedBy;
   final DateTime? purchasedAt;
+  final double? purchasedQty;
+  final double? purchasedCost;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -178,6 +198,8 @@ class PurchaseScheduleItem {
         'purchased': purchased,
         'purchasedBy': purchasedBy,
         'purchasedAt': purchasedAt?.toUtc().toIso8601String(),
+        'purchasedQty': purchasedQty,
+        'purchasedCost': purchasedCost,
         'createdAt': createdAt.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };

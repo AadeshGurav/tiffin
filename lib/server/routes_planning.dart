@@ -99,6 +99,8 @@ Router planningRoutes(HostContainer c) {
     final created = await c.ingredients.create(
       body['name'] as String? ?? '',
       body['unit'] as String? ?? '',
+      stockQty: (body['stockQty'] as num?)?.toDouble() ?? 0,
+      lowStockAt: (body['lowStockAt'] as num?)?.toDouble(),
     );
     return jsonOk(created.toJson());
   });
@@ -110,6 +112,26 @@ Router planningRoutes(HostContainer c) {
       pathId(id, entity: 'ingredient'),
       name: body['name'] as String?,
       unit: body['unit'] as String?,
+      stockQty: (body['stockQty'] as num?)?.toDouble(),
+      lowStockAt: body.containsKey('lowStockAt')
+          ? (body['lowStockAt'] as num?)?.toDouble()
+          : kUnset,
+    );
+    return jsonOk(updated.toJson());
+  });
+
+  router.post('/ingredients/<id>/adjust-stock',
+      (Request request, String id) async {
+    requireRole(request, rolesAdmin);
+    final body = await readJsonObject(request);
+    final delta = (body['delta'] as num?)?.toDouble();
+    if (delta == null) {
+      throw const ValidationException('delta is required.');
+    }
+    final updated = await c.ingredients.adjustStock(
+      pathId(id, entity: 'ingredient'),
+      delta,
+      body['reason'] as String? ?? '',
     );
     return jsonOk(updated.toJson());
   });
@@ -191,6 +213,8 @@ Router planningRoutes(HostContainer c) {
       pathId(id, entity: 'purchase schedule item'),
       quantityNote: body['quantityNote'] as String?,
       purchased: body['purchased'] as bool?,
+      purchasedQty: (body['purchasedQty'] as num?)?.toDouble(),
+      purchasedCost: (body['purchasedCost'] as num?)?.toDouble(),
       actingUsername: caller.username,
     );
     return jsonOk(updated.toJson());

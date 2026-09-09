@@ -43,6 +43,9 @@ class ScanResult {
     this.mealType,
     this.remainingBalance,
     this.viaGrace = false,
+    this.memberCategory,
+    this.plannedCount,
+    this.servedCount,
     required this.message,
   });
 
@@ -56,6 +59,9 @@ class ScanResult {
             : MealType.fromWire(j['mealType'] as String),
         remainingBalance: j['remainingBalance'] as int?,
         viaGrace: j['viaGrace'] as bool? ?? false,
+        memberCategory: j['memberCategory'] as String?,
+        plannedCount: j['plannedCount'] as int?,
+        servedCount: j['servedCount'] as int?,
         message: j['message'] as String,
       );
 
@@ -66,6 +72,21 @@ class ScanResult {
   final MealType? mealType;
   final int? remainingBalance;
   final bool viaGrace;
+
+  /// The scanned member's serving group, and the planned vs served plate count
+  /// for that group / meal / today. Set only on an accepted scan when a menu
+  /// entry with a headcount exists.
+  final String? memberCategory;
+  final int? plannedCount;
+  final int? servedCount;
+
+  /// This scan has met or passed the planned plate count for its category.
+  bool get headcountReached =>
+      plannedCount != null &&
+      plannedCount! > 0 &&
+      servedCount != null &&
+      servedCount! >= plannedCount!;
+
   final String message;
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +97,9 @@ class ScanResult {
         'mealType': mealType?.wire,
         'remainingBalance': remainingBalance,
         'viaGrace': viaGrace,
+        'memberCategory': memberCategory,
+        'plannedCount': plannedCount,
+        'servedCount': servedCount,
         'message': message,
       };
 }

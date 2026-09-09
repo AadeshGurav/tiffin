@@ -242,12 +242,24 @@ class HostBackend implements Backend {
   Future<List<Ingredient>> listIngredients() => _c.ingredients.list();
 
   @override
-  Future<Ingredient> createIngredient(String name, String unit) =>
-      _c.ingredients.create(name, unit);
+  Future<Ingredient> createIngredient(String name, String unit,
+          {double stockQty = 0, double? lowStockAt}) =>
+      _c.ingredients
+          .create(name, unit, stockQty: stockQty, lowStockAt: lowStockAt);
 
   @override
-  Future<Ingredient> updateIngredient(int id, {String? name, String? unit}) =>
-      _c.ingredients.update(id, name: name, unit: unit);
+  Future<Ingredient> updateIngredient(int id,
+          {String? name,
+          String? unit,
+          double? stockQty,
+          Object? lowStockAt = kUnset}) =>
+      _c.ingredients.update(id,
+          name: name, unit: unit, stockQty: stockQty, lowStockAt: lowStockAt);
+
+  @override
+  Future<Ingredient> adjustIngredientStock(
+          int id, double delta, String reason) =>
+      _c.ingredients.adjustStock(id, delta, reason);
 
   @override
   Future<void> deleteIngredient(int id) => _c.ingredients.delete(id);
@@ -282,12 +294,17 @@ class HostBackend implements Backend {
 
   @override
   Future<PurchaseScheduleItem> updatePurchaseItem(int id,
-      {String? quantityNote, bool? purchased}) {
+      {String? quantityNote,
+      bool? purchased,
+      double? purchasedQty,
+      double? purchasedCost}) {
     _requireSession();
     return _c.purchaseSchedule.updateItem(
       id,
       quantityNote: quantityNote,
       purchased: purchased,
+      purchasedQty: purchasedQty,
+      purchasedCost: purchasedCost,
       actingUsername: _username,
     );
   }

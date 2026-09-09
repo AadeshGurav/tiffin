@@ -40,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -160,6 +160,22 @@ class AppDatabase extends _$AppDatabase {
               }
             }
             await customStatement('DROP TABLE _menu_entries_v6');
+          },
+          from7To8: (m, schema) async {
+            // Inventory: ingredients carry stock + an alert threshold; a
+            // purchased schedule item records the actual quantity/cost; a scan
+            // records what it consumed so a reversal can restore it. All
+            // additive and defaulted.
+            await m.addColumn(schema.ingredients, schema.ingredients.stockQty);
+            await m.addColumn(
+                schema.ingredients, schema.ingredients.lowStockAt);
+            await m.addColumn(schema.purchaseScheduleItems,
+                schema.purchaseScheduleItems.purchasedQty);
+            await m.addColumn(schema.purchaseScheduleItems,
+                schema.purchaseScheduleItems.purchasedCost);
+            await m.addColumn(schema.purchaseScheduleItems,
+                schema.purchaseScheduleItems.expenseId);
+            await m.addColumn(schema.scans, schema.scans.consumedJson);
           },
         ),
       );

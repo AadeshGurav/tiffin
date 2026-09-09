@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../core/app_mode.dart';
 import '../core/errors.dart';
@@ -27,6 +28,62 @@ class NotificationService {
     final localNow = toLocal(nowUtc, s.localTimezone);
     await _generatePrepReminders(localNow, s);
     await _generatePurchaseReminders(localNow, s);
+    await _generateLowStock();
+    await _generateHeadcountOverrun(localNow);
+  }
+
+  /// One alert per ingredient that is at or below its threshold. Visible to
+  /// everyone who can act on it, including whoever is at the scanner.
+  Future<void> _generateLowStock() async {
+    final low = await (_db.select(_db.ingredients)
+          ..where((i) =>
+              i.lowStockAt.isNotNull() &
+              i.stockQty.isSmallerOrEqual(i.lowStockAt)))
+        .get();
+    for (final ing in low) {
+      await _upsert(
+        type: 'low_stock',
+        dateKey: 'ing-${ing.id}',
+        mealType: null,
+        title: 'Low stock: ${ing.name}',
+        message: '${_num(ing.stockQty)} ${ing.unit} left '
+            '(alert at ${_num(ing.lowStockAt!)} ${ing.unit}). Restock soon.',
+        visibleRoles: const [Role.admin, Role.counter, Role.scanner],
+      );
+    }
+  }
+
+  /// One alert per (day, meal, category) whose accepted scans have met or
+  /// passed the planned plate count.
+  Future<void> _generateHeadcountOverrun(tz.TZDateTime localNow) async {
+    final today = DateTime.utc(localNow.year, localNow.month, localNow.day);
+    final bounds = dayBounds(localNow);
+    final entries = await (_db.select(_db.menuEntries)
+          ..where(
+              (e) => e.date.equals(today) & e.headcount.isBiggerThanValue(0)))
+        .get();
+    for (final entry in entries) {
+      final countExp = _db.scans.id.count();
+      final served = await (_db.selectOnly(_db.scans)
+            ..addColumns([countExp])
+            ..where(_db.scans.mealType.equals(entry.mealType) &
+                _db.scans.memberCategory.equals(entry.category) &
+                _db.scans.reversed.equals(false) &
+                _db.scans.result.equals('accepted') &
+                _db.scans.scannedAt
+                    .isBetweenValues(bounds.start.toUtc(), bounds.end.toUtc())))
+          .map((row) => row.read(countExp))
+          .getSingle();
+      if ((served ?? 0) < entry.headcount) continue;
+      await _upsert(
+        type: 'headcount_overrun',
+        dateKey: '${_ymd(today)}-${entry.category}',
+        mealType: entry.mealType,
+        title: 'More ${entry.category} ${entry.mealType} plates than planned',
+        message: 'Planned ~${entry.headcount}, served $served so far.',
+        visibleRoles: const [Role.admin, Role.counter],
+      );
+    }
   }
 
   Future<void> _generatePrepReminders(
@@ -173,4 +230,6 @@ class NotificationService {
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   String _capitalize(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  String _num(double x) =>
+      x == x.roundToDouble() ? x.toStringAsFixed(0) : x.toString();
 }

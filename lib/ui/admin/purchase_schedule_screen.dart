@@ -79,16 +79,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                       children: [
                         Checkbox(
                           value: it.purchased,
-                          onChanged: (v) async {
-                            final ok = await runGuarded(
-                              context,
-                              () => ref
-                                  .read(backendProvider)
-                                  .updatePurchaseItem(it.id,
-                                      purchased: v ?? false),
-                            );
-                            if (ok) ref.invalidate(_scheduleProvider);
-                          },
+                          onChanged: (v) =>
+                              _togglePurchased(context, ref, it, v ?? false),
                         ),
                         Expanded(
                           child: Column(
@@ -226,6 +218,76 @@ class PurchaseScheduleScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Ticking "purchased" opens a small form for the actual quantity received
+  /// (→ stock) and, optionally, what it cost (→ Expenses). Un-ticking just
+  /// reverses it.
+  Future<void> _togglePurchased(BuildContext context, WidgetRef ref,
+      PurchaseScheduleItem it, bool purchased) async {
+    if (!purchased) {
+      final ok = await runGuarded(
+        context,
+        () => ref
+            .read(backendProvider)
+            .updatePurchaseItem(it.id, purchased: false),
+      );
+      if (ok) ref.invalidate(_scheduleProvider);
+      return;
+    }
+
+    final t = context.tokens;
+    final planned = RegExp(r'[\d.]+').firstMatch(it.quantityNote)?.group(0);
+    final qty = TextEditingController(text: planned ?? '');
+    final cost = TextEditingController();
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Bought ${it.ingredientName}', style: t.text.heading),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Planned: ${it.quantityNote}. Enter what you actually got.',
+                style: t.text.label),
+            const SizedBox(height: NbSpace.sm),
+            NbTextField(
+              label: 'Quantity (${it.ingredientUnit})',
+              controller: qty,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+            ),
+            const SizedBox(height: NbSpace.sm),
+            NbTextField(
+              label: 'Cost (Rs., optional)',
+              controller: cost,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          NbButton(
+              label: 'Confirm', onPressed: () => Navigator.pop(context, true)),
+        ],
+      ),
+    );
+    if (go != true || !context.mounted) return;
+    final ok = await runGuarded(
+      context,
+      () => ref.read(backendProvider).updatePurchaseItem(
+            it.id,
+            purchased: true,
+            purchasedQty: double.tryParse(qty.text.trim()),
+            purchasedCost: double.tryParse(cost.text.trim()),
+          ),
+      successMessage: 'Marked purchased.',
+    );
+    if (ok) ref.invalidate(_scheduleProvider);
   }
 
   Future<void> _addManual(BuildContext context, WidgetRef ref) async {

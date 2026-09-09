@@ -178,6 +178,12 @@ row stays in the log, marked reversed.
   **Settings ▸ Menu categories**.
 - **Recipes** hold **per-plate** quantities. The purchase schedule multiplies
   them by each entry's headcount.
+- **Ingredients = inventory.** Each row shows on-hand **stock** and a **LOW**
+  badge when it's at or below its alert threshold. Set stock and the threshold
+  on the ingredient form; use the **⚙ tune** icon for a quick correction
+  (delivery, spoilage) with a reason. Stock goes **down** automatically on
+  each accepted scan (the person's meal's recipes) and **up** when you mark a
+  purchase-schedule item bought.
 
 - **Kitchen setup** — two tabs, done once at setup:
   - **Ingredients** — your master shopping list. Each has a name and the
@@ -192,9 +198,10 @@ row stays in the log, marked reversed.
   **headcount**, sums per ingredient per date, and rounds up to 2 dp. Safe to
   re-run — changing a headcount and regenerating updates the un-purchased
   lines; purchased and one-off lines are left alone. If it adds nothing it
-  tells you which link is missing. Admin and counter can check items off and
-  add one-off items with the **+** button (pick the ingredient, type a
-  quantity — its unit is shown).
+  tells you which link is missing. Ticking an item **bought** asks for the
+  actual quantity received (→ ingredient stock) and, optionally, what it cost
+  (→ Expenses); un-ticking rolls both back. Add one-off items with the **+**
+  button.
 
 **The chain:** Menu calendar (what's cooked) + Recipes (what each dish needs)
 → Purchase schedule (what to buy).
@@ -209,8 +216,12 @@ row stays in the log, marked reversed.
 
 ### 3.7 Notifications
 
-The bell in the top bar shows prep reminders (before a planned meal's window)
-and purchase-due reminders. Dismissing one only hides it for you.
+The bell in the top bar shows: prep reminders (before a planned meal's
+window), purchase-due reminders, **low stock** (an ingredient at or below its
+threshold — also shown to the scanner), and **headcount overrun** (accepted
+scans for a category/meal have reached the planned plate count). Dismissing
+one only hides it for you. The scan screen also flags an overrun inline —
+"PLANNED ~15 JAIN — THIS IS #16".
 
 ### 3.8 Settings (admin)
 

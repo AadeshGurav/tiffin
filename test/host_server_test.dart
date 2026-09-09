@@ -304,6 +304,123 @@ void main() {
     expect(row['memberCategory'], 'Jain');
   });
 
+  test('inventory: scan consumes stock, purchased adds it back with an expense',
+      () async {
+    String ymd(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+    final day = DateTime.now();
+
+    await _send(http, 'PATCH', '$base/api/settings', token: adminToken, body: {
+      'unitPrices': {'lunch': 40.0, 'breakfast': 25.0, 'brunch': 50.0},
+      'mealWindows': {
+        'breakfast': {'start': '00:00', 'end': '00:01'},
+        'brunch': {'start': '00:00', 'end': '00:01'},
+        'lunch': {'start': '00:02', 'end': '23:59'},
+      },
+    });
+
+    final rice = await _send(http, 'POST', '$base/api/ingredients',
+        token: adminToken,
+        body: {
+          'name': 'Rice',
+          'unit': 'kg',
+          'stockQty': 1.0,
+          'lowStockAt': 2.0
+        });
+    final riceId = rice.json['id'] as int;
+    expect(rice.json['stockQty'], 1.0);
+
+    await _send(http, 'POST', '$base/api/recipes', token: adminToken, body: {
+      'dishName': 'Dal Rice',
+      'ingredients': [
+        {'ingredientId': riceId, 'quantity': 0.15}
+      ],
+    });
+    await _send(http, 'POST', '$base/api/menu-categories',
+        token: adminToken, body: {'name': 'Normal'});
+    await _send(http, 'POST', '$base/api/menu', token: adminToken, body: {
+      'date': ymd(day),
+      'mealType': 'lunch',
+      'category': 'Normal',
+      'headcount': 1,
+      'items': ['Dal Rice'],
+    });
+
+    final m = await _send(http, 'POST', '$base/api/members',
+        token: adminToken,
+        body: {'type': 'staff', 'name': 'Anil', 'staffId': 'A9'});
+    await _send(http, 'POST', '$base/api/topups', token: adminToken, body: {
+      'memberId': m.json['id'],
+      'lunchUnits': 1,
+      'paymentMethod': 'cash'
+    });
+
+    final scan = await _send(http, 'POST', '$base/api/scan',
+        token: adminToken, body: {'qrCodeId': m.json['qrCodeId']});
+    expect(scan.json['outcome'], 'accepted');
+    // Headcount was 1 and this is the first plate -> banner fields set.
+    expect(scan.json['plannedCount'], 1);
+    expect(scan.json['servedCount'], 1);
+
+    final afterScan =
+        await _send(http, 'GET', '$base/api/ingredients', token: adminToken);
+    final riceAfter = (jsonDecode(afterScan.body) as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((i) => i['id'] == riceId);
+    expect(riceAfter['stockQty'], closeTo(0.85, 1e-9)); // 1.0 - 0.15
+
+    // Low-stock notification fired (stock 0.85 <= threshold 2.0).
+    final notes =
+        await _send(http, 'GET', '$base/api/notifications', token: adminToken);
+    expect(
+        (jsonDecode(notes.body) as List)
+            .any((n) => n['title'].toString().contains('Low stock: Rice')),
+        isTrue);
+
+    // Buy 3 kg for Rs. 150 via a manual purchase item.
+    final item = await _send(http, 'POST', '$base/api/purchase-schedule',
+        token: adminToken,
+        body: {
+          'date': ymd(day),
+          'ingredientId': riceId,
+          'quantityNote': '3 kg'
+        });
+    await _send(http, 'PATCH', '$base/api/purchase-schedule/${item.json['id']}',
+        token: adminToken,
+        body: {'purchased': true, 'purchasedQty': 3.0, 'purchasedCost': 150.0});
+
+    final afterBuy =
+        await _send(http, 'GET', '$base/api/ingredients', token: adminToken);
+    final riceBought = (jsonDecode(afterBuy.body) as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((i) => i['id'] == riceId);
+    expect(riceBought['stockQty'], closeTo(3.85, 1e-9));
+
+    final expenses =
+        await _send(http, 'GET', '$base/api/expenses', token: adminToken);
+    expect(
+        (jsonDecode(expenses.body) as List)
+            .any((e) => e['amount'] == 150.0 && e['category'] == 'ingredients'),
+        isTrue);
+
+    // Un-mark -> stock and expense roll back.
+    await _send(http, 'PATCH', '$base/api/purchase-schedule/${item.json['id']}',
+        token: adminToken, body: {'purchased': false});
+    final rolledBack =
+        await _send(http, 'GET', '$base/api/ingredients', token: adminToken);
+    expect(
+        (jsonDecode(rolledBack.body) as List)
+            .cast<Map<String, dynamic>>()
+            .firstWhere((i) => i['id'] == riceId)['stockQty'],
+        closeTo(0.85, 1e-9));
+    final expenses2 =
+        await _send(http, 'GET', '$base/api/expenses', token: adminToken);
+    expect(
+        (jsonDecode(expenses2.body) as List).any((e) => e['amount'] == 150.0),
+        isFalse);
+  });
+
   test('grace allowance lets a zero balance go negative, then hard-stops',
       () async {
     await _send(http, 'PATCH', '$base/api/settings', token: adminToken, body: {

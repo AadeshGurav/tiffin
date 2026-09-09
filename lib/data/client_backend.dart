@@ -1,6 +1,7 @@
 import '../core/app_mode.dart';
 import '../core/errors.dart';
 import '../core/role.dart';
+import '../core/sentinels.dart';
 import '../domain/inventory.dart';
 import '../domain/ledger.dart';
 import '../domain/member.dart';
@@ -281,20 +282,37 @@ class ClientBackend implements Backend {
       _list(await _api.getJson('/ingredients'), Ingredient.fromJson);
 
   @override
-  Future<Ingredient> createIngredient(String name, String unit) async =>
-      Ingredient.fromJson(_obj(
-          await _api.postJson('/ingredients', {'name': name, 'unit': unit})));
+  Future<Ingredient> createIngredient(String name, String unit,
+          {double stockQty = 0, double? lowStockAt}) async =>
+      Ingredient.fromJson(_obj(await _api.postJson('/ingredients', {
+        'name': name,
+        'unit': unit,
+        'stockQty': stockQty,
+        if (lowStockAt != null) 'lowStockAt': lowStockAt,
+      })));
 
   @override
   Future<Ingredient> updateIngredient(int id,
-      {String? name, String? unit}) async {
+      {String? name,
+      String? unit,
+      double? stockQty,
+      Object? lowStockAt = kUnset}) async {
     final body = <String, dynamic>{
       if (name != null) 'name': name,
       if (unit != null) 'unit': unit,
+      if (stockQty != null) 'stockQty': stockQty,
+      if (!identical(lowStockAt, kUnset)) 'lowStockAt': lowStockAt,
     };
     return Ingredient.fromJson(
         _obj(await _api.patchJson('/ingredients/$id', body)));
   }
+
+  @override
+  Future<Ingredient> adjustIngredientStock(
+          int id, double delta, String reason) async =>
+      Ingredient.fromJson(_obj(await _api.postJson(
+          '/ingredients/$id/adjust-stock',
+          {'delta': delta, 'reason': reason})));
 
   @override
   Future<void> deleteIngredient(int id) => _api.deleteJson('/ingredients/$id');
@@ -347,10 +365,15 @@ class ClientBackend implements Backend {
 
   @override
   Future<PurchaseScheduleItem> updatePurchaseItem(int id,
-      {String? quantityNote, bool? purchased}) async {
+      {String? quantityNote,
+      bool? purchased,
+      double? purchasedQty,
+      double? purchasedCost}) async {
     final body = <String, dynamic>{
       if (quantityNote != null) 'quantityNote': quantityNote,
       if (purchased != null) 'purchased': purchased,
+      if (purchasedQty != null) 'purchasedQty': purchasedQty,
+      if (purchasedCost != null) 'purchasedCost': purchasedCost,
     };
     return PurchaseScheduleItem.fromJson(
         _obj(await _api.patchJson('/purchase-schedule/$id', body)));

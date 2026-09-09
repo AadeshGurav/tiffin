@@ -74,6 +74,11 @@ class Scans extends Table {
   /// planned-vs-actual count per category stays correct if the member's
   /// category is later changed. Null on scans recorded before v7.
   TextColumn get memberCategory => text().nullable()();
+
+  /// JSON `{ingredientId: qty}` of what this scan consumed from stock (the
+  /// matching menu entry's per-plate recipes). Kept so a reversal restores
+  /// the exact amounts. Null when nothing was consumed.
+  TextColumn get consumedJson => text().nullable()();
 }
 
 // --------------------------------------------------------------------------
@@ -174,6 +179,15 @@ class Ingredients extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
   TextColumn get unit => text()(); // free text: "kg", "litre", "pcs"
+
+  /// On-hand quantity, in [unit]. Goes up when a purchase-schedule item is
+  /// marked purchased and down on each accepted scan that consumes it; the
+  /// admin can also correct it by hand (PRD §6.5.1).
+  RealColumn get stockQty => real().withDefault(const Constant(0))();
+
+  /// Alert threshold in [unit]; null disables the low-stock alert.
+  RealColumn get lowStockAt => real().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 }
@@ -209,6 +223,15 @@ class PurchaseScheduleItems extends Table {
   BoolColumn get purchased => boolean().withDefault(const Constant(false))();
   TextColumn get purchasedBy => text().nullable()();
   DateTimeColumn get purchasedAt => dateTime().nullable()();
+
+  /// Actual amount received (may differ from the planned figure) — added to
+  /// [Ingredients.stockQty] when marked purchased, subtracted back on un-mark.
+  RealColumn get purchasedQty => real().nullable()();
+
+  /// Actual spend, if known. When set, an [Expenses] row is created and its id
+  /// kept here so un-marking can remove it.
+  RealColumn get purchasedCost => real().nullable()();
+  IntColumn get expenseId => integer().nullable()();
 
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

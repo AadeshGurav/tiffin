@@ -100,6 +100,8 @@ Ingredient ingredientFromRow(db.Ingredient r) => Ingredient(
       id: r.id,
       name: r.name,
       unit: r.unit,
+      stockQty: r.stockQty,
+      lowStockAt: r.lowStockAt,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     );
@@ -126,6 +128,8 @@ PurchaseScheduleItem purchaseItemFromRow(db.PurchaseScheduleItem r) =>
       purchased: r.purchased,
       purchasedBy: r.purchasedBy,
       purchasedAt: r.purchasedAt,
+      purchasedQty: r.purchasedQty,
+      purchasedCost: r.purchasedCost,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     );

@@ -163,38 +163,103 @@ class PurchaseScheduleService {
   }
 
   /// [actingUsername] is recorded when an item is marked purchased.
+  ///
+  /// Marking purchased with [purchasedQty] adds that amount to the ingredient's
+  /// stock; with [purchasedCost] it also records an [Expenses] row. Un-marking
+  /// reverses both. All in one transaction.
   Future<PurchaseScheduleItem> updateItem(
     int id, {
     String? quantityNote,
     bool? purchased,
+    double? purchasedQty,
+    double? purchasedCost,
     required String actingUsername,
   }) async {
     if (quantityNote == null && purchased == null) {
       throw const ValidationException('Nothing to update.');
     }
     final now = DateTime.now().toUtc();
-    final companion = PurchaseScheduleItemsCompanion(
-      quantityNote:
-          quantityNote == null ? const Value.absent() : Value(quantityNote),
-      purchased: purchased == null ? const Value.absent() : Value(purchased),
-      purchasedBy: purchased == null
-          ? const Value.absent()
-          : Value(purchased ? actingUsername : null),
-      purchasedAt: purchased == null
-          ? const Value.absent()
-          : Value(purchased ? now : null),
-      updatedAt: Value(now),
-    );
-    final n = await (_db.update(_db.purchaseScheduleItems)
-          ..where((p) => p.id.equals(id)))
-        .write(companion);
-    if (n == 0) {
-      throw const NotFoundException('Purchase schedule item not found.');
-    }
+
+    await _db.transaction(() async {
+      final row = await (_db.select(_db.purchaseScheduleItems)
+            ..where((p) => p.id.equals(id)))
+          .getSingleOrNull();
+      if (row == null) {
+        throw const NotFoundException('Purchase schedule item not found.');
+      }
+
+      var expenseId = row.expenseId;
+      var storedQty = row.purchasedQty;
+      var storedCost = row.purchasedCost;
+
+      if (purchased == true && !row.purchased) {
+        // Newly purchased — apply stock and, if given, an expense.
+        if (purchasedQty != null && purchasedQty != 0) {
+          await _bumpStock(row.ingredientId, purchasedQty, now);
+        }
+        if (purchasedCost != null && purchasedCost > 0) {
+          expenseId = await _db.into(_db.expenses).insert(
+                ExpensesCompanion.insert(
+                  category: 'ingredients',
+                  description: '${row.ingredientName} — purchase',
+                  amount: purchasedCost,
+                  date: _dateOnly(now),
+                  createdBy: actingUsername,
+                ),
+              );
+        }
+        storedQty = purchasedQty;
+        storedCost = purchasedCost;
+      } else if (purchased == false && row.purchased) {
+        // Un-marked — roll back what marking it did.
+        if (row.purchasedQty != null && row.purchasedQty != 0) {
+          await _bumpStock(row.ingredientId, -row.purchasedQty!, now);
+        }
+        if (row.expenseId != null) {
+          await (_db.delete(_db.expenses)
+                ..where((e) => e.id.equals(row.expenseId!)))
+              .go();
+        }
+        expenseId = null;
+        storedQty = null;
+        storedCost = null;
+      }
+
+      await (_db.update(_db.purchaseScheduleItems)
+            ..where((p) => p.id.equals(id)))
+          .write(PurchaseScheduleItemsCompanion(
+        quantityNote:
+            quantityNote == null ? const Value.absent() : Value(quantityNote),
+        purchased: purchased == null ? const Value.absent() : Value(purchased),
+        purchasedBy: purchased == null
+            ? const Value.absent()
+            : Value(purchased ? actingUsername : null),
+        purchasedAt: purchased == null
+            ? const Value.absent()
+            : Value(purchased ? now : null),
+        purchasedQty: Value(storedQty),
+        purchasedCost: Value(storedCost),
+        expenseId: Value(expenseId),
+        updatedAt: Value(now),
+      ));
+    });
+
     final row = await (_db.select(_db.purchaseScheduleItems)
           ..where((p) => p.id.equals(id)))
         .getSingle();
     return purchaseItemFromRow(row);
+  }
+
+  Future<void> _bumpStock(int ingredientId, double delta, DateTime now) async {
+    final ing = await (_db.select(_db.ingredients)
+          ..where((i) => i.id.equals(ingredientId)))
+        .getSingleOrNull();
+    if (ing == null) return;
+    await (_db.update(_db.ingredients)..where((i) => i.id.equals(ingredientId)))
+        .write(IngredientsCompanion(
+      stockQty: Value(ing.stockQty + delta),
+      updatedAt: Value(now),
+    ));
   }
 
   Future<void> deleteItem(int id) async {

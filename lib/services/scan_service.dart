@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../core/app_mode.dart';
@@ -6,6 +8,7 @@ import '../core/logging.dart';
 import '../core/time/meal_window.dart';
 import '../data/local/database.dart';
 import '../data/local/mappers.dart';
+import '../domain/inventory.dart';
 import '../domain/ledger.dart';
 import 'settings_service.dart';
 
@@ -107,20 +110,54 @@ class ScanService {
     final newBalance = balance - 1;
     final usedGrace = newBalance < 0;
 
+    // What one plate of this member's category gets today, and its recipe cost.
+    final entryDate = DateTime.utc(nowLocal.year, nowLocal.month, nowLocal.day);
+    final entry = await (_db.select(_db.menuEntries)
+          ..where((e) =>
+              e.date.equals(entryDate) &
+              e.mealType.equals(mealType.wire) &
+              e.category.equals(member.category)))
+        .getSingleOrNull();
+    final consumed = await _recipeCostOf(entry);
+
     final scanId = await _db.transaction(() async {
       await (_db.update(_db.members)..where((m) => m.id.equals(member.id)))
           .write(_balanceCompanion(mealType, newBalance, nowUtc));
+      for (final e in consumed.entries) {
+        await _bumpStock(e.key, -e.value, nowUtc);
+      }
       return _db.into(_db.scans).insert(ScansCompanion.insert(
             memberId: member.id,
             mealType: mealType.wire,
             scannedAt: nowUtc,
             viaGrace: Value(usedGrace),
             memberCategory: Value(member.category),
+            consumedJson: Value(consumed.isEmpty
+                ? null
+                : jsonEncode(consumed.map((k, v) => MapEntry('$k', v)))),
           ));
     });
 
     _log.info(
-        'accepted member_id=${member.id} meal=${mealType.wire} new_balance=$newBalance via_grace=$usedGrace');
+        'accepted member_id=${member.id} meal=${mealType.wire} new_balance=$newBalance via_grace=$usedGrace consumed=${consumed.length}');
+
+    // Planned vs actual plates for this category / meal / today.
+    int? planned;
+    int? served;
+    if (entry != null && entry.headcount > 0) {
+      planned = entry.headcount;
+      final countExp = _db.scans.id.count();
+      served = await (_db.selectOnly(_db.scans)
+            ..addColumns([countExp])
+            ..where(_db.scans.mealType.equals(mealType.wire) &
+                _db.scans.memberCategory.equals(member.category) &
+                _db.scans.reversed.equals(false) &
+                _db.scans.result.equals('accepted') &
+                _db.scans.scannedAt
+                    .isBetweenValues(bounds.start.toUtc(), bounds.end.toUtc())))
+          .map((row) => row.read(countExp))
+          .getSingle();
+    }
 
     final graceNote = usedGrace ? ' (on grace allowance)' : '';
     return ScanResult(
@@ -131,9 +168,44 @@ class ScanService {
       mealType: mealType,
       remainingBalance: newBalance,
       viaGrace: usedGrace,
+      memberCategory: member.category,
+      plannedCount: planned,
+      servedCount: served,
       message:
           'Confirmed — ${member.name} (${mealType.wire})$graceNote. $newBalance left.',
     );
+  }
+
+  /// `{ingredientId: total per-plate quantity}` for the items on [entry],
+  /// summing each item's recipe. Empty when [entry] is null or nothing matches.
+  Future<Map<int, double>> _recipeCostOf(MenuEntry? entry) async {
+    if (entry == null) return const {};
+    final items = (jsonDecode(entry.itemsJson) as List<dynamic>).cast<String>();
+    if (items.isEmpty) return const {};
+    final recipes = await _db.select(_db.recipes).get();
+    final byDish = {for (final r in recipes) r.dishNameLower: r};
+    final out = <int, double>{};
+    for (final name in items) {
+      final recipe = byDish[name.trim().toLowerCase()];
+      if (recipe == null) continue;
+      for (final ri in (jsonDecode(recipe.ingredientsJson) as List<dynamic>)
+          .map((e) => RecipeIngredient.fromJson(e as Map<String, dynamic>))) {
+        out[ri.ingredientId] = (out[ri.ingredientId] ?? 0) + ri.quantity;
+      }
+    }
+    return out;
+  }
+
+  Future<void> _bumpStock(int ingredientId, double delta, DateTime now) async {
+    final ing = await (_db.select(_db.ingredients)
+          ..where((i) => i.id.equals(ingredientId)))
+        .getSingleOrNull();
+    if (ing == null) return;
+    await (_db.update(_db.ingredients)..where((i) => i.id.equals(ingredientId)))
+        .write(IngredientsCompanion(
+      stockQty: Value(ing.stockQty + delta),
+      updatedAt: Value(now),
+    ));
   }
 
   /// Undo a mistaken accepted scan within the configured window (PRD §5). The
@@ -178,6 +250,13 @@ class ScanService {
     await _db.transaction(() async {
       await (_db.update(_db.members)..where((m) => m.id.equals(member.id)))
           .write(_balanceCompanion(meal, restored, now));
+      // Put back whatever this scan consumed from stock.
+      if (scan.consumedJson != null) {
+        final consumed = jsonDecode(scan.consumedJson!) as Map<String, dynamic>;
+        for (final e in consumed.entries) {
+          await _bumpStock(int.parse(e.key), (e.value as num).toDouble(), now);
+        }
+      }
       await (_db.update(_db.scans)..where((s) => s.id.equals(scan.id))).write(
         ScansCompanion(
           reversed: const Value(true),

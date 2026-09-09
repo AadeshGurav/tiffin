@@ -1,4 +1,5 @@
 import '../core/app_mode.dart';
+import '../core/sentinels.dart';
 import '../domain/inventory.dart';
 import '../domain/ledger.dart';
 import '../domain/member.dart';
@@ -85,8 +86,14 @@ abstract interface class Backend {
 
   // ---- ingredients & recipes ----------------------------
   Future<List<Ingredient>> listIngredients();
-  Future<Ingredient> createIngredient(String name, String unit);
-  Future<Ingredient> updateIngredient(int id, {String? name, String? unit});
+  Future<Ingredient> createIngredient(String name, String unit,
+      {double stockQty, double? lowStockAt});
+  Future<Ingredient> updateIngredient(int id,
+      {String? name,
+      String? unit,
+      double? stockQty,
+      Object? lowStockAt = kUnset});
+  Future<Ingredient> adjustIngredientStock(int id, double delta, String reason);
   Future<void> deleteIngredient(int id);
   Future<List<Recipe>> listRecipes();
   Future<Recipe> createRecipe(RecipeDraft draft);
@@ -101,7 +108,10 @@ abstract interface class Backend {
   Future<PurchaseScheduleItem> addManualPurchaseItem(
       DateTime date, int ingredientId, String quantityNote);
   Future<PurchaseScheduleItem> updatePurchaseItem(int id,
-      {String? quantityNote, bool? purchased});
+      {String? quantityNote,
+      bool? purchased,
+      double? purchasedQty,
+      double? purchasedCost});
   Future<void> deletePurchaseItem(int id);
 
   // ---- expenses ---------------------------------

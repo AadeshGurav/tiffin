@@ -16,7 +16,7 @@ void main() {
 
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  const current = 7;
+  const current = 8;
 
   Future<String> timezoneOf(AppDatabase db) async =>
       (await db.select(db.appSettings).getSingle()).localTimezone;
@@ -40,7 +40,7 @@ void main() {
     return db;
   }
 
-  for (final from in [1, 2, 3, 4, 5, 6]) {
+  for (final from in [1, 2, 3, 4, 5, 6, 7]) {
     test('v$from -> v$current keeps the schema valid and the row intact',
         () async {
       final db = await migrated(from);
@@ -108,6 +108,20 @@ void main() {
     expect(rows.map((e) => e.category).toSet(), {'Normal', 'Jain'});
     expect(rows.every((e) => e.headcount == 0), isTrue);
     expect(rows.every((e) => e.itemsJson.contains('Rice')), isTrue);
+    await db.close();
+  });
+
+  test('v7 -> v8 adds inventory columns with safe defaults', () async {
+    final db = await migrated(7);
+    final now = DateTime.now().toUtc();
+    final ingId = await db.into(db.ingredients).insert(
+        IngredientsCompanion.insert(
+            name: 'Rice', unit: 'kg', createdAt: now, updatedAt: now));
+    final ing = await (db.select(db.ingredients)
+          ..where((i) => i.id.equals(ingId)))
+        .getSingle();
+    expect(ing.stockQty, 0);
+    expect(ing.lowStockAt, null);
     await db.close();
   });
 

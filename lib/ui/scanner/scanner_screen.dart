@@ -212,6 +212,24 @@ class _ResultOverlay extends StatelessWidget {
                   ),
                 ),
               ],
+              if (result.headcountReached) ...[
+                const SizedBox(height: NbSpace.md),
+                Align(
+                  alignment: Alignment.center,
+                  child: NbSurface(
+                    background: t.color.warn,
+                    intensity: NbIntensity.full,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: NbSpace.md, vertical: NbSpace.sm),
+                    child: Text(
+                        'PLANNED ~${result.plannedCount} '
+                        '${result.memberCategory?.toUpperCase() ?? ''} — '
+                        'THIS IS #${result.servedCount}',
+                        textAlign: TextAlign.center,
+                        style: t.text.label.copyWith(color: t.color.onWarn)),
+                  ),
+                ),
+              ],
               const SizedBox(height: NbSpace.xl),
               NbButton(
                 label: 'Next',
