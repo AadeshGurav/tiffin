@@ -282,10 +282,12 @@ canteens keeps both sets of accounts.
 
 ## 4. If something's wrong
 
-- **A client says "host unreachable"** — the host phone is off, asleep, on a
-  different Wi-Fi, or (iPhone) the app was backgrounded. Wake it, check
-  **Admin ▸ Hosting & LAN** shows *serving*, and tap **Retry** / **Find host
-  again**. If discovery won't find it, use **Connect by IP address**.
+- **A client says it can't reach the host** — the message now names the
+  address it tried (`http://192.168.x.x:8710`). Usual causes: the host phone
+  is off, asleep, on a different Wi-Fi, or (iPhone) the app was backgrounded.
+  Wake it, check **Settings ▸ Hosting & LAN** shows *serving*, and tap
+  **Search again**. If discovery finds the host but connecting still fails,
+  use **Connect by IP address** with the IP shown on the host.
 - **Camera won't open** — grant the camera permission in the OS settings for
   Tiffin.
 - **Host logs** — the host writes a rolling log file on its own storage

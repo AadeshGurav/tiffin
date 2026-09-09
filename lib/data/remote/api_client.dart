@@ -73,16 +73,24 @@ class ApiClient {
     for (var attempt = 0;; attempt++) {
       try {
         return await call();
-      } on SocketException {
-        if (attempt >= retries) throw const HostUnreachableException();
-      } on http.ClientException {
-        if (attempt >= retries) throw const HostUnreachableException();
-      } on HttpException {
-        if (attempt >= retries) throw const HostUnreachableException();
+      } on SocketException catch (e) {
+        if (attempt >= retries) throw _unreachable(e.osError?.message ?? '$e');
+      } on http.ClientException catch (e) {
+        if (attempt >= retries) throw _unreachable(e.message);
+      } on HttpException catch (e) {
+        if (attempt >= retries) throw _unreachable(e.message);
       }
       await Future<void>.delayed(Duration(milliseconds: 250 * (1 << attempt)));
     }
   }
+
+  /// Names the address that failed so a connection problem is diagnosable
+  /// without a debugger (CLAUDE.md §8).
+  HostUnreachableException _unreachable(String detail) =>
+      HostUnreachableException(
+        'Could not reach the host at $baseUrl. Check both devices are on the '
+        'same Wi-Fi and the host is serving. ($detail)',
+      );
 
   void _throwForStatus(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) return;

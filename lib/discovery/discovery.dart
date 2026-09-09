@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:nsd/nsd.dart' as nsd;
 
 import '../core/config.dart';
@@ -11,10 +13,17 @@ class DiscoveredHost {
       {required this.name, required this.host, required this.port});
 
   final String name;
+
+  /// A dialable address — an IP literal, never an mDNS `.local` name (see
+  /// [_dialableAddress]).
   final String host;
   final int port;
 
-  String get baseUrl => 'http://$host:$port';
+  String get baseUrl {
+    // IPv6 literals need brackets in a URL authority.
+    final authority = host.contains(':') ? '[$host]' : host;
+    return 'http://$authority:$port';
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -159,8 +168,10 @@ class HostBrowser {
   void _emit() {
     final now = DateTime.now();
     for (final service in _discovery?.services ?? const <nsd.Service>[]) {
-      final host = service.host;
+      final host = dialableAddress(service);
       final port = service.port;
+      // A service with no resolved address yet is skipped this round; it lands
+      // in a later _emit once nsd's IP lookup completes.
       if (host == null || port == null) continue;
       _seen[DiscoveredHost(
         name: service.name ?? host,
@@ -171,6 +182,33 @@ class HostBrowser {
     _seen.removeWhere((_, at) => now.difference(at) > _staleAfter);
     _emittedOnce = true;
     if (!_controller.isClosed) _controller.add(_seen.keys.toList());
+  }
+
+  /// The address a client can actually open a socket to. Prefers a routable
+  /// IPv4, then a routable IPv6. **Never returns `service.host`** when it's an
+  /// mDNS `.local` name — `dart:io`'s HTTP client has no mDNS resolver, so
+  /// dialing one throws `SocketException` and the host looks "offline" even
+  /// though discovery found it. Only a bare IP literal in `host` is accepted.
+  @visibleForTesting
+  static String? dialableAddress(nsd.Service service) {
+    final addresses = service.addresses ?? const <InternetAddress>[];
+    for (final a in addresses) {
+      if (a.type == InternetAddressType.IPv4 &&
+          !a.isLoopback &&
+          !a.isLinkLocal) {
+        return a.address;
+      }
+    }
+    for (final a in addresses) {
+      if (a.type == InternetAddressType.IPv6 &&
+          !a.isLoopback &&
+          !a.isLinkLocal) {
+        return a.address;
+      }
+    }
+    final host = service.host;
+    if (host != null && InternetAddress.tryParse(host) != null) return host;
+    return null;
   }
 
   Future<void> _teardownDiscovery() async {
