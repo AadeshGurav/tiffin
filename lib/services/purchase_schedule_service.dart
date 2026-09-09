@@ -21,7 +21,11 @@ class PurchaseScheduleService {
 
   final AppDatabase _db;
 
-  /// Returns the count of newly created items.
+  /// Builds/refreshes the shopping list from the menu calendar in the range.
+  /// For each entry, `need per ingredient = Σ(per-plate recipe qty) ×
+  /// entry.headcount`, summed per `(date, ingredient)` and rounded up to 2 dp.
+  /// Re-runnable: un-purchased `auto` rows are recomputed, purchased rows and
+  /// `manual` rows are left alone. Returns the count of newly created rows.
   Future<int> generate(DateTime start, DateTime end) async {
     if (start.isAfter(end)) {
       throw const ValidationException('start must be on or before end.');
@@ -36,64 +40,79 @@ class PurchaseScheduleService {
         .get();
     if (entries.isEmpty) return 0;
 
-    // dishNameLower -> recipe row
     final allRecipes = await _db.select(_db.recipes).get();
     final recipeByDish = {for (final r in allRecipes) r.dishNameLower: r};
-
-    // ingredientId -> ingredient row (only those a matched recipe references)
     final allIngredients = await _db.select(_db.ingredients).get();
     final ingredientById = {for (final i in allIngredients) i.id: i};
 
-    final now = DateTime.now().toUtc();
-    var created = 0;
+    // (date, ingredientId) -> total quantity needed.
+    final need = <(DateTime, int), double>{};
 
     for (final entry in entries) {
+      if (entry.headcount <= 0) continue;
       final entryDate = _dateOnly(entry.date);
       final items =
           (jsonDecode(entry.itemsJson) as List<dynamic>).cast<String>();
       for (final itemName in items) {
         final recipe = recipeByDish[itemName.trim().toLowerCase()];
         if (recipe == null) continue;
-
-        final recipeIngredients = (jsonDecode(recipe.ingredientsJson)
-                as List<dynamic>)
-            .map((e) => RecipeIngredient.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        for (final ri in recipeIngredients) {
-          final ingredient = ingredientById[ri.ingredientId];
-          if (ingredient == null) {
-            continue; // deleted after the recipe was saved
-          }
-
-          final exists = await (_db.select(_db.purchaseScheduleItems)
-                    ..where((p) =>
-                        p.date.equals(entryDate) &
-                        p.ingredientId.equals(ri.ingredientId))
-                    ..limit(1))
-                  .getSingleOrNull() !=
-              null;
-          if (exists) continue;
-
-          await _db.into(_db.purchaseScheduleItems).insert(
-                PurchaseScheduleItemsCompanion.insert(
-                  date: entryDate,
-                  ingredientId: ri.ingredientId,
-                  ingredientName: ingredient.name,
-                  ingredientUnit: ingredient.unit,
-                  quantityNote:
-                      '${formatQuantity(ri.quantity)} ${ingredient.unit}',
-                  source: 'auto',
-                  createdAt: now,
-                  updatedAt: now,
-                ),
-              );
-          created++;
+        final lines = (jsonDecode(recipe.ingredientsJson) as List<dynamic>)
+            .map((e) => RecipeIngredient.fromJson(e as Map<String, dynamic>));
+        for (final ri in lines) {
+          if (!ingredientById.containsKey(ri.ingredientId)) continue;
+          final key = (entryDate, ri.ingredientId);
+          need[key] = (need[key] ?? 0) + ri.quantity * entry.headcount;
         }
+      }
+    }
+
+    final now = DateTime.now().toUtc();
+    var created = 0;
+
+    for (final entry in need.entries) {
+      final (date, ingredientId) = entry.key;
+      final ingredient = ingredientById[ingredientId]!;
+      final qty = _roundUp2(entry.value);
+      final note = '${formatQuantity(qty)} ${ingredient.unit}';
+
+      final existing = await (_db.select(_db.purchaseScheduleItems)
+            ..where((p) =>
+                p.date.equals(date) &
+                p.ingredientId.equals(ingredientId) &
+                p.source.equals('auto'))
+            ..limit(1))
+          .getSingleOrNull();
+
+      if (existing == null) {
+        await _db.into(_db.purchaseScheduleItems).insert(
+              PurchaseScheduleItemsCompanion.insert(
+                date: date,
+                ingredientId: ingredientId,
+                ingredientName: ingredient.name,
+                ingredientUnit: ingredient.unit,
+                quantityNote: note,
+                source: 'auto',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+        created++;
+      } else if (!existing.purchased) {
+        // Headcount or recipe changed since last run — refresh the figure.
+        await (_db.update(_db.purchaseScheduleItems)
+              ..where((p) => p.id.equals(existing.id)))
+            .write(PurchaseScheduleItemsCompanion(
+          quantityNote: Value(note),
+          ingredientName: Value(ingredient.name),
+          ingredientUnit: Value(ingredient.unit),
+          updatedAt: Value(now),
+        ));
       }
     }
     return created;
   }
+
+  double _roundUp2(double x) => (x * 100).ceil() / 100;
 
   Future<List<PurchaseScheduleItem>> list({
     DateTime? start,

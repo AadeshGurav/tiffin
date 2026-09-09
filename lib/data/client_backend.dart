@@ -135,11 +135,13 @@ class ClientBackend implements Backend {
   @override
   Future<Member> updateMember(int id, MemberPatch patch) async {
     final body = <String, dynamic>{
+      if (patch.type != null) 'type': patch.type,
       if (patch.name != null) 'name': patch.name,
       if (patch.className != null) 'className': patch.className,
       if (patch.rollNumber != null) 'rollNumber': patch.rollNumber,
       if (patch.staffId != null) 'staffId': patch.staffId,
       if (patch.status != null) 'status': patch.status,
+      if (patch.category != null) 'category': patch.category,
       if (patch.touchesGrace) 'graceAllowanceOverride': patch.graceValue,
     };
     return Member.fromJson(_obj(await _api.patchJson('/members/$id', body)));
@@ -261,6 +263,14 @@ class ClientBackend implements Backend {
   @override
   Future<MenuEntry> addMenuEntry(MenuEntryDraft draft) async =>
       MenuEntry.fromJson(_obj(await _api.postJson('/menu', draft.toJson())));
+
+  @override
+  Future<MenuEntry> updateMenuEntry(int id,
+          {List<String>? items, int? headcount}) async =>
+      MenuEntry.fromJson(_obj(await _api.patchJson('/menu/$id', {
+        if (items != null) 'items': items,
+        if (headcount != null) 'headcount': headcount,
+      })));
 
   @override
   Future<void> deleteMenuEntry(int id) => _api.deleteJson('/menu/$id');

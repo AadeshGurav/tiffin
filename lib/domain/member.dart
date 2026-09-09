@@ -42,6 +42,7 @@ class Member {
     required this.balances,
     this.graceAllowanceOverride,
     required this.status,
+    this.category = 'Normal',
     required this.createdAt,
     required this.updatedAt,
   });
@@ -57,6 +58,7 @@ class Member {
         balances: UnitCounts.fromJson(j['balances'] as Map<String, dynamic>),
         graceAllowanceOverride: j['graceAllowanceOverride'] as int?,
         status: j['status'] as String,
+        category: j['category'] as String? ?? 'Normal',
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
@@ -71,6 +73,7 @@ class Member {
   final UnitCounts balances;
   final int? graceAllowanceOverride;
   final String status; // 'active' | 'inactive'
+  final String category; // dietary/serving group, e.g. 'Jain'
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -87,6 +90,7 @@ class Member {
         'balances': balances.toJson(),
         'graceAllowanceOverride': graceAllowanceOverride,
         'status': status,
+        'category': category,
         'createdAt': createdAt.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };
@@ -102,6 +106,7 @@ class MemberDraft {
     this.staffId,
     this.balances = const UnitCounts(),
     this.graceAllowanceOverride,
+    this.category = 'Normal',
   });
 
   factory MemberDraft.fromJson(Map<String, dynamic> j) => MemberDraft(
@@ -114,6 +119,9 @@ class MemberDraft {
             ? const UnitCounts()
             : UnitCounts.fromJson(j['balances'] as Map<String, dynamic>),
         graceAllowanceOverride: j['graceAllowanceOverride'] as int?,
+        category: (j['category'] as String?)?.trim().isNotEmpty == true
+            ? (j['category'] as String).trim()
+            : 'Normal',
       );
 
   final String type;
@@ -123,6 +131,7 @@ class MemberDraft {
   final String? staffId;
   final UnitCounts balances;
   final int? graceAllowanceOverride;
+  final String category;
 
   Map<String, dynamic> toJson() => {
         'type': type,
@@ -132,6 +141,7 @@ class MemberDraft {
         'staffId': staffId,
         'balances': balances.toJson(),
         'graceAllowanceOverride': graceAllowanceOverride,
+        'category': category,
       };
 }
 
@@ -139,11 +149,13 @@ class MemberDraft {
 /// `graceAllowanceOverride` uses [Sentinel] so it can be explicitly set to null.
 class MemberPatch {
   const MemberPatch({
+    this.type,
     this.name,
     this.className,
     this.rollNumber,
     this.staffId,
     this.status,
+    this.category,
     this.graceAllowanceOverride = const _Unset(),
   });
 
@@ -151,21 +163,25 @@ class MemberPatch {
   /// touched when the key is actually present, so a PATCH can clear it (send
   /// null) or leave it alone (omit it).
   factory MemberPatch.fromJson(Map<String, dynamic> j) => MemberPatch(
+        type: j['type'] as String?,
         name: j['name'] as String?,
         className: j['className'] as String?,
         rollNumber: j['rollNumber'] as String?,
         staffId: j['staffId'] as String?,
         status: j['status'] as String?,
+        category: j['category'] as String?,
         graceAllowanceOverride: j.containsKey('graceAllowanceOverride')
             ? j['graceAllowanceOverride'] as int?
             : const _Unset(),
       );
 
+  final String? type;
   final String? name;
   final String? className;
   final String? rollNumber;
   final String? staffId;
   final String? status;
+  final String? category;
   final Object? graceAllowanceOverride; // int? value, or _Unset
 
   bool get touchesGrace => graceAllowanceOverride is! _Unset;

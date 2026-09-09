@@ -216,13 +216,14 @@ class ReportService {
       final entries = await (_db.select(_db.menuEntries)
             ..orderBy([(m) => OrderingTerm.desc(m.date)]))
           .get();
-      final sheet =
-          Sheet('Menu', headers: ['Date', 'Meal', 'Categories', 'Items', 'By']);
+      final sheet = Sheet('Menu',
+          headers: ['Date', 'Meal', 'Category', 'Plates', 'Items', 'By']);
       for (final e in entries.where((e) => inRange(e.date))) {
         sheet.add([
           day(e.date),
           e.mealType,
-          _joinJsonList(e.categoriesJson),
+          e.category,
+          e.headcount,
           _joinJsonList(e.itemsJson),
           e.createdBy,
         ]);

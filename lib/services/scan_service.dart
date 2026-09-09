@@ -115,6 +115,7 @@ class ScanService {
             mealType: mealType.wire,
             scannedAt: nowUtc,
             viaGrace: Value(usedGrace),
+            memberCategory: Value(member.category),
           ));
     });
 

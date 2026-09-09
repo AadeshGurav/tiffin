@@ -98,7 +98,10 @@ class MenuScreen extends ConsumerWidget {
           final dayEntries = list
               .where((e) => _sameDay(e.date, selected))
               .toList()
-            ..sort((a, b) => a.mealType.index.compareTo(b.mealType.index));
+            ..sort((a, b) {
+              final byMeal = a.mealType.index.compareTo(b.mealType.index);
+              return byMeal != 0 ? byMeal : a.category.compareTo(b.category);
+            });
 
           return Column(
             children: [
@@ -120,6 +123,7 @@ class MenuScreen extends ConsumerWidget {
                 child: _DayPanel(
                   day: selected,
                   entries: dayEntries,
+                  onEdit: (e) => _editEntry(context, ref, e),
                   onDelete: (id) async {
                     final ok = await runGuarded(
                       context,
@@ -145,7 +149,8 @@ class MenuScreen extends ConsumerWidget {
     if (!context.mounted) return;
     final date = day;
     var meal = MealType.lunch;
-    final selectedCategories = <String>{};
+    String? category = categories.isEmpty ? null : categories.first.name;
+    final headcount = TextEditingController();
     final items = TextEditingController();
     String? error;
 
@@ -176,23 +181,25 @@ class MenuScreen extends ConsumerWidget {
                   onChanged: (m) => setLocal(() => meal = m ?? meal),
                 ),
                 const SizedBox(height: NbSpace.sm),
-                Text('Categories (optional)', style: t.text.label),
-                const SizedBox(height: NbSpace.xs),
-                Wrap(
-                  spacing: NbSpace.sm,
-                  runSpacing: NbSpace.xs,
+                Text('Category', style: t.text.label),
+                Row(
                   children: [
-                    for (final c in categories)
-                      FilterChip(
-                        label: Text(c.name),
-                        selected: selectedCategories.contains(c.name),
-                        onSelected: (v) => setLocal(() => v
-                            ? selectedCategories.add(c.name)
-                            : selectedCategories.remove(c.name)),
+                    Expanded(
+                      child: DropdownButton<String>(
+                        value: category,
+                        isExpanded: true,
+                        hint: const Text('Pick or add one'),
+                        items: [
+                          for (final c in categories)
+                            DropdownMenuItem(
+                                value: c.name, child: Text(c.name)),
+                        ],
+                        onChanged: (v) => setLocal(() => category = v),
                       ),
-                    ActionChip(
-                      avatar: const Icon(Icons.add, size: 18),
-                      label: const Text('New category'),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      tooltip: 'New category',
                       onPressed: () async {
                         final name = await _promptCategoryName(dialogContext);
                         if (name == null || !dialogContext.mounted) return;
@@ -205,17 +212,22 @@ class MenuScreen extends ConsumerWidget {
                             categories
                               ..add(c)
                               ..sort((a, b) => a.name.compareTo(b.name));
-                            selectedCategories.add(c.name);
                           },
                           successMessage: 'Category added.',
                         );
                         if (created) {
                           ref.invalidate(_categoriesProvider);
-                          setLocal(() {});
+                          setLocal(() => category = name);
                         }
                       },
                     ),
                   ],
+                ),
+                const SizedBox(height: NbSpace.sm),
+                NbTextField(
+                  label: 'Approx plates',
+                  controller: headcount,
+                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
@@ -240,6 +252,10 @@ class MenuScreen extends ConsumerWidget {
             NbButton(
               label: 'Add',
               onPressed: () {
+                if (category == null) {
+                  setLocal(() => error = 'Pick a category.');
+                  return;
+                }
                 if (parseItems().isEmpty) {
                   setLocal(() => error = 'Add at least one item.');
                   return;
@@ -257,11 +273,63 @@ class MenuScreen extends ConsumerWidget {
       () => ref.read(backendProvider).addMenuEntry(MenuEntryDraft(
             date: date,
             mealType: meal,
-            categories: selectedCategories.toList(),
+            category: category!,
+            headcount: int.tryParse(headcount.text.trim()) ?? 0,
             items: parseItems(),
             createdBy: '',
           )),
       successMessage: 'Entry added.',
+    );
+    if (saved) ref.invalidate(_menuProvider);
+  }
+
+  Future<void> _editEntry(
+      BuildContext context, WidgetRef ref, MenuEntry entry) async {
+    final t = context.tokens;
+    final headcount = TextEditingController(text: '${entry.headcount}');
+    final items = TextEditingController(text: entry.items.join(', '));
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('${entry.mealType.wire.toUpperCase()} · ${entry.category}',
+            style: t.text.heading),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NbTextField(
+                label: 'Approx plates',
+                controller: headcount,
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: NbSpace.sm),
+              NbTextField(label: 'Items (comma-separated)', controller: items),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          NbButton(
+              label: 'Save', onPressed: () => Navigator.pop(context, true)),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final saved = await runGuarded(
+      context,
+      () => ref.read(backendProvider).updateMenuEntry(
+            entry.id,
+            headcount: int.tryParse(headcount.text.trim()) ?? 0,
+            items: items.text
+                .split(',')
+                .map((s) => s.trim())
+                .where((s) => s.isNotEmpty)
+                .toList(),
+          ),
+      successMessage: 'Entry updated.',
     );
     if (saved) ref.invalidate(_menuProvider);
   }
@@ -421,12 +489,14 @@ class _DayPanel extends StatelessWidget {
   const _DayPanel({
     required this.day,
     required this.entries,
+    required this.onEdit,
     required this.onDelete,
     required this.onAdd,
   });
 
   final DateTime day;
   final List<MenuEntry> entries;
+  final ValueChanged<MenuEntry> onEdit;
   final ValueChanged<int> onDelete;
   final VoidCallback onAdd;
 
@@ -458,6 +528,7 @@ class _DayPanel extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: NbSpace.sm),
               child: NbSurface(
+                onTap: () => onEdit(e),
                 child: Row(
                   children: [
                     Container(
@@ -472,7 +543,7 @@ class _DayPanel extends StatelessWidget {
                         children: [
                           Text(
                               '${e.mealType.wire.toUpperCase()} · '
-                              '${e.categories.join(", ")}',
+                              '${e.category}  ·  ~${e.headcount} plates',
                               style: t.text.label),
                           Text(e.items.join(', '), style: t.text.body),
                         ],

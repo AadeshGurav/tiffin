@@ -27,6 +27,7 @@ Member memberFromRow(db.Member r) => Member(
       ),
       graceAllowanceOverride: r.graceAllowanceOverride,
       status: r.status,
+      category: r.category,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     );
@@ -42,6 +43,7 @@ ScanRecord scanFromRow(db.Scan r, String memberName) => ScanRecord(
       reversed: r.reversed,
       reversedAt: r.reversedAt,
       reversedBy: r.reversedBy,
+      memberCategory: r.memberCategory,
     );
 
 Topup topupFromRow(db.Topup r) => Topup(
@@ -86,9 +88,8 @@ MenuEntry menuEntryFromRow(db.MenuEntry r) => MenuEntry(
       id: r.id,
       date: r.date,
       mealType: MealType.fromWire(r.mealType),
-      categories: (jsonDecode(r.categoriesJson) as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      category: r.category,
+      headcount: r.headcount,
       items: (jsonDecode(r.itemsJson) as List<dynamic>)
           .map((e) => e as String)
           .toList(),

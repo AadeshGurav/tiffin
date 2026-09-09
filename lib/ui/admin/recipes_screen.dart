@@ -114,6 +114,9 @@ Future<void> openRecipeForm(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 NbTextField(label: 'Dish name', controller: dish),
+                const SizedBox(height: NbSpace.xs),
+                Text('Quantities are for ONE plate / one serving.',
+                    style: t.text.label),
                 const SizedBox(height: NbSpace.md),
                 for (var i = 0; i < lines.length; i++)
                   Padding(
@@ -140,7 +143,7 @@ Future<void> openRecipeForm(
                         Expanded(
                           flex: 2,
                           child: NbTextField(
-                            label: 'qty',
+                            label: 'per plate',
                             controller: lines[i].qty,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),

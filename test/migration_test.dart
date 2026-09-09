@@ -16,7 +16,7 @@ void main() {
 
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  const current = 6;
+  const current = 7;
 
   Future<String> timezoneOf(AppDatabase db) async =>
       (await db.select(db.appSettings).getSingle()).localTimezone;
@@ -40,7 +40,7 @@ void main() {
     return db;
   }
 
-  for (final from in [1, 2, 3, 4, 5]) {
+  for (final from in [1, 2, 3, 4, 5, 6]) {
     test('v$from -> v$current keeps the schema valid and the row intact',
         () async {
       final db = await migrated(from);
@@ -84,6 +84,46 @@ void main() {
     expect(row.reversed, isFalse);
     expect(row.reversedAt, null);
     expect(row.reversedBy, null);
+    await db.close();
+  });
+
+  test('v6 -> v7 fans a multi-category menu entry into one row per category',
+      () async {
+    final schema = await verifier.schemaAt(6);
+    final seed = schema.newConnection();
+    await seed.executor.ensureOpen(_SeedUser(6));
+    await seed.executor
+        .runCustom("INSERT INTO app_settings (id, app_name) VALUES (0, 'T')");
+    await seed.executor.runCustom(
+      'INSERT INTO menu_entries (id, date, meal_type, categories_json, '
+      "items_json, created_by) VALUES (1, 0, 'lunch', ?, ?, 'admin')",
+      ['["Normal","Jain"]', '["Rice","Dal"]'],
+    );
+    await seed.executor.close();
+
+    final db = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, current);
+
+    final rows = await db.select(db.menuEntries).get();
+    expect(rows.map((e) => e.category).toSet(), {'Normal', 'Jain'});
+    expect(rows.every((e) => e.headcount == 0), isTrue);
+    expect(rows.every((e) => e.itemsJson.contains('Rice')), isTrue);
+    await db.close();
+  });
+
+  test('v6 -> v7 defaults a member to the Normal category', () async {
+    final db = await migrated(6);
+    final now = DateTime.now().toUtc();
+    final id = await db.into(db.members).insert(MembersCompanion.insert(
+          type: 'student',
+          name: 'Cat Default',
+          qrCodeId: 'qr-cat-default',
+          createdAt: now,
+          updatedAt: now,
+        ));
+    final row = await (db.select(db.members)..where((m) => m.id.equals(id)))
+        .getSingle();
+    expect(row.category, 'Normal');
     await db.close();
   });
 

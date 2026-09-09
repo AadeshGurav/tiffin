@@ -70,6 +70,17 @@ Router planningRoutes(HostContainer c) {
     return jsonOk((await c.menu.addEntry(draft)).toJson());
   });
 
+  router.patch('/menu/<id>', (Request request, String id) async {
+    requireRole(request, rolesAdmin);
+    final body = await readJsonObject(request);
+    final updated = await c.menu.updateEntry(
+      pathId(id, entity: 'menu entry'),
+      items: (body['items'] as List<dynamic>?)?.map((e) => '$e').toList(),
+      headcount: (body['headcount'] as num?)?.toInt(),
+    );
+    return jsonOk(updated.toJson());
+  });
+
   router.delete('/menu/<id>', (Request request, String id) async {
     requireRole(request, rolesAdmin);
     await c.menu.deleteEntry(pathId(id, entity: 'menu entry'));

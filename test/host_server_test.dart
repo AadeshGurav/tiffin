@@ -207,18 +207,21 @@ void main() {
         token: adminToken, body: {'name': 'Rice', 'unit': 'kg'});
     final riceId = rice.json['id'] as int;
 
+    // Per-plate recipe: 0.1 kg rice for one plate.
     await _send(http, 'POST', '$base/api/recipes', token: adminToken, body: {
       'dishName': 'Veg Pulao',
       'ingredients': [
-        {'ingredientId': riceId, 'quantity': 2}
+        {'ingredientId': riceId, 'quantity': 0.1}
       ],
     });
 
-    // Menu entry with no categories — categories are optional now.
+    await _send(http, 'POST', '$base/api/menu-categories',
+        token: adminToken, body: {'name': 'Normal'});
     await _send(http, 'POST', '$base/api/menu', token: adminToken, body: {
       'date': ymd(day),
       'mealType': 'lunch',
-      'categories': <String>[],
+      'category': 'Normal',
+      'headcount': 50,
       'items': ['Veg Pulao'],
     });
 
@@ -235,10 +238,10 @@ void main() {
         token: adminToken);
     final item = (jsonDecode(list.body) as List).single as Map<String, dynamic>;
     expect(item['ingredientName'], 'Rice');
-    // Quantity is rendered from the recipe number + the ingredient's unit.
-    expect(item['quantityNote'], '2 kg');
+    // 0.1 kg/plate × 50 plates = 5 kg.
+    expect(item['quantityNote'], '5 kg');
 
-    // Idempotent: a second run over the same range adds nothing.
+    // Idempotent for a repeat; but a headcount change re-computes the figure.
     final again = await _send(
         http,
         'POST',
@@ -246,6 +249,59 @@ void main() {
             '?start=${ymd(day)}&end=${ymd(day.add(const Duration(days: 1)))}',
         token: adminToken);
     expect(again.json['created'], 0);
+
+    final entryId = (jsonDecode((await _send(
+                http, 'GET', '$base/api/menu?start=${ymd(day)}&end=${ymd(day)}',
+                token: adminToken))
+            .body) as List)
+        .single['id'];
+    await _send(http, 'PATCH', '$base/api/menu/$entryId',
+        token: adminToken, body: {'headcount': 80});
+    await _send(
+        http,
+        'POST',
+        '$base/api/purchase-schedule/generate'
+            '?start=${ymd(day)}&end=${ymd(day.add(const Duration(days: 1)))}',
+        token: adminToken);
+    final after = await _send(http, 'GET', '$base/api/purchase-schedule',
+        token: adminToken);
+    expect((jsonDecode(after.body) as List).single['quantityNote'], '8 kg');
+  });
+
+  test('member category defaults to Normal and is editable; scans record it',
+      () async {
+    await _send(http, 'PATCH', '$base/api/settings', token: adminToken, body: {
+      'unitPrices': {'lunch': 40.0, 'breakfast': 25.0, 'brunch': 50.0},
+      'mealWindows': {
+        'breakfast': {'start': '00:00', 'end': '00:01'},
+        'brunch': {'start': '00:00', 'end': '00:01'},
+        'lunch': {'start': '00:02', 'end': '23:59'},
+      },
+    });
+    final created = await _send(http, 'POST', '$base/api/members',
+        token: adminToken,
+        body: {'type': 'staff', 'name': 'Kiran', 'staffId': 'K1'});
+    final id = created.json['id'] as int;
+    expect(created.json['category'], 'Normal');
+
+    final patched = await _send(http, 'PATCH', '$base/api/members/$id',
+        token: adminToken, body: {'category': 'Jain'});
+    expect(patched.json['category'], 'Jain');
+
+    await _send(http, 'POST', '$base/api/topups', token: adminToken, body: {
+      'memberId': id,
+      'lunchUnits': 1,
+      'paymentMethod': 'cash',
+    });
+    await _send(http, 'POST', '$base/api/scan',
+        token: adminToken, body: {'qrCodeId': created.json['qrCodeId']});
+
+    final scans =
+        await _send(http, 'GET', '$base/api/scans', token: adminToken);
+    final row = (jsonDecode(scans.body) as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((s) => s['memberId'] == id);
+    expect(row['memberCategory'], 'Jain');
   });
 
   test('grace allowance lets a zero balance go negative, then hard-stops',

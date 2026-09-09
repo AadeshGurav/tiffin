@@ -79,6 +79,8 @@ abstract interface class Backend {
   Future<void> deleteMenuCategory(int id);
   Future<List<MenuEntry>> listMenu({DateTime? start, DateTime? end});
   Future<MenuEntry> addMenuEntry(MenuEntryDraft draft);
+  Future<MenuEntry> updateMenuEntry(int id,
+      {List<String>? items, int? headcount});
   Future<void> deleteMenuEntry(int id);
 
   // ---- ingredients & recipes ----------------------------

@@ -216,6 +216,7 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
   late final _grace = TextEditingController(
       text: widget.existing?.graceAllowanceOverride?.toString() ?? '');
   late String _status = widget.existing?.status ?? 'active';
+  late String _category = widget.existing?.category ?? 'Normal';
   bool _busy = false;
 
   bool get _isEdit => widget.existing != null;
@@ -228,11 +229,13 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
         await backend.updateMember(
           widget.existing!.id,
           MemberPatch(
+            type: _type,
             name: _name.text.trim(),
             className: _type == 'student' ? _className.text.trim() : null,
             rollNumber: _type == 'student' ? _rollNumber.text.trim() : null,
             staffId: _type == 'staff' ? _staffId.text.trim() : null,
             status: _status,
+            category: _category,
             graceAllowanceOverride:
                 _grace.text.isEmpty ? null : int.parse(_grace.text),
           ),
@@ -244,6 +247,7 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
           className: _type == 'student' ? _className.text.trim() : null,
           rollNumber: _type == 'student' ? _rollNumber.text.trim() : null,
           staffId: _type == 'staff' ? _staffId.text.trim() : null,
+          category: _category,
           graceAllowanceOverride:
               _grace.text.isEmpty ? null : int.parse(_grace.text),
         ));
@@ -278,8 +282,7 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
                 ButtonSegment(value: 'staff', label: Text('Staff')),
               ],
               selected: {_type},
-              onSelectionChanged:
-                  _isEdit ? null : (s) => setState(() => _type = s.first),
+              onSelectionChanged: (s) => setState(() => _type = s.first),
             ),
             const SizedBox(height: NbSpace.md),
             NbTextField(label: 'Name', controller: _name, autofocus: true),
@@ -290,6 +293,11 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
               NbTextField(label: 'Roll number', controller: _rollNumber),
             ] else
               NbTextField(label: 'Staff ID', controller: _staffId),
+            const SizedBox(height: NbSpace.md),
+            _CategoryField(
+              value: _category,
+              onChanged: (c) => setState(() => _category = c),
+            ),
             const SizedBox(height: NbSpace.md),
             NbTextField(
               label: 'Grace override (blank = global default)',
@@ -322,6 +330,42 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Dropdown of the menu categories (Jain / Normal / Staff …) plus whatever the
+/// member already has, so counting a scan against a category works.
+class _CategoryField extends ConsumerWidget {
+  const _CategoryField({required this.value, required this.onChanged});
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = context.tokens;
+    final fromMenu =
+        ref.watch(menuCategoriesProvider).asData?.value ?? const [];
+    final names = {
+      value,
+      'Normal',
+      for (final c in fromMenu) c.name,
+    }.toList()
+      ..sort();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('CATEGORY', style: t.text.label),
+        DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          items: [
+            for (final n in names) DropdownMenuItem(value: n, child: Text(n)),
+          ],
+          onChanged: (v) => onChanged(v ?? value),
+        ),
+      ],
     );
   }
 }

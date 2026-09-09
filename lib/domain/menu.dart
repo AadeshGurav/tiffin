@@ -41,7 +41,8 @@ class MenuEntry {
     required this.id,
     required this.date,
     required this.mealType,
-    required this.categories,
+    required this.category,
+    required this.headcount,
     required this.items,
     required this.createdBy,
   });
@@ -50,8 +51,8 @@ class MenuEntry {
         id: j['id'] as int,
         date: DateTime.parse(j['date'] as String),
         mealType: MealType.fromWire(j['mealType'] as String),
-        categories:
-            (j['categories'] as List<dynamic>).map((e) => e as String).toList(),
+        category: j['category'] as String,
+        headcount: (j['headcount'] as num?)?.toInt() ?? 0,
         items: (j['items'] as List<dynamic>).map((e) => e as String).toList(),
         createdBy: j['createdBy'] as String,
       );
@@ -59,7 +60,12 @@ class MenuEntry {
   final int id;
   final DateTime date;
   final MealType mealType;
-  final List<String> categories;
+
+  /// The single serving group this entry is for (e.g. 'Jain').
+  final String category;
+
+  /// Approximate plates of [category] expected for this meal.
+  final int headcount;
   final List<String> items;
   final String createdBy;
 
@@ -67,7 +73,8 @@ class MenuEntry {
         'id': id,
         'date': _ymd(date),
         'mealType': mealType.wire,
-        'categories': categories,
+        'category': category,
+        'headcount': headcount,
         'items': items,
         'createdBy': createdBy,
       };
@@ -77,7 +84,8 @@ class MenuEntryDraft {
   const MenuEntryDraft({
     required this.date,
     required this.mealType,
-    required this.categories,
+    required this.category,
+    required this.headcount,
     required this.items,
     required this.createdBy,
   });
@@ -85,22 +93,24 @@ class MenuEntryDraft {
   factory MenuEntryDraft.fromJson(Map<String, dynamic> j) => MenuEntryDraft(
         date: DateTime.parse(j['date'] as String),
         mealType: MealType.fromWire(j['mealType'] as String),
-        categories:
-            (j['categories'] as List<dynamic>).map((e) => e as String).toList(),
+        category: (j['category'] as String).trim(),
+        headcount: (j['headcount'] as num?)?.toInt() ?? 0,
         items: (j['items'] as List<dynamic>).map((e) => e as String).toList(),
         createdBy: j['createdBy'] as String,
       );
 
   final DateTime date;
   final MealType mealType;
-  final List<String> categories;
+  final String category;
+  final int headcount;
   final List<String> items;
   final String createdBy;
 
   Map<String, dynamic> toJson() => {
         'date': _ymd(date),
         'mealType': mealType.wire,
-        'categories': categories,
+        'category': category,
+        'headcount': headcount,
         'items': items,
         'createdBy': createdBy,
       };

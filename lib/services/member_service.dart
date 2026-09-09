@@ -59,6 +59,7 @@ class MemberService {
               breakfastBalance: Value(draft.balances.breakfast),
               brunchBalance: Value(draft.balances.brunch),
               graceAllowanceOverride: Value(draft.graceAllowanceOverride),
+              category: Value(_cleanCategory(draft.category)),
               createdAt: now,
               updatedAt: now,
             ));
@@ -97,26 +98,36 @@ class MemberService {
         .getSingleOrNull();
     if (existing == null) throw const NotFoundException('Member not found.');
 
-    // type is immutable; still guard against a staff_id on a student etc.
-    _validateTypeSpecific(
-      existing.type,
-      patch.className ?? existing.className,
-      patch.rollNumber ?? existing.rollNumber,
-      patch.staffId ?? existing.staffId,
-    );
+    // type is now editable (PRD §6.1). When it flips, the fields that don't
+    // apply to the new type are cleared so a converted member isn't left
+    // carrying a stale staff_id or class/roll.
+    final newType = patch.type ?? existing.type;
+    final typeChanged = newType != existing.type;
+    final className =
+        newType == 'staff' ? null : (patch.className ?? existing.className);
+    final rollNumber =
+        newType == 'staff' ? null : (patch.rollNumber ?? existing.rollNumber);
+    final staffId =
+        newType == 'student' ? null : (patch.staffId ?? existing.staffId);
+    _validateTypeSpecific(newType, className, rollNumber, staffId);
 
     final companion = MembersCompanion(
+      type: patch.type == null ? const Value.absent() : Value(newType),
       name: patch.name == null ? const Value.absent() : Value(patch.name!),
-      className: patch.className == null
-          ? const Value.absent()
-          : Value(patch.className),
-      rollNumber: patch.rollNumber == null
-          ? const Value.absent()
-          : Value(patch.rollNumber),
-      staffId:
-          patch.staffId == null ? const Value.absent() : Value(patch.staffId),
+      className: (patch.className != null || typeChanged)
+          ? Value(className)
+          : const Value.absent(),
+      rollNumber: (patch.rollNumber != null || typeChanged)
+          ? Value(rollNumber)
+          : const Value.absent(),
+      staffId: (patch.staffId != null || typeChanged)
+          ? Value(staffId)
+          : const Value.absent(),
       status:
           patch.status == null ? const Value.absent() : Value(patch.status!),
+      category: patch.category == null
+          ? const Value.absent()
+          : Value(_cleanCategory(patch.category!)),
       graceAllowanceOverride:
           patch.touchesGrace ? Value(patch.graceValue) : const Value.absent(),
       updatedAt: Value(DateTime.now().toUtc()),
@@ -205,6 +216,10 @@ class MemberService {
       throw ValidationException("Unknown member type '$type'.");
     }
   }
+
+  /// A blank category falls back to the default so a scan always counts
+  /// against some group.
+  String _cleanCategory(String c) => c.trim().isEmpty ? 'Normal' : c.trim();
 
   bool _isUniqueViolation(Exception e) =>
       e.toString().toLowerCase().contains('unique');

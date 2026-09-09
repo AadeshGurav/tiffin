@@ -93,6 +93,7 @@ class ScanRecord {
     required this.reversed,
     this.reversedAt,
     this.reversedBy,
+    this.memberCategory,
   });
 
   factory ScanRecord.fromJson(Map<String, dynamic> j) => ScanRecord(
@@ -108,6 +109,7 @@ class ScanRecord {
             ? null
             : DateTime.parse(j['reversedAt'] as String),
         reversedBy: j['reversedBy'] as String?,
+        memberCategory: j['memberCategory'] as String?,
       );
 
   final int id;
@@ -120,6 +122,7 @@ class ScanRecord {
   final bool reversed;
   final DateTime? reversedAt;
   final String? reversedBy;
+  final String? memberCategory;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -132,6 +135,7 @@ class ScanRecord {
         'reversed': reversed,
         'reversedAt': reversedAt?.toUtc().toIso8601String(),
         'reversedBy': reversedBy,
+        'memberCategory': memberCategory,
       };
 }
 

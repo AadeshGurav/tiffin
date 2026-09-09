@@ -36,6 +36,11 @@ class Members extends Table {
   /// Per-member grace override; null means "use the global default" (PRD §5).
   IntColumn get graceAllowanceOverride => integer().nullable()();
 
+  /// Dietary / serving group, drawn from [MenuCategories] (Jain, Normal,
+  /// Staff…). Drives per-category headcount vs actual counting: a scan by a
+  /// 'Jain' member counts against that day's planned Jain plates (PRD §6.5.1).
+  TextColumn get category => text().withDefault(const Constant('Normal'))();
+
   /// 'active' | 'inactive' — inactive fails scans with a clear reason.
   TextColumn get status => text().withDefault(const Constant('active'))();
 
@@ -64,6 +69,11 @@ class Scans extends Table {
   BoolColumn get reversed => boolean().withDefault(const Constant(false))();
   DateTimeColumn get reversedAt => dateTime().nullable()();
   TextColumn get reversedBy => text().nullable()();
+
+  /// The member's [Members.category] at scan time, denormalised so the
+  /// planned-vs-actual count per category stays correct if the member's
+  /// category is later changed. Null on scans recorded before v7.
+  TextColumn get memberCategory => text().nullable()();
 }
 
 // --------------------------------------------------------------------------
@@ -136,13 +146,25 @@ class MenuEntries extends Table {
   DateTimeColumn get date => dateTime()();
   TextColumn get mealType => text()();
 
-  /// JSON arrays of strings. Category names are validated against
-  /// [MenuCategories] in MenuService before insert; item names are free text
-  /// matched case-insensitively against [Recipes.dishNameLower].
-  TextColumn get categoriesJson => text()();
+  /// One entry is one meal, one date, one category — "Monday lunch, Jain".
+  /// Category name is validated against [MenuCategories]; the triple below is
+  /// unique so a category's meal is a single editable row (PRD §6.5.1).
+  TextColumn get category => text()();
+
+  /// Approximate plates of this category expected. Drives the purchase
+  /// schedule (× per-plate recipe) and the planned-vs-actual scan count.
+  IntColumn get headcount => integer().withDefault(const Constant(0))();
+
+  /// JSON array of strings — what one plate of this category gets. Item names
+  /// are free text matched case-insensitively against [Recipes.dishNameLower].
   TextColumn get itemsJson => text()();
 
   TextColumn get createdBy => text()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {date, mealType, category},
+      ];
 }
 
 // --------------------------------------------------------------------------

@@ -40,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -123,6 +123,43 @@ class AppDatabase extends _$AppDatabase {
                 [jsonEncode(converted), id],
               );
             }
+          },
+          from6To7: (m, schema) async {
+            // Members gain a serving category; scans record the member's
+            // category as-of-scan. Both additive and defaulted.
+            await m.addColumn(schema.members, schema.members.category);
+            await m.addColumn(schema.scans, schema.scans.memberCategory);
+
+            // A menu entry is now one meal / one date / one *single* category
+            // with a headcount, instead of a list of categories. Rebuild the
+            // table and fan each old row out into one row per category.
+            await customStatement(
+                'ALTER TABLE menu_entries RENAME TO _menu_entries_v6');
+            await m.createTable(schema.menuEntries);
+            final rows = await customSelect(
+              'SELECT date, meal_type, categories_json, items_json, created_by '
+              'FROM _menu_entries_v6',
+            ).get();
+            for (final row in rows) {
+              final cats = (jsonDecode(row.read<String>('categories_json'))
+                      as List<dynamic>)
+                  .cast<String>();
+              for (final category in cats.isEmpty ? const ['General'] : cats) {
+                await customStatement(
+                  'INSERT OR IGNORE INTO menu_entries '
+                  '(date, meal_type, category, headcount, items_json, '
+                  'created_by) VALUES (?, ?, ?, 0, ?, ?)',
+                  [
+                    row.read<int>('date'),
+                    row.read<String>('meal_type'),
+                    category,
+                    row.read<String>('items_json'),
+                    row.read<String>('created_by'),
+                  ],
+                );
+              }
+            }
+            await customStatement('DROP TABLE _menu_entries_v6');
           },
         ),
       );

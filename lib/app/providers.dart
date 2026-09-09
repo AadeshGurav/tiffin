@@ -14,9 +14,10 @@ import '../core/logging.dart';
 import '../data/backend.dart';
 import '../data/client_backend.dart';
 import '../data/host_backend.dart';
-import '../data/local/database.dart';
+import '../data/local/database.dart' hide MenuCategory;
 import '../data/remote/api_client.dart';
 import '../discovery/discovery.dart';
+import '../domain/menu.dart';
 import '../domain/ops.dart';
 import '../server/host_container.dart';
 import '../services/backup_service.dart';
@@ -498,6 +499,11 @@ class SessionController extends Notifier<AuthSession?> {
 
 final sessionProvider =
     NotifierProvider<SessionController, AuthSession?>(SessionController.new);
+
+/// The menu-category list (Jain / Normal / Staff …). Shared: menu entries and
+/// members are both tagged from it.
+final menuCategoriesProvider = FutureProvider.autoDispose<List<MenuCategory>>(
+    (ref) => ref.watch(backendProvider).listMenuCategories());
 
 /// Polls `GET /notifications` on a cadence (PRD §6.5.2) once signed in.
 final notificationsProvider =

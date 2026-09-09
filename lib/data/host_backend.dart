@@ -223,11 +223,17 @@ class HostBackend implements Backend {
     return _c.menu.addEntry(MenuEntryDraft(
       date: draft.date,
       mealType: draft.mealType,
-      categories: draft.categories,
+      category: draft.category,
+      headcount: draft.headcount,
       items: draft.items,
       createdBy: _username,
     ));
   }
+
+  @override
+  Future<MenuEntry> updateMenuEntry(int id,
+          {List<String>? items, int? headcount}) =>
+      _c.menu.updateEntry(id, items: items, headcount: headcount);
 
   @override
   Future<void> deleteMenuEntry(int id) => _c.menu.deleteEntry(id);

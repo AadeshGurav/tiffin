@@ -105,20 +105,55 @@ class MenuService {
     if (draft.items.isEmpty) {
       throw const ValidationException('At least one item is required.');
     }
-    // Categories are optional — a meal plus its items is a valid entry. Any
-    // categories that *are* named still have to exist.
-    if (draft.categories.isNotEmpty) {
-      await _validateCategoryNames(draft.categories);
+    if (draft.headcount < 0) {
+      throw const ValidationException('Headcount cannot be negative.');
     }
+    await _validateCategoryName(draft.category);
 
-    final id =
-        await _db.into(_db.menuEntries).insert(MenuEntriesCompanion.insert(
-              date: _dateOnly(draft.date),
-              mealType: draft.mealType.wire,
-              categoriesJson: jsonEncode(draft.categories),
-              itemsJson: jsonEncode(draft.items),
-              createdBy: draft.createdBy,
-            ));
+    try {
+      final id =
+          await _db.into(_db.menuEntries).insert(MenuEntriesCompanion.insert(
+                date: _dateOnly(draft.date),
+                mealType: draft.mealType.wire,
+                category: draft.category,
+                headcount: Value(draft.headcount),
+                itemsJson: jsonEncode(draft.items),
+                createdBy: draft.createdBy,
+              ));
+      final row = await (_db.select(_db.menuEntries)
+            ..where((e) => e.id.equals(id)))
+          .getSingle();
+      return menuEntryFromRow(row);
+    } on Exception catch (e) {
+      if (_isUnique(e)) {
+        throw ConflictException(
+          "There's already a ${draft.mealType.wire} entry for "
+          "'${draft.category}' on that date — edit it instead.",
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// Change the plate contents and/or the expected headcount of an entry.
+  Future<MenuEntry> updateEntry(
+    int id, {
+    List<String>? items,
+    int? headcount,
+  }) async {
+    if (items != null && items.isEmpty) {
+      throw const ValidationException('At least one item is required.');
+    }
+    if (headcount != null && headcount < 0) {
+      throw const ValidationException('Headcount cannot be negative.');
+    }
+    final n = await (_db.update(_db.menuEntries)..where((e) => e.id.equals(id)))
+        .write(MenuEntriesCompanion(
+      itemsJson:
+          items == null ? const Value.absent() : Value(jsonEncode(items)),
+      headcount: headcount == null ? const Value.absent() : Value(headcount),
+    ));
+    if (n == 0) throw const NotFoundException('Menu entry not found.');
     final row = await (_db.select(_db.menuEntries)
           ..where((e) => e.id.equals(id)))
         .getSingle();
@@ -131,17 +166,14 @@ class MenuService {
     if (n == 0) throw const NotFoundException('Menu entry not found.');
   }
 
-  Future<void> _validateCategoryNames(List<String> names) async {
-    final existing = (await (_db.select(_db.menuCategories)
-              ..where((c) => c.name.isIn(names)))
-            .get())
-        .map((c) => c.name)
-        .toSet();
-    final unknown = names.where((n) => !existing.contains(n)).toList();
-    if (unknown.isNotEmpty) {
+  Future<void> _validateCategoryName(String name) async {
+    final exists = await (_db.select(_db.menuCategories)
+              ..where((c) => c.name.equals(name)))
+            .getSingleOrNull() !=
+        null;
+    if (!exists) {
       throw ValidationException(
-        'Unknown menu category/categories: ${unknown.join(', ')}. '
-        'Create them first.',
+        "Unknown menu category '$name'. Create it first.",
       );
     }
   }

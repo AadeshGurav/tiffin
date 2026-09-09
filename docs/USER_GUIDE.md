@@ -152,10 +152,14 @@ process a **Refund** instead.
 
 ### 3.3 Members (admin)
 
-**Members** → **New** for a student (class + roll) or staff (staff ID).
-Tap a member to edit, set them inactive, or set a per-member grace override.
-**Credit** adds units without a bill. **QR** shows the printable code — it
-never changes, so reprinting a lost card is safe.
+**Members** → **New** for a student (class + roll) or staff (staff ID), and
+pick a **category** (Jain / Normal / Staff… — the same list as menu
+categories; defaults to Normal). Tap a member to edit — including switching
+student ↔ staff and changing the category — set them inactive, or set a
+per-member grace override. The category is what lets a scan count against
+that group's planned plates. **Credit** adds units without a bill. **QR**
+shows the printable code — it never changes, so reprinting a lost card is
+safe.
 
 ### 3.4 Scan log & reversal (admin)
 
@@ -165,12 +169,15 @@ row stays in the log, marked reversed.
 
 ### 3.5 Menu, kitchen setup, purchase schedule (admin; counter co-manages the schedule)
 
-- **Menu calendar** — tap a day, then **Add**: pick the meal, type the items
-  (comma-separated), and optionally tag categories. A meal plus its items is
-  enough — categories are optional, and you can create one with **New
-  category** right in the dialog. The **⊞ categories** button in the top bar
-  opens the full list (rename / delete); it's also under **Settings ▸ Menu
-  categories**. Your own list — Jain, Normal, Staff…
+- **Menu calendar** — tap a day, then **Add** one entry per **category**:
+  pick the meal, pick the **category** (or add one on the spot), enter
+  **approx plates**, and the items one plate of that category gets. "Monday
+  lunch" for 3 groups is 3 entries. Tap an entry to edit its plates/headcount;
+  the `(date, meal, category)` combination is unique so you edit rather than
+  duplicate. Manage the category list from the **⊞** button in the top bar or
+  **Settings ▸ Menu categories**.
+- **Recipes** hold **per-plate** quantities. The purchase schedule multiplies
+  them by each entry's headcount.
 
 - **Kitchen setup** — two tabs, done once at setup:
   - **Ingredients** — your master shopping list. Each has a name and the
@@ -181,11 +188,13 @@ row stays in the log, marked reversed.
     number** in that ingredient's unit. You can create a missing ingredient
     without leaving the recipe form.
 - **Purchase schedule** — the ↻ / generate action reads the menu calendar for
-  a date range, looks up each dish's recipe, and rolls the ingredients into a
-  dated shopping checklist (safe to re-run — it never duplicates or un-checks
-  anything). If it adds nothing it tells you which link is missing. Admin and
-  counter can check items off and add one-off items with the **+** button
-  (pick the ingredient, type a quantity — its unit is shown).
+  a date range and, for each entry, multiplies its per-plate recipes by the
+  **headcount**, sums per ingredient per date, and rounds up to 2 dp. Safe to
+  re-run — changing a headcount and regenerating updates the un-purchased
+  lines; purchased and one-off lines are left alone. If it adds nothing it
+  tells you which link is missing. Admin and counter can check items off and
+  add one-off items with the **+** button (pick the ingredient, type a
+  quantity — its unit is shown).
 
 **The chain:** Menu calendar (what's cooked) + Recipes (what each dish needs)
 → Purchase schedule (what to buy).
