@@ -1,105 +1,121 @@
-# Tiffin — canteen coupon system (v2, native Flutter app)
+# Tiffin — canteen coupon system (v3)
 
 A single-campus canteen tool that issues each student/staff member a permanent
 QR code, scans it at meal time for an instant accept/reject, and tracks meal
 entitlements as **units** (lunch / breakfast / brunch) — never currency.
 
-**v2 architecture (PRD §13):** one Flutter app, one APK, two roles on the LAN:
+**v3 architecture (PRD §15, ADR 0005):** one Flutter app on every phone. Each
+phone reads and writes the canteen's own **Firebase** project (Cloud
+Firestore) directly and **keeps working offline** — scans included — syncing
+when the connection returns. There is no host phone and no LAN server.
 
-- **Host** — runs the on-device SQLite database (drift), the business logic,
-  and an embedded HTTP server (shelf), and advertises itself over mDNS.
-- **Client** — discovers a host on the same Wi-Fi and talks to it over
-  HTTP/JSON. Same screens; the host/client difference is one interface behind
-  the UI (`lib/data/repository/`).
+- **The only configuration** is the Firebase console's config file for this
+  app, imported on first launch. Nothing about any canteen is baked into the
+  build.
+- **Phones are approved, not trusted by default.** A phone asks to join; an
+  admin phone approves it with a role (admin / counter / scanner) that
+  `firestore.rules` enforce.
+- **Two kinds of account.** Offline accounts (username + password) always work
+  with no network; online (email) accounts are an optional Settings toggle.
+- **Three languages.** English, Hindi and Marathi, chosen per phone — scan
+  verdicts, errors, notifications, the bill and the spreadsheet included.
 
-The full product spec — business rules, roles, meal-window logic, grace
-allowance, scan reversal, billing, menu planning, purchase schedule,
-notifications — is in [`docs/PRD.md`](docs/PRD.md) (§5–§8).
-
-- **Themes** — four (Neobrutal, Clean, Frost, Clay), each light and dark, with
-  motion that belongs to the theme: [`docs/THEME_SPEC.md`](docs/THEME_SPEC.md).
-- **Why things are the way they are** — runtime theming, the first-run setup
-  flow, saved logins, and the export/backup design, with the alternatives that
-  were rejected: [`docs/adr/`](docs/adr/).
-- **Day-to-day use** — [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
-
-Data portability: admins can export a multi-sheet `.xlsx` report, and a
-complete encrypted `.tiffin` backup that restores onto another phone.
-
-> **v1 (browser + FastAPI + MongoDB) has been removed** in favour of this
-> rebuild. It's recoverable from git history before the `chore: remove v1`
-> commit if a business rule needs cross-checking.
+The full product spec is in [`docs/PRD.md`](docs/PRD.md) (§5–§8 business rules,
+§15 architecture). Why things are the way they are, with the alternatives that
+were rejected: [`docs/adr/`](docs/adr/). Day-to-day use:
+[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md). Themes:
+[`docs/THEME_SPEC.md`](docs/THEME_SPEC.md).
 
 ## Requirements
 
 - Flutter SDK ≥ 3.24 (Dart ≥ 3.5)
-- **Android:** Android SDK + JDK 17 (`flutter doctor` lists what's missing);
-  an Android device or emulator.
-- **iOS** (client mode; host is Android-first, PRD §13.8): a Mac with the
-  full **Xcode** app + **CocoaPods** (`brew install cocoapods`), and an
-  Apple ID for signing. `ios/` is scaffolded and configured (camera, local
-  network + Bonjour `_tiffin._tcp`, ATS local networking). Open
-  `ios/Runner.xcworkspace` in Xcode, set your Team + a unique bundle id,
-  then `flutter run`.
+- **Android:** Android SDK + JDK 17. Android 6.0 (API 23) or newer on the
+  phone.
+- **iOS:** a Mac with Xcode + CocoaPods, iOS 15+.
+- A **Firebase project** (the free Spark plan is enough).
 
 ## Setup
 
 ```bash
-make setup      # flutter pub get + codegen (drift / riverpod / l10n)
-make run        # run on a connected device (Android or iOS)
-make apk        # release APK  ->  build/app/outputs/flutter-apk/
-make ios        # release .app (needs Xcode) -> build/ios/iphoneos/
+make setup      # flutter pub get + generate the AppText classes
+make run        # run on a connected device
+make apk        # release APK  ->  build/app/outputs/flutter-apk/app-release.apk
+make test       # unit + widget tests
+make analyze    # dart analyze --fatal-infos
+make rules-test # firestore.rules on the Firestore emulator (Node + Java 17+)
 ```
 
-`make setup` runs `build_runner`, which generates the files git ignores
-(`*.g.dart`). Re-run `make gen` after changing a drift table, a `@riverpod`
-provider, or `lib/l10n/*.arb`.
+Re-run `make l10n` after editing `lib/l10n/*.arb`. `app_en.arb` is the
+template; every message with placeholders carries a description for
+translators, and `test/l10n_parity_test.dart` fails on missing, unused or
+untranslated keys.
 
-**After a schema change**, bump `AppDatabase.schemaVersion` and run
-`make schema`. That snapshots the new schema and regenerates the versioned
-migration steps, so `test/migration_test.dart` runs the real migration against
-a real previous version. A host's SQLite file is the only copy of its data, so
-migrations are not written against the *current* tables — each step sees the
-schema as it was at that version.
+## Firebase setup (once per canteen)
 
-## Project layout (PRD §13.7)
+1. **Create a project** at <https://console.firebase.google.com>.
+2. **Authentication ▸ Sign-in method:** enable **Anonymous** (how phones
+   join) and, if you want online accounts, **Email/Password**.
+3. **Firestore Database ▸ Create database** (production mode; pick the region
+   nearest the canteen, e.g. `asia-south1`).
+4. **Deploy the rules and indexes** from this repo:
+   ```bash
+   npm install -g firebase-tools   # or: npx firebase-tools …
+   firebase login
+   firebase deploy --only firestore --project <your-project-id>
+   ```
+5. **Add the app** under Project settings ▸ Your apps and download its config
+   file:
+   - Android package name **`com.canteen.canteen_coupon`** →
+     `google-services.json`
+   - iOS bundle ID **`com.aadeshgurav.canteencoupon`** →
+     `GoogleService-Info.plist`
+6. Put that file on the phone (download, Drive, WhatsApp…) and pick it on the
+   app's **Connect to your Firebase project** screen. The first phone becomes
+   the canteen's first admin phone.
+
+Don't commit the config file; the app never needs it in source.
+
+**Without a real project**, run against the local emulators:
+
+```bash
+firebase emulators:start                 # from the repo root (firebase.json)
+flutter run --dart-define=USE_EMULATOR=true
+# a phone on the same Wi-Fi instead of an Android emulator:
+flutter run --dart-define=USE_EMULATOR=true --dart-define=EMULATOR_HOST=192.168.1.20
+```
+
+## Moving an existing (v2, LAN-host) canteen across
+
+On the old app's host phone: **Settings ▸ Backup & restore ▸ Export**. On the
+new app's first phone, after starting the canteen: **Bring over existing
+records?** on the setup screen, and pick that `.tiffin` file. Members keep
+their QR codes (printed cards keep working) and accounts keep their passwords.
+
+## Project layout
 
 ```
 lib/
-  app/            bootstrap, mode gate
-  core/           config, typed errors, logging, role, app mode, time/meal windows
+  app/            bootstrap, the routing gate, providers, Firebase config import
+  core/           typed error codes, logging, roles, meal windows
   domain/         plain models shared by every layer
   data/
-    local/        drift schema + DAOs        (host mode only)
-    remote/       HTTP client to a host      (client mode only)
-    repository/   ONE interface per domain, + Host*/Client* implementations
-  services/       business rules (host only) — ported from v1 app/services + routers
-  server/         shelf app: routers, JSON, static desktop-admin serving
-  discovery/      nsd wrapper: advertise() / find()
-  ui/
-    theme/        design tokens + the four themes, in OKLCH
-    settings/     appearance (theme, light/dark, motion, saved logins)
-    shared_widgets/
-    ...           mode picker, host setup, client discovery, login, scanner, admin
+    store.dart        the one doorway to Firestore (cached reads, offline commits)
+    cache_warmer.dart keeps the counter's collections synced for offline use
+    access.dart       phones, approval, online accounts
+    backend.dart      the seam every screen depends on
+  services/       business rules (scan, top-up, refund, menu, kitchen, backup…)
+  l10n/           ARB files (en/hi/mr), labels for stored values, message wording
+  ui/             screens, shared widgets, the four themes (OKLCH tokens)
+firestore.rules   the security boundary (tested in tool/rules-test)
 ```
 
 ## Status
 
-Working end to end on real hardware (a Vivo V2135 / Android 13 host and an
-iPhone 17 client): mode pick → host setup → serve + discover → sign in → role
-home, with scanning, top-ups, members, menu planning, the purchase schedule,
-expenses and refunds all functional, plus the desktop web admin served by the
-host.
-
-Since then: four themes with light/dark and motion, first-run admin setup,
-per-host saved logins, and `.xlsx` / `.tiffin` export and restore.
-
-Known gaps:
-
-- The Android offline hotspot has not been exercised on real hardware; OEM
-  behaviour for `LocalOnlyHotspot` varies.
+- Unit, widget and rules tests green (`make test`, `make rules-test`).
+- **Not yet exercised on real hardware** with a live Firebase project. Before
+  a shift, check on two phones: approve a phone, scan in airplane mode on
+  both, reconnect, and confirm the duplicate is dropped
+  (USER_GUIDE §4).
 - Android release signing still uses the debug keystore.
-- No on-device performance profiling yet.
-- An iPhone can act as host, but only while the app is on screen — iOS will
-  not let it serve in the background. The app says so rather than pretending
-  otherwise. Host on Android for real shifts.
+- Home-screen icon switching per theme is not wired (the in-app logo follows
+  the theme).

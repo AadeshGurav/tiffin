@@ -1,9 +1,14 @@
-# Tiffin — User Guide (v2, native app)
+# Tiffin — User Guide (v3)
 
-For the people running the canteen day to day. The system is now a single
-**app** (`Tiffin`) installed on every device — no browser, no
-laptop required. The product rules (units, meal windows, grace allowance, scan
-reversal, billing) are unchanged from v1; see `docs/PRD.md` §5–§8.
+For the people running the canteen day to day. Tiffin is one **app** installed
+on every phone. The canteen's records live in its own **Firebase** project, so
+every phone sees the same members and balances — and every phone **keeps
+working without internet**, syncing when the connection comes back. The
+product rules (units, meal windows, grace allowance, scan reversal, billing)
+are unchanged; see `docs/PRD.md` §5–§8.
+
+The app speaks **English, हिन्दी and मराठी** — each phone picks its own under
+**Settings ▸ Appearance ▸ Language**.
 
 ---
 
@@ -11,112 +16,73 @@ reversal, billing) are unchanged from v1; see `docs/PRD.md` §5–§8.
 
 | Role | Who | Can do |
 |---|---|---|
-| **Admin** | The contractor | Everything: members, top-ups & billing, top-up history & reversal, QR codes, menu planning, kitchen setup (ingredients + recipes), purchase schedule, expenses, refunds, settings, scan reversal, user accounts. |
+| **Admin** | The contractor | Everything: members, top-ups & billing, top-up history & reversal, QR codes, menu planning, kitchen setup (ingredients + recipes), purchase schedule, expenses, refunds, settings, scan reversal, accounts, phones. |
 | **Counter** | Billing-counter staff | Scan, top-ups & billing, and the shared purchase schedule. Nothing else. |
 | **Scanner** | Meal-serving staff | Scan only. |
 
 Students and staff are **records**, not logins — they carry a QR code and get
 scanned.
 
+**Phones have a role too.** An admin approves each phone as an admin, counter
+or scanner phone, and that caps who can sign in on it: an admin phone allows
+everyone, a counter phone allows counter and scanner accounts, a scanner phone
+allows scanner accounts only. Approve each phone with the narrowest role it
+needs — the gate phone as a scanner phone.
+
 ---
 
 ## 2. First-time setup
 
-### 2.1 Pick a host device
+### 2.1 The Firebase project (once, by whoever sets the canteen up)
 
-One phone is the **host**: it holds the database and serves the others. Pick
-the phone that stays at the canteen and is on power during meal times —
-**preferably an Android phone** (an iPhone host can only serve while the app
-is open on screen; see 2.4).
+Follow **Firebase setup** in the README: create the project, turn on the
+sign-in methods, create the database, deploy the rules, and download the
+**config file** for the app. That file is the only thing the app is ever
+configured with.
 
-1. Install and open the app on that phone.
-2. On the setup screen, tap **Run as host**.
-3. **Set up this host** appears: choose the admin username (`admin` by
-   default) and a password. **Suggest a strong one** fills both boxes and
-   shows the password so you can write it down — it is stored only as a
-   one-way hash, so nobody, including the app, can read it back later.
-4. Tap **Create admin & continue**. You are signed straight in, and the server
-   starts serving on the Wi-Fi on its own — there is no separate "start
-   server" step.
+### 2.2 The first phone
 
-Both the username and the password can be changed later from **Users**. If the
-admin password is ever lost, **Forgot the password?** on the host device's own
-sign-in screen will set a new one (host device only, never over the network).
+1. Install and open the app. It asks you to **connect to your Firebase
+   project** — tap **Choose config file** and pick the file you downloaded.
+2. **Set up this phone**: give it a name you'll recognise (e.g. "Office") and
+   tap **Join this canteen**. This needs internet once.
+3. Nobody has used the project yet, so it offers **Start the canteen on this
+   phone**. This phone becomes the first **admin phone**.
+4. **Create the admin account**: choose a username and password. **Suggest a
+   strong one** fills both boxes and shows the password so you can write it
+   down — it's stored only as a one-way hash.
+   - *Moving from the earlier version of Tiffin?* Instead of creating an
+     account, tap **Bring over existing records?** and pick the `.tiffin`
+     backup you made on the old host phone. Members keep their QR codes and
+     everyone keeps their old password.
 
-Every other device installs the same app and taps **Run as client**, then
-picks the host from the list. If it doesn't appear (some routers block
-device-to-device discovery), tap **Connect by IP address** and type the
-host's address — see it on the host under **Admin ▸ Hosting & LAN**.
+### 2.3 Every other phone
 
-You can change a device's role later from the ↔ icon in the top bar.
+1. Install the app and pick the **same config file**.
+2. Name the phone ("Counter 1", "Gate") and tap **Join this canteen**. It
+   shows **Waiting for approval** with a short **phone code**.
+3. On the admin phone: **Settings ▸ Devices**, find the phone (match the
+   code), tap **Approve**, and pick its role. The waiting phone moves on by
+   itself.
+4. Sign in with an account. Accounts are made under **Settings ▸ Users**.
 
-### 2.2 Managing the host (Admin ▸ Hosting & LAN)
+A phone that's lost or replaced: **Settings ▸ Devices ▸ Remove**. It can ask
+again later, and has to be approved again.
 
-Sign in on the host as **admin** and open **Settings ▸ Hosting & LAN**. It
-shows:
+### 2.4 Online accounts (optional)
 
-- whether the server is **serving**, and the exact URL(s) other devices use;
-- **Stop / Restart** serving (rarely needed — it auto-starts);
-- **Generate certificate** for optional HTTPS (see 2.3);
-- the keep-awake reminder (2.4).
+**Settings ▸ Online accounts ▸ Allow online accounts** adds a second kind of
+account: an **email and password** that works on *any* phone without
+approving the phone first — handy for the owner's own phone. On a phone that
+hasn't joined, tap **Sign in with an online account instead**. Online accounts
+need internet to sign in; "Email me a reset link" handles a forgotten
+password. Turn one off from the same screen. Offline accounts keep working
+either way.
 
-The admin dashboard shows a yellow banner if the host is *not* serving.
-
-### 2.3 Scanning
+### 2.5 Scanning
 
 Scanning uses the phone camera directly — grant the camera permission when
-asked. There is **no HTTPS requirement** for scanning.
-
-### 2.4 Desktop admin (browser)
-
-For heavy data entry, a full admin runs in a desktop browser — served by the
-host phone itself. Under **Admin ▸ Hosting & LAN**, the **DESKTOP ADMIN** box
-shows the exact URL(s), e.g.:
-
-```
-http://192.168.1.42:8710/
-```
-
-Open that on any computer on the same Wi-Fi and sign in with an **admin** (or
-**counter**) account. It covers everything except scanning: members, top-ups
-& billing, top-up history & reversal, scan log & reversal, menu calendar
-(month grid), categories, ingredients, recipes, purchase schedule, expenses,
-refunds, settings, users.
-Bill PDFs open in a new tab. Use the plain `http://` URL — it's faster than
-the HTTPS one.
-
-**Optional HTTPS:** tap **Generate certificate** under Hosting & LAN, then
-**Restart** serving. The server then *also* listens on `https://<ip>:8711/`.
-Phones always use the HTTP port, so a cert never affects phone-to-phone use.
-The HTTPS URL still shows a browser "not trusted" warning the first time each
-computer connects — only a real CA removes that.
-
-### 2.5 No Wi-Fi? Serve from the host's own hotspot (Android)
-
-Under **Admin ▸ Hosting & LAN**, **Start hotspot** makes the Android host
-broadcast its own private Wi-Fi — no router, no internet. It shows the
-network name, password, and a QR the other phones can scan to join. Once
-they're on it, they pick the host from the list, or use **Connect by IP →
-192.168.49.1**. Starting the hotspot turns this phone's normal Wi-Fi off
-while it's running. (iPhone can't do this — use its built-in Personal
-Hotspot from iOS Settings instead.)
-
-### 2.6 Keeping the host awake
-
-While serving, the app keeps the screen from timing out.
-
-- **Android:** a persistent notification + foreground service keep the server
-  running even with the screen off. Allow the notification permission when
-  asked. Keep the phone on power and on Wi-Fi; don't "force stop" the app.
-- **iPhone:** iOS **cannot** keep the server running in the background. Leave
-  the app open and on screen for the whole meal service — locking the phone
-  or switching apps stops the server and every client drops. iOS also can't
-  create its own Wi-Fi: everyone must be on the same router, or turn on
-  **Personal Hotspot** (Settings ▸ Personal Hotspot) and have the other
-  phones join it. For a full shift, host on Android.
-
-This is shown as a banner on the iPhone during host setup and under Hosting
-& LAN.
+asked. While the scan screen is open the phone stays awake.
 
 ---
 
@@ -134,6 +100,13 @@ Open **Scan**, point at the QR. The verdict fills the screen:
 Tap **Next** for the next person. A member can only be scanned once per meal
 per day.
 
+**No internet?** Keep scanning. A yellow **Offline — changes will sync**
+banner shows on the scan screen (a cloud-off icon on other screens), and every
+scan goes up when the connection returns. If the same person was served the
+same meal on another offline phone, the later scan is dropped when it syncs —
+their unit is given back — and a **Offline scan not counted** notification
+says who.
+
 ### 3.2 Top-up & bill (counter / admin)
 
 **Top-up & bill** → tap the member field to open a searchable picker (name,
@@ -141,7 +114,8 @@ class, roll number or staff ID). Not on the list yet? **+ New member** adds a
 walk-up member without leaving the screen. Then set units per meal type with
 +/− → pick **Cash** or **UPI**. The amount is calculated from the unit prices
 in Settings — you never type it. **Charge & generate bill** credits the
-balance immediately and shows the bill. For UPI it also shows a payment QR for
+balance immediately and shows the bill; **Share bill** sends it as a PDF
+(WhatsApp, email, print) in this phone's language. For UPI it also shows a payment QR for
 the payer to scan; once the money lands, tap **Mark received**.
 
 The **History** tab (same screen) lists every top-up, newest first.
@@ -219,9 +193,10 @@ row stays in the log, marked reversed.
 The bell in the top bar shows: prep reminders (before a planned meal's
 window), purchase-due reminders, **low stock** (an ingredient at or below its
 threshold — also shown to the scanner), and **headcount overrun** (accepted
-scans for a category/meal have reached the planned plate count). Dismissing
-one only hides it for you. The scan screen also flags an overrun inline —
-"PLANNED ~15 JAIN — THIS IS #16".
+scans for a category/meal have reached the planned plate count). **Offline scan
+not counted** appears when a scan made without internet turned out to be a
+duplicate (3.1). Dismissing one only hides it for you. The scan screen also
+flags an overrun inline — "Planned about 15 Jain — this is plate 16".
 
 ### 3.8 Settings (admin)
 
@@ -234,21 +209,27 @@ Settings is a short menu of rows, not one long form. Each opens its own screen:
 - **Menu categories** — the tag list for menu entries (also editable from the
   menu planner's top bar).
 - **Appearance** — see 3.10.
-- **Hosting & LAN** *(host only)* — start/stop serving, URLs, certificate.
-- **Reports** *(host only)* — see 3.11.
-- **Backup & restore** *(host only)* — see 3.11.
-- **Sign out** — ends this session on this device.
-- **Switch device role** — host ↔ client; signs you out, touches no data.
-- **Reset all data** *(host only)* — wipes this host, no undo.
+- **Devices** — approve, re-role and remove phones (2.3).
+- **Online accounts** — the optional email accounts (2.4).
+- **Reports** — see 3.11.
+- **Backup & restore** — see 3.11.
+- **Sign out** — ends this session on this phone.
+- **Firebase project** — which project this phone uses. *Change* signs out
+  and forgets this phone's copy of the data (nothing is deleted in Firebase);
+  changes not yet synced from this phone are lost, so do it online.
+- **Reset all data** — deletes every record in the project (accounts too),
+  then asks for a new admin. Needs internet. No undo — take a backup first.
 
 **Counter and scanner** open the same Settings screen from the **⚙ gear** in
-the top bar. Their version shows only **Appearance** and **Sign out** — same
-layout, fewer rows.
+the top bar. Their version shows **Appearance**, **Sign out** and **Firebase
+project** — same layout, fewer rows.
 
 ### 3.9 Users & access (admin — inside Settings)
 
-Add accounts, change usernames, change roles, reset passwords, deactivate.
-You can't deactivate or delete your own account.
+Add **offline accounts** (username + password), change usernames, change
+roles, reset passwords, deactivate. You can't deactivate or delete your own
+account. A forgotten admin password can be reset from **Forgot the password?**
+on the sign-in screen of an *admin phone*.
 
 ### 3.10 Appearance (everyone, per device)
 
@@ -261,55 +242,63 @@ or the **⚙ gear** in the top bar for counter and scanner.
   accessibility setting always wins, whatever is chosen here.
 
 Each phone keeps its own choice. An admin can make every device match: turn on
-**Use this look everywhere** at the bottom of the screen. Devices then show the
-host's look, and say so rather than quietly ignoring taps.
+**Use this look everywhere** at the bottom of the screen. Every phone then shows
+that look, and says so rather than quietly ignoring taps.
 
 The same screen lists **saved logins** and clears them.
 
-### 3.11 Reports, and Backup & restore (admin, host only — two screens under Settings)
+### 3.11 Reports, and Backup & restore (admin — two screens under Settings)
 
 **Reports** — an `.xlsx` for Excel or Google Sheets, with a tab per area
 (summary, members, balances, scans, top-ups, refunds, expenses, menu). Pick a
 date range and which tabs you want, then it goes out through the normal share
-sheet. It is for reading and printing; it is *not* a way to put data back —
+sheet, with headings in this phone's language. It is for reading and printing; it is *not* a way to put data back —
 that is what **Backup & restore** is for.
 
 **Backup** — a complete copy of the canteen in one `.tiffin` file: members,
-balances, history, settings and accounts. Use it to move to a new phone, or to
-recover from a lost one.
+balances, history, settings and accounts. The data already lives safely in
+Firebase; this is *your* copy, outside Google's, and the way to move to a new
+Firebase project.
 
 - Leave **Protect with a password** on unless you have a reason not to. The
   file holds member names and account details. Write the password down —
   without it the backup cannot be opened by anyone, including you.
-- **Restore from a backup** replaces *everything* on this device. It shows
-  what the file contains first and asks you to type REPLACE. Your current data
-  is kept beside the restored copy rather than deleted.
+- **Restore from a backup** replaces *everything* in the project, for every
+  phone. It shows what the file contains first and asks you to type the
+  confirmation word (REPLACE, or its translation). The whole file is read and
+  checked before anything is deleted. Needs internet.
 
-Take a backup before changing phones, and keep one somewhere off the phone.
+Take a backup now and then, and keep it somewhere off the phone.
 
 ### 3.12 Staying signed in
 
-A phone remembers who signs in on each host it has used, so returning to a
-known host skips the login form. Usernames are always remembered; a password
-is only kept if you tick **Remember password on this device**. Clear any of it
-from **Appearance ▸ Saved logins**.
-
-Because hosts are recognised by identity rather than address, this keeps
-working when the router hands the host a different IP — and a phone used at two
-canteens keeps both sets of accounts.
+A phone remembers who signs in on it, so the next launch skips the sign-in
+form until the session ends (12 hours) or someone signs out. Usernames are
+always remembered; a password is only kept if you tick **Remember password on
+this device**. Clear any of it from **Appearance ▸ Saved logins**.
 
 ---
 
 ## 4. If something's wrong
 
-- **A client says it can't reach the host** — the message now names the
-  address it tried (`http://192.168.x.x:8710`). Usual causes: the host phone
-  is off, asleep, on a different Wi-Fi, or (iPhone) the app was backgrounded.
-  Wake it, check **Settings ▸ Hosting & LAN** shows *serving*, and tap
-  **Search again**. If discovery finds the host but connecting still fails,
-  use **Connect by IP address** with the IP shown on the host.
-- **Camera won't open** — grant the camera permission in the OS settings for
-  Tiffin.
-- **Host logs** — the host writes a rolling log file on its own storage
-  (`logs/app.log` under the app's documents directory) recording every scan,
-  top-up, refund, and admin action.
+- **"Waiting for approval" never moves on** — the admin phone needs
+  internet to approve, and so does the waiting phone to notice. Check both are
+  online, and that the admin approved the right phone code.
+- **"This phone isn't allowed to do that"** — the phone's role is narrower
+  than the job. Change it in **Settings ▸ Devices** on an admin phone.
+- **Offline for a long time** — fine for scanning and top-ups. Balances other
+  phones changed meanwhile aren't seen until this phone syncs, so a person
+  could be served on their last unit at two offline counters; reports show any
+  balance that went negative.
+- **Check offline sync before a real shift:** approve two phones, turn on
+  airplane mode on both, scan the same person for the same meal on each, turn
+  airplane mode off. One scan stays, the other is dropped with a notification,
+  and the balance goes down once.
+- **"That file is for a different app"** on the connect screen — the config
+  file was downloaded for another app id. Add an app with the id the message
+  names in the Firebase console and download its file.
+- **Camera won't open** — grant the camera permission in the phone's settings
+  for Tiffin.
+- **Logs** — every phone writes a rolling log (`logs/app.log` under the app's
+  documents directory) of scans, top-ups, refunds, admin actions and anything
+  the server refused.

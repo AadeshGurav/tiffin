@@ -162,9 +162,9 @@ All of the following must be stored in the database and editable at runtime — 
 
 - **Frictionless & foolproof.** This term was used repeatedly in planning specifically about the admin/payment side — every action there should have a clear, unambiguous outcome and be hard to get wrong. Favor explicit confirmations and clear state over cleverness.
 - **Mobile-first, lightweight scanner page.** It will sit open on a phone browser for hours across a meal period. No heavy frontend framework, no memory leaks, no unnecessary background work. Plain JS/HTML preferred over a full SPA framework for this page specifically.
-- **Local-network first.** Scanning and the admin dashboard must work entirely on the local network with no internet dependency. Internet access is only required for the UPI QR payment step (and that's still just a static QR, not a live network call) — not for anything during normal day-to-day operation. ~~**TLS is required, not optional**, for the scanner specifically: browsers only allow camera access in a secure context (HTTPS or `localhost`), and that rule holds even on a fully private, offline LAN — see `make tls-setup` in the README and `docs/USER_GUIDE.md` §2.3.~~ **Superseded — see §13.6.** Under the native-app architecture, scanning uses the device's native camera API, not a browser, so the secure-context requirement that forced mandatory TLS no longer applies to scanning. TLS/HTTPS is downgraded from a hard requirement to a recommended-but-optional protection for the *desktop-browser admin* surface only (protecting login credentials and session cookies over LAN, not enabling a feature) — see §13.6 for the certificate approach.
+- **Offline-first** *(was "Local-network first"; amended by §15)*. Every phone keeps working with no internet — scanning included — and syncs when the connection returns (§15.3). ~~Scanning and the admin dashboard must work entirely on the local network with no internet dependency. Internet access is only required for the UPI QR payment step (and that's still just a static QR, not a live network call) — not for anything during normal day-to-day operation.~~ ~~**TLS is required, not optional**, for the scanner specifically: browsers only allow camera access in a secure context (HTTPS or `localhost`), and that rule holds even on a fully private, offline LAN — see `make tls-setup` in the README and `docs/USER_GUIDE.md` §2.3.~~ **Superseded — see §13.6.** Under the native-app architecture, scanning uses the device's native camera API, not a browser, so the secure-context requirement that forced mandatory TLS no longer applies to scanning. TLS/HTTPS is downgraded from a hard requirement to a recommended-but-optional protection for the *desktop-browser admin* surface only (protecting login credentials and session cookies over LAN, not enabling a feature) — see §13.6 for the certificate approach.
 - **Operable without the developer.** The admin is technically capable and can debug his own issues post-handoff, but only if the system surfaces **clear, specific errors** (not generic 500s or silent failures) and maintains a **detailed, searchable action log** of scans, top-ups, and admin actions. Design logging as a first-class feature, not an afterthought — this is intended to double as the admin's own debugging tool.
-- **Self-hosted, low-maintenance.** No managed cloud dependencies required to run day-to-day. ~~Target host is a laptop (or possibly a phone) on the local network. If hosted off a phone hotspot, the host's IP (and on Android 11+, its whole subnet) isn't stable without rooting the phone — `make mdns-setup` (optional, see README) publishes a `<hostname>.local` address as a workaround, since it doesn't depend on the current IP at all.~~ **Superseded — see §13.** Under the native-app architecture, any device running the app can become the host outright — no separate laptop, no manual `.local` setup script. Service discovery (§13.5) replaces the old mDNS workaround with the same underlying idea (don't depend on a stable IP), but built into the app rather than a manual step in the README.
+- **Low-maintenance, owned by the canteen** *(amended by §15)*. The data lives in the canteen's own Firebase project rather than on one phone. ~~No managed cloud dependencies required to run day-to-day.~~ ~~Target host is a laptop (or possibly a phone) on the local network. If hosted off a phone hotspot, the host's IP (and on Android 11+, its whole subnet) isn't stable without rooting the phone — `make mdns-setup` (optional, see README) publishes a `<hostname>.local` address as a workaround, since it doesn't depend on the current IP at all.~~ **Superseded — see §13.** Under the native-app architecture, any device running the app can become the host outright — no separate laptop, no manual `.local` setup script. Service discovery (§13.5) replaces the old mDNS workaround with the same underlying idea (don't depend on a stable IP), but built into the app rather than a manual step in the README.
 - **This is a one-time build, not a retainer.** Prioritize correctness and clarity of failure over speculative extensibility. Don't build for scale this project doesn't need yet.
 
 ---
@@ -259,7 +259,7 @@ This is context for prioritization, not a constraint that should force cut corne
 
 ## 13. Native App Architecture (v2 — Flutter, Host/Client on LAN)
 
-**Status:** Approved direction, supersedes §3's original "no mobile app" non-goal and the browser-only/FastAPI-MongoDB delivery model described elsewhere in this document. Everything in §5, §6, and §8 (business rules, functional requirements, data model shape) still holds — this section only changes *how it's delivered and hosted*, not what it does.
+**Status:** **Superseded by §15** (Firebase, offline-first) for how data is stored and shared; kept as the record of the LAN-host design. Originally: approved direction, supersedes §3's original "no mobile app" non-goal and the browser-only/FastAPI-MongoDB delivery model described elsewhere in this document. Everything in §5, §6, and §8 (business rules, functional requirements, data model shape) still holds — this section only changes *how it's delivered and hosted*, not what it does.
 
 ### 13.1 Why this change
 
@@ -381,3 +381,63 @@ The client has requested a neobrutalism visual theme (thick borders, flat satura
 Before UI build begins: a small theme spec (color tokens, border-width tokens, shadow tokens, and the two intensity levels from §14.2) should be defined once as reusable design tokens (matches `ui/shared_widgets/` in §13.7's structure) rather than hand-styled per-screen — this is the same "config lives in config, not scattered in code" principle (CLAUDE.md §7) applied to design instead of business logic.
 
 ---
+
+---
+
+## 15. Firebase, offline-first (v3)
+
+**Status:** Approved and built, 2026-10-17. Supersedes §13 (LAN host) and the
+"local-network first / no managed cloud" lines of §7 and §13.3. Business rules
+in §5, §6 and §8 are unchanged. The reasoning and the rejected alternatives
+are in `docs/adr/0005-firebase-offline-first.md`.
+
+### 15.1 Shape
+
+- One Flutter app on every phone. Each phone reads and writes the canteen's
+  own **Cloud Firestore** project directly — no host phone, no LAN server, no
+  discovery, no web admin.
+- The **only configuration** is the Firebase console's config file for this
+  app (`google-services.json` / `GoogleService-Info.plist`), imported on first
+  launch. Everything an operator changes lives in the canteen's settings
+  document, as before (§6.8).
+
+### 15.2 Who can do what
+
+- A phone joins by asking (anonymous Firebase identity, once, online) and an
+  **admin phone approves it with a role** — admin, counter or scanner.
+  `firestore.rules` enforce that role.
+- **Offline accounts** (username + password) sign in on an approved phone
+  with no network, capped at the phone's role.
+- **Online accounts** (email + password) are optional, switched on in
+  Settings, and work on any phone without approval; they need internet to
+  sign in.
+- The first phone on a fresh project becomes the first admin phone.
+
+### 15.3 Offline behaviour
+
+- Everything works offline: scanning, top-ups, refunds, menu and kitchen
+  edits. Changes sync when the network returns; the app shows "Offline —
+  changes will sync" meanwhile.
+- One scan per member per meal per day is enforced by the server at sync
+  time: if two offline phones serve the same person the same meal, the second
+  scan is dropped with its unit returned, and that phone posts a notification.
+- Balance checks offline use the phone's last-synced balance, so two offline
+  phones can between them take a balance below the grace limit. Reports show
+  negative balances.
+- Needs the network: joining, the first sign-in of an online account,
+  creating online accounts, and restoring a backup.
+
+### 15.4 Data portability
+
+- `.xlsx` report (export only) and `.tiffin` backup, as in §13 — the backup is
+  now JSON inside the zip.
+- A `.tiffin` file from the v2 LAN-host build can be imported on first-run
+  setup; members keep their QR codes and accounts keep their passwords.
+
+### 15.5 Languages
+
+English, Hindi and Marathi, chosen per phone. Services return codes, never
+sentences, so every phone words the same record in its own language — errors,
+scan verdicts, notifications, the bill and the spreadsheet included (CLAUDE.md
+§13).
+
