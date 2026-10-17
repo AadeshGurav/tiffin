@@ -1,30 +1,18 @@
-/// Compile-time-ish constants and their runtime-configurable counterparts.
+/// Values genuinely fixed for a given build.
 ///
 /// CLAUDE.md §7 / PRD §6.8: anything an operator might reasonably change lives
-/// in the `settings` row of the database (see `SettingsService`), NOT here.
-/// This file holds only values that are genuinely fixed for a given build:
-/// the discovery service type, the default port, wire-format constants.
+/// in the canteen's settings document (see `SettingsService`), and the one
+/// thing this build is configured with — which Firebase project — is imported
+/// at runtime (`FirebaseConfig`). Neither belongs here.
 class AppConfig {
-  /// Stamped into backup manifests so a restore can say which build wrote a
-  /// file. Kept in step with pubspec.yaml's `version:` by hand.
-  static const String appVersion = '2.0.0';
-
   const AppConfig._();
 
-  /// mDNS/Bonjour service type the host advertises and the client scans for
-  /// (PRD §13.5).
-  static const String discoveryServiceType = '_tiffin._tcp';
+  /// Stamped into backup manifests so a restore can say which build wrote a
+  /// file. Kept in step with pubspec.yaml's `version:` by hand.
+  static const String appVersion = '3.0.0';
 
-  /// Default TCP port for the embedded server. The host operator can override
-  /// it in the mode picker; discovery carries the actual chosen port so
-  /// clients never assume this value.
-  static const int defaultServerPort = 8710;
-
-  /// Bearer token header the client sends and the server reads.
-  static const String authHeader = 'Authorization';
-  static const String authScheme = 'Bearer';
-
-  /// How often the client dashboard polls `GET /notifications` (PRD §6.5.2).
+  /// How often signed-in screens re-read notifications (PRD §6.5.2). Reads
+  /// come from the local cache, so this costs no network.
   static const Duration notificationPollInterval = Duration(seconds: 45);
 
   /// Rotating log file budget (the admin's primary debugging tool, PRD §7).

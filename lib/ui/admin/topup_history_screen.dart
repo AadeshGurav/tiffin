@@ -10,8 +10,10 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/messages.dart';
+import '../../l10n/labels.dart';
 
-typedef _History = ({List<Topup> topups, Map<int, Member> membersById});
+typedef _History = ({List<Topup> topups, Map<String, Member> membersById});
 
 final _historyProvider = FutureProvider.autoDispose<_History>((ref) async {
   final backend = ref.watch(backendProvider);
@@ -52,7 +54,8 @@ class TopupHistoryTab extends ConsumerWidget {
         itemBuilder: (_, i) {
           final tp = data.topups[i];
           final name = data.membersById[tp.memberId]?.name ??
-              AppText.of(context).topupHistoryUnknownMember(tp.memberId);
+              AppText.of(context)
+                  .topupHistoryUnknownMember(shortCode(tp.memberId));
           return NbSurface(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,21 +130,12 @@ class TopupHistoryTab extends ConsumerWidget {
       ),
     );
     if (ok != true || !context.mounted) return;
-    final done = await runGuarded(
-      context,
-      () async {
-        final r = await ref.read(backendProvider).reverseTopup(tp.id);
-        if (!r.success) throw _Msg(r.message);
-      },
-      successMessage: AppText.of(context).topupHistorySuccessMessage,
-    );
-    if (done) ref.invalidate(_historyProvider);
+    ReversalResult? r;
+    final ran = await runGuarded(context, () async {
+      r = await ref.read(backendProvider).reverseTopup(tp.id);
+    });
+    if (!ran || r == null || !context.mounted) return;
+    showNbSnack(context, AppText.of(context).reversalText(r!), ok: r!.success);
+    if (r!.success) ref.invalidate(_historyProvider);
   }
-}
-
-class _Msg implements Exception {
-  _Msg(this.message);
-  final String message;
-  @override
-  String toString() => message;
 }

@@ -1,70 +1,61 @@
-import 'package:drift/drift.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/errors.dart';
 import '../core/logging.dart';
-import '../data/local/database.dart' hide Expense;
-import '../data/local/mappers.dart';
+import '../data/store.dart';
 import '../domain/ops.dart';
+import 'scan_service.dart' show ymd;
 
-/// Expense logging + a revenue-vs-expense summary — a port of v1
-/// `app/routers/expenses.py` (PRD §6.6). Revenue = confirmed top-ups in range.
+/// Expense logging + a revenue-vs-expense summary (PRD §6.6). Revenue is
+/// confirmed top-ups in range.
+///
+/// ponytail: summary sums documents client-side. Fine at one canteen's scale;
+/// switch to Firestore aggregate queries if a year's top-ups reach ~10k.
 class ExpenseService {
-  ExpenseService(this._db);
+  ExpenseService(this._store);
 
-  final AppDatabase _db;
+  final Store _store;
   final _log = log('expense');
+
+  CollectionReference<Json> get _col => _store.col(Col.expenses);
 
   Future<Expense> add(ExpenseDraft draft) async {
     if (draft.amount < 0) {
-      throw const ValidationException('Amount cannot be negative.');
+      throw const ValidationException(ErrorCode.expenseAmountNegative);
     }
-    final id = await _db.into(_db.expenses).insert(ExpensesCompanion.insert(
-          category: draft.category,
-          description: draft.description,
-          amount: draft.amount,
-          date: _dateOnly(draft.date),
-          createdBy: draft.createdBy,
-        ));
+    final id = _store.newId(Col.expenses);
+    await _store.commit(
+        _store.batch()..set(_col.doc(id), draft.toJson()), 'expenses.add');
     _log.info('logged category=${draft.category} '
         'amount=${draft.amount.toStringAsFixed(2)} by=${draft.createdBy}');
-    final row = await (_db.select(_db.expenses)..where((e) => e.id.equals(id)))
-        .getSingle();
-    return expenseFromRow(row);
+    return Expense.fromJson({...draft.toJson(), 'id': id});
   }
 
   Future<List<Expense>> list({DateTime? start, DateTime? end}) async {
-    final query = _db.select(_db.expenses)
-      ..orderBy([(e) => OrderingTerm.asc(e.date)]);
-    if (start != null) {
-      query.where((e) => e.date.isBiggerOrEqualValue(_dateOnly(start)));
-    }
-    if (end != null) {
-      query.where((e) => e.date.isSmallerOrEqualValue(_dateOnly(end)));
-    }
-    return (await query.get()).map(expenseFromRow).toList();
+    Query<Json> q = _col;
+    if (start != null) q = q.where('date', isGreaterThanOrEqualTo: ymd(start));
+    if (end != null) q = q.where('date', isLessThanOrEqualTo: ymd(end));
+    return (await _store.fresh(q)).map(Expense.fromJson).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
   }
 
   Future<ProfitSummary> summary({DateTime? start, DateTime? end}) async {
-    final topupQuery = _db.select(_db.topups)
-      ..where((t) => t.paymentStatus.equals('confirmed'));
-    final expenseQuery = _db.select(_db.expenses);
+    Query<Json> topups =
+        _store.col(Col.topups).where('paymentStatus', isEqualTo: 'confirmed');
     if (start != null) {
-      topupQuery.where((t) => t.createdAt.isBiggerOrEqualValue(start.toUtc()));
-      expenseQuery.where((e) => e.date.isBiggerOrEqualValue(_dateOnly(start)));
+      topups = topups.where('createdAt',
+          isGreaterThanOrEqualTo: start.toUtc().toIso8601String());
     }
     if (end != null) {
-      topupQuery.where((t) => t.createdAt.isSmallerOrEqualValue(end.toUtc()));
-      expenseQuery.where((e) => e.date.isSmallerOrEqualValue(_dateOnly(end)));
+      topups = topups.where('createdAt',
+          isLessThanOrEqualTo: end.toUtc().toIso8601String());
     }
-
-    final revenue =
-        (await topupQuery.get()).fold<double>(0, (sum, t) => sum + t.amount);
-    final spend =
-        (await expenseQuery.get()).fold<double>(0, (sum, e) => sum + e.amount);
-
+    final revenue = (await _store.fresh(topups))
+        .where((t) => t['reversed'] != true)
+        .fold<double>(0, (total, t) => total + (t['amount'] as num).toDouble());
+    final spend = (await list(start: start, end: end))
+        .fold<double>(0, (total, e) => total + e.amount);
     return ProfitSummary(
         revenue: revenue, expenses: spend, profit: revenue - spend);
   }
-
-  DateTime _dateOnly(DateTime d) => DateTime.utc(d.year, d.month, d.day);
 }

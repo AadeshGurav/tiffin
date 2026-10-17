@@ -1,82 +1,59 @@
 name: tiffin
 description: >-
-  Tiffin — a unit-based canteen coupon system. One native Flutter app that runs
-  as either the LAN host (embedded server + on-device database) or a client,
-  from the same APK. See docs/PRD.md §13–§14.
+  Tiffin — a unit-based canteen coupon system. One native Flutter app; every
+  phone reads and writes the canteen's own Firebase project directly, and keeps
+  working offline. See docs/PRD.md §15 and docs/adr/0005.
 publish_to: none
-version: 2.1.0+2
+version: 3.0.0+3
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
   flutter: ">=3.24.0"
 
-# PRD §13.3 settled the package *choices*; its version numbers were "current as
-# of that research pass" and it directs an explicit bump at build time
-# (CLAUDE.md §10 "know why an upgrade is happening"). The why here: this build
-# runs on Dart 3.13, whose dot-shorthand syntax the analyzer pulled in by the
-# 2024-era pins (drift 2.21 / riverpod 2.6 / build_runner 2.4) cannot parse —
-# codegen crashes in the analyzer's summary linker. Bumped to the current
-# stable line of each; the choices are unchanged.
+# Every dependency is a decision (CLAUDE.md §10). Versions are the current
+# stable line at the time of the change that added them.
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
 
-  # --- State management / DI (PRD §13.3) ---
+  # --- State management / DI ---
   flutter_riverpod: ^3.4.2
-  riverpod_annotation: ^4.0.6
 
-  # --- Embedded HTTP server, host mode only (PRD §13.3, §13.4) ---
-  shelf: ^1.4.2
-  shelf_router: ^1.1.4
-  shelf_static: ^1.1.2
+  # --- Data: Firebase (ADR 0005) ---
+  #  Pinned to the 6.x line of cloud_firestore because fake_cloud_firestore,
+  #  which the service tests run on, doesn't support 7.x yet.
+  cloud_firestore: ^6.7.1
+  firebase_core: ^4.15.0
+  firebase_auth: ^6.7.0
+  #  Import-only: reads the SQLite snapshot inside a backup made by the
+  #  earlier LAN-host build (lib/services/legacy_import.dart).
+  sqlite3: ^3.7.1
 
-  # --- On-device database, host mode only (PRD §13.3) ---
-  drift: ^2.34.4
-  sqlite3_flutter_libs: ^0.5.24
-  path_provider: ^2.1.4
-  path: ^1.9.0
-
-  # --- LAN discovery (PRD §13.3, §13.5) ---
-  nsd: ^5.0.1
-
-  # --- QR scanning / generation (PRD §13.3) ---
+  # --- QR scanning / generation ---
   mobile_scanner: ^7.2.0
   qr_flutter: ^4.1.0
 
-  # --- PDF bill generation (PRD §13.3) ---
+  # --- Bill PDF + the share sheet ---
   pdf: ^3.11.1
   printing: ^5.13.4
 
-  # --- Self-signed TLS cert for the desktop-admin surface (PRD §13.6) ---
-  #  Native Dart key/cert generation — no mkcert, no shelling out.
-  basic_utils: ^5.8.1
+  # --- PBKDF2 password hashes and AES-GCM backup encryption ---
   pointycastle: ^4.0.0
 
-  # --- Host server as an Android foreground service (PRD §13.3) ---
-  #  EXACT pin, not a caret: §13.3 flags a reported CDN hash mismatch on a
-  #  9.1.0 build. Verify the resolved archive's SHA-256 against the upstream
-  #  GitHub release before trusting `pub get`, and keep pubspec.lock pinned.
-  flutter_foreground_task: 8.17.0
-
   # --- IANA timezone conversion (PRD §6.8) ---
-  #  Not in §13.3's table, but §6.8 requires meal windows to resolve in the
-  #  canteen's own IANA zone and Dart's core library ships no tz database.
-  #  `timezone` is the standard pure-Dart implementation (the analog of
-  #  Python's stdlib `zoneinfo` the v1 build used) — no native dependency.
+  #  Meal windows resolve in the canteen's own zone and Dart's core library
+  #  ships no tz database. Pure Dart, no native dependency.
   timezone: ^0.9.4
 
   # --- Small cross-cutting helpers ---
-  http: ^1.2.2
   shared_preferences: ^2.3.2
   flutter_secure_storage: ^11.0.0
   archive: ^4.0.2        # .xlsx and .tiffin containers are both zips
-  file_picker: ^12.2.0   # choose a backup to restore
-  # Keeps the screen awake while a device is hosting (PRD §13.3). On iOS this
-  # is the only lever available — it stops the display timeout; it cannot keep
-  # a backgrounded app alive (nothing can).
-  crypto: ^3.0.5
+  file_picker: ^12.2.0   # pick a Firebase config file or a backup
+  path_provider: ^2.1.4
+  path: ^1.9.0
   collection: ^1.18.0
   intl: ^0.20.2
   logging: ^1.3.0
@@ -85,13 +62,13 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  build_runner: ^2.16.1
-  drift_dev: ^2.34.6
-  riverpod_generator: ^4.0.8
   # App-icon generator (build tooling only). Source art in assets/icon/.
   flutter_launcher_icons: ^0.14.4
   # Native launch screen. Regenerate: dart run flutter_native_splash:create
   flutter_native_splash: ^2.4.3
+  # Service and rules tests run against an in-memory Firestore.
+  fake_cloud_firestore: ^4.2.0
+  firebase_auth_mocks: ^0.15.2
   # custom_lint / riverpod_lint are intentionally omitted: at these versions
   # their analyzer_plugin constraints don't co-resolve (riverpod_lint 3.1.8
   # wants ^0.14, the current custom_lint wants ^0.13). They're lint-only dev
@@ -102,7 +79,6 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/web_admin/
     - assets/icon/icon_foreground.png
 
 # App icon — neobrutalism coupon/ticket stub. Regenerate after editing the

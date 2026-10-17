@@ -1,114 +1,95 @@
-import 'dart:convert';
-
-import 'package:drift/drift.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/errors.dart';
-import '../data/local/database.dart' hide PurchaseScheduleItem;
-import '../data/local/mappers.dart';
+import '../data/store.dart';
 import '../domain/inventory.dart';
+import '../domain/menu.dart';
+import 'scan_service.dart' show ymd;
 
-/// Derives a shopping list from the menu calendar — a port of v1
-/// `app/services/purchase_schedule_service.py` + `app/routers/purchase_schedule.py`
-/// (PRD §6.5.1).
+/// Derives a shopping list from the menu calendar (PRD §6.5.1).
 ///
-/// [generate] is idempotent: re-running it over an overlapping range never
-/// duplicates an item or resets one already checked off. It does this the same
-/// way v1 did — check whether a row for (date, ingredient) exists before
-/// inserting — rather than a DB unique constraint, so ad-hoc manual items for
-/// the same (date, ingredient) still coexist.
+/// [generate] is idempotent: an automatic item's id is `{day}_{ingredient}_auto`,
+/// so re-running over an overlapping range refreshes the figure instead of
+/// adding a second row, and never touches an item already bought. Manual
+/// items get random ids and so coexist with automatic ones.
 class PurchaseScheduleService {
-  PurchaseScheduleService(this._db);
+  PurchaseScheduleService(this._store);
 
-  final AppDatabase _db;
+  final Store _store;
 
-  /// Builds/refreshes the shopping list from the menu calendar in the range.
-  /// For each entry, `need per ingredient = Σ(per-plate recipe qty) ×
-  /// entry.headcount`, summed per `(date, ingredient)` and rounded up to 2 dp.
-  /// Re-runnable: un-purchased `auto` rows are recomputed, purchased rows and
-  /// `manual` rows are left alone. Returns the count of newly created rows.
+  CollectionReference<Json> get _col => _store.col(Col.purchaseSchedule);
+
+  /// For each menu entry in range, need per ingredient = Σ(per-plate recipe
+  /// qty) × headcount, summed per (day, ingredient), rounded up to 2 dp.
+  /// Returns the count of newly created items.
   Future<int> generate(DateTime start, DateTime end) async {
     if (start.isAfter(end)) {
-      throw const ValidationException('start must be on or before end.');
+      throw const ValidationException(ErrorCode.purchaseRangeInvalid);
     }
-    final startDate = _dateOnly(start);
-    final endDate = _dateOnly(end);
+    final entries = (await _store.cached(_store
+            .col(Col.menu)
+            .where('date', isGreaterThanOrEqualTo: ymd(start))
+            .where('date', isLessThanOrEqualTo: ymd(end))))
+        .map(MenuEntry.fromJson);
+    final recipes =
+        (await _store.cached(_store.col(Col.recipes))).map(Recipe.fromJson);
+    final recipeByDish = {
+      for (final r in recipes) r.dishName.trim().toLowerCase(): r
+    };
+    final ingredientById = {
+      for (final i in (await _store.cached(_store.col(Col.ingredients)))
+          .map(Ingredient.fromJson))
+        i.id: i
+    };
 
-    final entries = await (_db.select(_db.menuEntries)
-          ..where((e) =>
-              e.date.isBiggerOrEqualValue(startDate) &
-              e.date.isSmallerOrEqualValue(endDate)))
-        .get();
-    if (entries.isEmpty) return 0;
-
-    final allRecipes = await _db.select(_db.recipes).get();
-    final recipeByDish = {for (final r in allRecipes) r.dishNameLower: r};
-    final allIngredients = await _db.select(_db.ingredients).get();
-    final ingredientById = {for (final i in allIngredients) i.id: i};
-
-    // (date, ingredientId) -> total quantity needed.
-    final need = <(DateTime, int), double>{};
-
+    final need = <(String, String), double>{};
     for (final entry in entries) {
       if (entry.headcount <= 0) continue;
-      final entryDate = _dateOnly(entry.date);
-      final items =
-          (jsonDecode(entry.itemsJson) as List<dynamic>).cast<String>();
-      for (final itemName in items) {
-        final recipe = recipeByDish[itemName.trim().toLowerCase()];
+      final day = ymd(entry.date);
+      for (final item in entry.items) {
+        final recipe = recipeByDish[item.trim().toLowerCase()];
         if (recipe == null) continue;
-        final lines = (jsonDecode(recipe.ingredientsJson) as List<dynamic>)
-            .map((e) => RecipeIngredient.fromJson(e as Map<String, dynamic>));
-        for (final ri in lines) {
+        for (final ri in recipe.ingredients) {
           if (!ingredientById.containsKey(ri.ingredientId)) continue;
-          final key = (entryDate, ri.ingredientId);
+          final key = (day, ri.ingredientId);
           need[key] = (need[key] ?? 0) + ri.quantity * entry.headcount;
         }
       }
     }
+    if (need.isEmpty) return 0;
 
-    final now = DateTime.now().toUtc();
+    final now = DateTime.now().toUtc().toIso8601String();
+    final b = _store.batch();
     var created = 0;
-
-    for (final entry in need.entries) {
-      final (date, ingredientId) = entry.key;
+    for (final MapEntry(key: (day, ingredientId), value: qty) in need.entries) {
       final ingredient = ingredientById[ingredientId]!;
-      final qty = _roundUp2(entry.value);
-      final note = '${formatQuantity(qty)} ${ingredient.unit}';
-
-      final existing = await (_db.select(_db.purchaseScheduleItems)
-            ..where((p) =>
-                p.date.equals(date) &
-                p.ingredientId.equals(ingredientId) &
-                p.source.equals('auto'))
-            ..limit(1))
-          .getSingleOrNull();
-
+      final note = '${formatQuantity(_roundUp2(qty))} ${ingredient.unit}';
+      final ref = _col.doc('${day}_${ingredientId}_auto');
+      final existing = await _store.cachedDoc(ref);
       if (existing == null) {
-        await _db.into(_db.purchaseScheduleItems).insert(
-              PurchaseScheduleItemsCompanion.insert(
-                date: date,
-                ingredientId: ingredientId,
-                ingredientName: ingredient.name,
-                ingredientUnit: ingredient.unit,
-                quantityNote: note,
-                source: 'auto',
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
+        b.set(ref, {
+          'date': day,
+          'ingredientId': ingredientId,
+          'ingredientName': ingredient.name,
+          'ingredientUnit': ingredient.unit,
+          'quantityNote': note,
+          'source': 'auto',
+          'purchased': false,
+          'createdAt': now,
+          'updatedAt': now,
+        });
         created++;
-      } else if (!existing.purchased) {
-        // Headcount or recipe changed since last run — refresh the figure.
-        await (_db.update(_db.purchaseScheduleItems)
-              ..where((p) => p.id.equals(existing.id)))
-            .write(PurchaseScheduleItemsCompanion(
-          quantityNote: Value(note),
-          ingredientName: Value(ingredient.name),
-          ingredientUnit: Value(ingredient.unit),
-          updatedAt: Value(now),
-        ));
+      } else if (existing['purchased'] != true) {
+        // Headcount or recipe changed since the last run — refresh it.
+        b.update(ref, {
+          'quantityNote': note,
+          'ingredientName': ingredient.name,
+          'ingredientUnit': ingredient.unit,
+          'updatedAt': now,
+        });
       }
     }
+    await _store.commit(b, 'purchaseSchedule.generate');
     return created;
   }
 
@@ -118,57 +99,49 @@ class PurchaseScheduleService {
     DateTime? start,
     DateTime? end,
   }) async {
-    final query = _db.select(_db.purchaseScheduleItems)
-      ..orderBy([(p) => OrderingTerm.asc(p.date)]);
-    if (start != null) {
-      query.where((p) => p.date.isBiggerOrEqualValue(_dateOnly(start)));
-    }
-    if (end != null) {
-      query.where((p) => p.date.isSmallerOrEqualValue(_dateOnly(end)));
-    }
-    return (await query.get()).map(purchaseItemFromRow).toList();
+    Query<Json> q = _col;
+    if (start != null) q = q.where('date', isGreaterThanOrEqualTo: ymd(start));
+    if (end != null) q = q.where('date', isLessThanOrEqualTo: ymd(end));
+    return (await _store.cached(q)).map(PurchaseScheduleItem.fromJson).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
   }
 
   Future<PurchaseScheduleItem> addManual(
     DateTime date,
-    int ingredientId,
+    String ingredientId,
     String quantityNote,
   ) async {
     if (quantityNote.trim().isEmpty) {
-      throw const ValidationException('A quantity note is required.');
+      throw const ValidationException(ErrorCode.purchaseQuantityRequired);
     }
-    final ingredient = await (_db.select(_db.ingredients)
-          ..where((i) => i.id.equals(ingredientId)))
-        .getSingleOrNull();
+    final ingredient =
+        await _store.cachedDoc(_store.doc(Col.ingredients, ingredientId));
     if (ingredient == null) {
-      throw const NotFoundException('Ingredient not found.');
+      throw const NotFoundException(ErrorCode.ingredientNotFound);
     }
-    final now = DateTime.now().toUtc();
-    final id = await _db.into(_db.purchaseScheduleItems).insert(
-          PurchaseScheduleItemsCompanion.insert(
-            date: _dateOnly(date),
-            ingredientId: ingredientId,
-            ingredientName: ingredient.name,
-            ingredientUnit: ingredient.unit,
-            quantityNote: quantityNote,
-            source: 'manual',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-    final row = await (_db.select(_db.purchaseScheduleItems)
-          ..where((p) => p.id.equals(id)))
-        .getSingle();
-    return purchaseItemFromRow(row);
+    final now = DateTime.now().toUtc().toIso8601String();
+    final id = _store.newId(Col.purchaseSchedule);
+    final row = {
+      'date': ymd(date),
+      'ingredientId': ingredientId,
+      'ingredientName': ingredient['name'],
+      'ingredientUnit': ingredient['unit'],
+      'quantityNote': quantityNote,
+      'source': 'manual',
+      'purchased': false,
+      'createdAt': now,
+      'updatedAt': now,
+    };
+    await _store.commit(
+        _store.batch()..set(_col.doc(id), row), 'purchaseSchedule.addManual');
+    return PurchaseScheduleItem.fromJson({...row, 'id': id});
   }
 
-  /// [actingUsername] is recorded when an item is marked purchased.
-  ///
-  /// Marking purchased with [purchasedQty] adds that amount to the ingredient's
-  /// stock; with [purchasedCost] it also records an [Expenses] row. Un-marking
-  /// reverses both. All in one transaction.
+  /// Marking an item bought with [purchasedQty] adds that much to stock; with
+  /// [purchasedCost] it also records an expense. Un-marking undoes both. One
+  /// batch, so the stock, the expense and the tick can't disagree.
   Future<PurchaseScheduleItem> updateItem(
-    int id, {
+    String id, {
     String? quantityNote,
     bool? purchased,
     double? purchasedQty,
@@ -176,100 +149,73 @@ class PurchaseScheduleService {
     required String actingUsername,
   }) async {
     if (quantityNote == null && purchased == null) {
-      throw const ValidationException('Nothing to update.');
+      throw const ValidationException(ErrorCode.nothingToUpdate);
+    }
+    final ref = _col.doc(id);
+    final row = await _store.cachedDoc(ref);
+    if (row == null) {
+      throw const NotFoundException(ErrorCode.purchaseItemNotFound);
     }
     final now = DateTime.now().toUtc();
+    final wasPurchased = row['purchased'] == true;
+    final ingredientRef =
+        _store.doc(Col.ingredients, row['ingredientId'] as String);
+    final b = _store.batch();
+    final changes = <String, dynamic>{
+      if (quantityNote != null) 'quantityNote': quantityNote,
+      'updatedAt': now.toIso8601String(),
+    };
 
-    await _db.transaction(() async {
-      final row = await (_db.select(_db.purchaseScheduleItems)
-            ..where((p) => p.id.equals(id)))
-          .getSingleOrNull();
-      if (row == null) {
-        throw const NotFoundException('Purchase schedule item not found.');
+    if (purchased == true && !wasPurchased) {
+      if (purchasedQty != null && purchasedQty != 0) {
+        b.update(
+            ingredientRef, {'stockQty': FieldValue.increment(purchasedQty)});
       }
-
-      var expenseId = row.expenseId;
-      var storedQty = row.purchasedQty;
-      var storedCost = row.purchasedCost;
-
-      if (purchased == true && !row.purchased) {
-        // Newly purchased — apply stock and, if given, an expense.
-        if (purchasedQty != null && purchasedQty != 0) {
-          await _bumpStock(row.ingredientId, purchasedQty, now);
-        }
-        if (purchasedCost != null && purchasedCost > 0) {
-          expenseId = await _db.into(_db.expenses).insert(
-                ExpensesCompanion.insert(
-                  category: 'ingredients',
-                  description: '${row.ingredientName} — purchase',
-                  amount: purchasedCost,
-                  date: _dateOnly(now),
-                  createdBy: actingUsername,
-                ),
-              );
-        }
-        storedQty = purchasedQty;
-        storedCost = purchasedCost;
-      } else if (purchased == false && row.purchased) {
-        // Un-marked — roll back what marking it did.
-        if (row.purchasedQty != null && row.purchasedQty != 0) {
-          await _bumpStock(row.ingredientId, -row.purchasedQty!, now);
-        }
-        if (row.expenseId != null) {
-          await (_db.delete(_db.expenses)
-                ..where((e) => e.id.equals(row.expenseId!)))
-              .go();
-        }
-        expenseId = null;
-        storedQty = null;
-        storedCost = null;
+      String? expenseId;
+      if (purchasedCost != null && purchasedCost > 0) {
+        expenseId = _store.newId(Col.expenses);
+        b.set(_store.doc(Col.expenses, expenseId), {
+          'category': 'ingredients',
+          'description': '${row['ingredientName']} — purchase',
+          'amount': purchasedCost,
+          'date': ymd(now),
+          'createdBy': actingUsername,
+        });
       }
-
-      await (_db.update(_db.purchaseScheduleItems)
-            ..where((p) => p.id.equals(id)))
-          .write(PurchaseScheduleItemsCompanion(
-        quantityNote:
-            quantityNote == null ? const Value.absent() : Value(quantityNote),
-        purchased: purchased == null ? const Value.absent() : Value(purchased),
-        purchasedBy: purchased == null
-            ? const Value.absent()
-            : Value(purchased ? actingUsername : null),
-        purchasedAt: purchased == null
-            ? const Value.absent()
-            : Value(purchased ? now : null),
-        purchasedQty: Value(storedQty),
-        purchasedCost: Value(storedCost),
-        expenseId: Value(expenseId),
-        updatedAt: Value(now),
-      ));
-    });
-
-    final row = await (_db.select(_db.purchaseScheduleItems)
-          ..where((p) => p.id.equals(id)))
-        .getSingle();
-    return purchaseItemFromRow(row);
-  }
-
-  Future<void> _bumpStock(int ingredientId, double delta, DateTime now) async {
-    final ing = await (_db.select(_db.ingredients)
-          ..where((i) => i.id.equals(ingredientId)))
-        .getSingleOrNull();
-    if (ing == null) return;
-    await (_db.update(_db.ingredients)..where((i) => i.id.equals(ingredientId)))
-        .write(IngredientsCompanion(
-      stockQty: Value(ing.stockQty + delta),
-      updatedAt: Value(now),
-    ));
-  }
-
-  Future<void> deleteItem(int id) async {
-    final n = await (_db.delete(_db.purchaseScheduleItems)
-          ..where((p) => p.id.equals(id)))
-        .go();
-    if (n == 0) {
-      throw const NotFoundException('Purchase schedule item not found.');
+      changes.addAll({
+        'purchased': true,
+        'purchasedBy': actingUsername,
+        'purchasedAt': now.toIso8601String(),
+        'purchasedQty': purchasedQty,
+        'purchasedCost': purchasedCost,
+        'expenseId': expenseId,
+      });
+    } else if (purchased == false && wasPurchased) {
+      final qty = (row['purchasedQty'] as num?)?.toDouble();
+      if (qty != null && qty != 0) {
+        b.update(ingredientRef, {'stockQty': FieldValue.increment(-qty)});
+      }
+      final expenseId = row['expenseId'] as String?;
+      if (expenseId != null) b.delete(_store.doc(Col.expenses, expenseId));
+      changes.addAll({
+        'purchased': false,
+        'purchasedBy': null,
+        'purchasedAt': null,
+        'purchasedQty': null,
+        'purchasedCost': null,
+        'expenseId': null,
+      });
     }
+    b.update(ref, changes);
+    await _store.commit(b, 'purchaseSchedule.update $id');
+    return PurchaseScheduleItem.fromJson({...row, ...changes});
   }
 
-  DateTime _dateOnly(DateTime d) => DateTime.utc(d.year, d.month, d.day);
+  Future<void> deleteItem(String id) async {
+    if (await _store.cachedDoc(_col.doc(id)) == null) {
+      throw const NotFoundException(ErrorCode.purchaseItemNotFound);
+    }
+    await _store.commit(
+        _store.batch()..delete(_col.doc(id)), 'purchaseSchedule.delete');
+  }
 }

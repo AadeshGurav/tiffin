@@ -1,4 +1,4 @@
-import '../core/app_mode.dart';
+import '../core/meal_type.dart';
 
 /// Menu planning models (PRD §6.5).
 
@@ -12,14 +12,14 @@ class MenuCategory {
   });
 
   factory MenuCategory.fromJson(Map<String, dynamic> j) => MenuCategory(
-        id: j['id'] as int,
+        id: j['id'] as String,
         name: j['name'] as String,
         description: j['description'] as String?,
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 
-  final int id;
+  final String id;
   final String name;
   final String? description;
   final DateTime createdAt;
@@ -48,7 +48,7 @@ class MenuEntry {
   });
 
   factory MenuEntry.fromJson(Map<String, dynamic> j) => MenuEntry(
-        id: j['id'] as int,
+        id: j['id'] as String,
         date: DateTime.parse(j['date'] as String),
         mealType: MealType.fromWire(j['mealType'] as String),
         category: j['category'] as String,
@@ -57,7 +57,7 @@ class MenuEntry {
         createdBy: j['createdBy'] as String,
       );
 
-  final int id;
+  final String id;
   final DateTime date;
   final MealType mealType;
 

@@ -62,7 +62,7 @@ class RecipesTab extends ConsumerWidget {
   }
 }
 
-typedef _Line = ({int ingredientId, TextEditingController qty});
+typedef _Line = ({String ingredientId, TextEditingController qty});
 
 /// Add or edit a recipe. Top-level so the Kitchen setup FAB and the tab's rows
 /// share it.
@@ -86,7 +86,7 @@ Future<void> openRecipeForm(
     ));
   }
 
-  String unitFor(int ingredientId) => allIngredients
+  String unitFor(String ingredientId) => allIngredients
       .firstWhere((x) => x.id == ingredientId,
           orElse: () => allIngredients.first)
       .unit;
@@ -133,7 +133,7 @@ Future<void> openRecipeForm(
                       children: [
                         Expanded(
                           flex: 3,
-                          child: DropdownButton<int>(
+                          child: DropdownButton<String>(
                             value: lines[i].ingredientId,
                             isExpanded: true,
                             items: [
@@ -167,7 +167,8 @@ Future<void> openRecipeForm(
                             style: t.text.label),
                         IconButton(
                           icon: const Icon(Icons.close, size: 18),
-                          tooltip: AppText.of(context).recipesScreenRemoveTooltip,
+                          tooltip:
+                              AppText.of(context).recipesScreenRemoveTooltip,
                           onPressed: lines.length == 1
                               ? null
                               : () => setLocal(() => lines.removeAt(i)),
@@ -189,7 +190,8 @@ Future<void> openRecipeForm(
                     ),
                     TextButton.icon(
                       icon: const Icon(Icons.add_circle_outline),
-                      label: Text(AppText.of(context).recipesScreenNewIngredient),
+                      label:
+                          Text(AppText.of(context).recipesScreenNewIngredient),
                       onPressed: addNewIngredient,
                     ),
                   ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/backend.dart';
 import '../ui/theme/appearance.dart';
 import '../ui/theme/theme_catalog.dart';
 import 'providers.dart';
@@ -33,18 +32,15 @@ final deviceAppearanceProvider =
     NotifierProvider<AppearanceController, Appearance>(
         AppearanceController.new);
 
-/// The host's policy, fetched from the public endpoint so it applies before
-/// anyone signs in.
+/// The canteen's name and appearance policy, from its settings document.
 ///
-/// Any failure resolves to [AppearancePolicy.none] rather than propagating: a
-/// device that cannot reach its host yet must still render *something*, and
-/// falling back to the device's own choice is the honest default. A host that
-/// is enforcing will be obeyed the moment it is reachable.
+/// Any failure — not approved yet, cache still cold — resolves to
+/// [HostGreeting.unknown]: a phone must still render *something*, and its own
+/// choice is the honest default until the canteen's policy is readable.
 final hostGreetingProvider = FutureProvider<HostGreeting>((ref) async {
-  if (ref.watch(currentModeProvider) == null) return HostGreeting.unknown;
   try {
-    final Backend backend = ref.watch(backendProvider);
-    return await backend.greeting();
+    await ref.watch(backendReadyProvider.future);
+    return await ref.watch(backendProvider).greeting();
   } catch (_) {
     return HostGreeting.unknown;
   }

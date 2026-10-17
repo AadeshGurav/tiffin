@@ -1,229 +1,166 @@
-import 'package:drift/drift.dart';
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/errors.dart';
 import '../core/logging.dart';
-import '../data/local/database.dart' hide Topup;
-import '../data/local/mappers.dart';
+import '../data/store.dart';
 import '../domain/ledger.dart';
 import '../domain/member.dart';
-import 'artifact_store.dart';
 import 'billing_service.dart';
+import 'member_service.dart';
 import 'qr_service.dart';
 import 'settings_service.dart';
 
-/// Top-ups & billing — a port of v1 `app/routers/topups.py`. The bill amount is
-/// always computed from `settings.unitPrices`, never client-supplied (PRD §6.3).
-/// Bill/QR generation is isolated: if it fails, the balance credit still
-/// stands (CLAUDE.md §5).
+/// Top-ups & billing (PRD §6.3). The amount is always computed from the
+/// configured unit prices, never typed in. The UPI QR is rendered on demand
+/// from the stored record rather than kept as a file, so any phone can show it.
 class TopupService {
-  TopupService(
-      this._db, this._settings, this._billing, this._qr, this._artifacts);
+  TopupService(this._store, this._settings, this._billing, this._qr);
 
-  final AppDatabase _db;
+  final Store _store;
   final SettingsService _settings;
   final BillingService _billing;
   final QrService _qr;
-  final ArtifactStore _artifacts;
   final _log = log('topup');
 
-  Future<List<Topup>> list({int? memberId, int limit = 200}) async {
-    final query = _db.select(_db.topups)
-      ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-      ..limit(limit.clamp(1, 1000));
-    if (memberId != null) query.where((t) => t.memberId.equals(memberId));
-    return (await query.get()).map(topupFromRow).toList();
+  CollectionReference<Json> get _col => _store.col(Col.topups);
+
+  Future<List<Topup>> list({String? memberId, int limit = 200}) async {
+    Query<Json> q =
+        _col.orderBy('createdAt', descending: true).limit(limit.clamp(1, 1000));
+    if (memberId != null) q = q.where('memberId', isEqualTo: memberId);
+    return (await _store.fresh(q)).map(Topup.fromJson).toList();
   }
 
-  Future<Topup> getById(int id) async {
-    final row = await (_db.select(_db.topups)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
-    if (row == null) throw const NotFoundException('Top-up not found.');
-    return topupFromRow(row);
+  Future<Topup> getById(String id) async {
+    final row = await _store.cachedDoc(_col.doc(id)) ??
+        await _store.freshDoc(_col.doc(id));
+    if (row == null) throw const NotFoundException(ErrorCode.topupNotFound);
+    return Topup.fromJson(row);
   }
 
   Future<Topup> create(TopupDraft draft) async {
     if (draft.isAllZero) {
-      throw const ValidationException('A top-up needs at least one unit.');
+      throw const ValidationException(ErrorCode.topupNeedsUnits);
     }
-    final member = await (_db.select(_db.members)
-          ..where((m) => m.id.equals(draft.memberId)))
-        .getSingleOrNull();
-    if (member == null) throw const NotFoundException('Member not found.');
+    final memberRow =
+        await _store.cachedDoc(_store.doc(Col.members, draft.memberId));
+    if (memberRow == null) {
+      throw const NotFoundException(ErrorCode.memberNotFound);
+    }
+    final member = Member.fromJson(memberRow);
 
     final settings = await _settings.read();
     final prices = settings.unitPrices;
     final amount = draft.lunchUnits * prices.lunch +
         draft.breakfastUnits * prices.breakfast +
         draft.brunchUnits * prices.brunch;
-
-    final now = DateTime.now().toUtc();
-    final newBalances = UnitCounts(
-      lunch: member.lunchBalance + draft.lunchUnits,
-      breakfast: member.breakfastBalance + draft.breakfastUnits,
-      brunch: member.brunchBalance + draft.brunchUnits,
+    final units = UnitCounts(
+      lunch: draft.lunchUnits,
+      breakfast: draft.breakfastUnits,
+      brunch: draft.brunchUnits,
     );
 
-    final topupId = await _db.transaction(() async {
-      final id = await _db.into(_db.topups).insert(TopupsCompanion.insert(
-            memberId: draft.memberId,
-            lunchUnits: Value(draft.lunchUnits),
-            breakfastUnits: Value(draft.breakfastUnits),
-            brunchUnits: Value(draft.brunchUnits),
-            amount: amount,
-            paymentMethod: draft.paymentMethod.wire,
-            // cash settles now; upi is pending until the admin confirms receipt.
-            paymentStatus: draft.paymentMethod == PaymentMethod.cash
-                ? 'confirmed'
-                : 'pending',
-            createdBy: draft.createdBy,
-            createdAt: now,
-          ));
-      await (_db.update(_db.members)..where((m) => m.id.equals(member.id)))
-          .write(
-        MembersCompanion(
-          lunchBalance: Value(newBalances.lunch),
-          breakfastBalance: Value(newBalances.breakfast),
-          brunchBalance: Value(newBalances.brunch),
-          updatedAt: Value(now),
-        ),
-      );
-      return id;
-    });
+    final topup = Topup(
+      id: _store.newId(Col.topups),
+      memberId: draft.memberId,
+      lunchUnits: draft.lunchUnits,
+      breakfastUnits: draft.breakfastUnits,
+      brunchUnits: draft.brunchUnits,
+      amount: amount,
+      paymentMethod: draft.paymentMethod,
+      // Cash settles now; UPI is pending until the admin confirms receipt.
+      paymentStatus:
+          draft.paymentMethod == PaymentMethod.cash ? 'confirmed' : 'pending',
+      hasBill: true,
+      hasUpiQr:
+          draft.paymentMethod == PaymentMethod.upi && settings.upiId.isNotEmpty,
+      createdBy: draft.createdBy,
+      createdAt: DateTime.now().toUtc(),
+      balancesAfter: UnitCounts(
+        lunch: member.balances.lunch + units.lunch,
+        breakfast: member.balances.breakfast + units.breakfast,
+        brunch: member.balances.brunch + units.brunch,
+      ),
+    );
 
-    _log.info('credited member_id=${draft.memberId} topup_id=$topupId '
-        'amount=${amount.toStringAsFixed(2)} method=${draft.paymentMethod.wire} '
-        'by=${draft.createdBy}');
-
-    // Layered on top of a transaction that already committed — a rendering
-    // failure must not lose or redo the credit.
-    try {
-      final billBytes = await _billing.buildBillPdf(
-        topupId: topupId,
-        member: memberFromRow(member),
-        lunchUnits: draft.lunchUnits,
-        breakfastUnits: draft.breakfastUnits,
-        brunchUnits: draft.brunchUnits,
-        amount: amount,
-        paymentMethod: draft.paymentMethod.wire,
-        newBalances: newBalances,
-        appName: settings.appName,
-      );
-      final billPath = await _artifacts.writeBill(topupId, billBytes);
-
-      String? qrPath;
-      if (draft.paymentMethod == PaymentMethod.upi) {
-        final uri = _billing.upiPaymentUri(
-          amount: amount,
-          note: 'Canteen topup $topupId',
-          upiId: settings.upiId,
-          upiPayeeName: settings.upiPayeeName,
-        );
-        if (uri != null) {
-          final qrBytes = await _qr.renderPng(uri);
-          qrPath = await _artifacts.writeUpiQr(topupId, qrBytes);
-        }
-      }
-
-      await (_db.update(_db.topups)..where((t) => t.id.equals(topupId))).write(
-        TopupsCompanion(
-          billPdfPath: Value(billPath),
-          upiQrPath: Value(qrPath),
-        ),
-      );
-    } catch (e, st) {
-      _log.severe(
-          'bill_generation_failed topup_id=$topupId — balance already credited; '
-          'admin should regenerate or inform the payer',
-          e,
-          st);
-    }
-
-    return getById(topupId);
+    final b = _store.batch()
+      ..set(_col.doc(topup.id), topup.toJson()..remove('id'))
+      ..update(_store.doc(Col.members, member.id),
+          MemberService.balanceDelta(units));
+    await _store.commit(b, 'topups.create ${topup.id}');
+    _log.info('credited member_id=${member.id} topup_id=${topup.id} '
+        'amount=${amount.toStringAsFixed(2)} '
+        'method=${draft.paymentMethod.wire} by=${draft.createdBy}');
+    return topup;
   }
 
-  Future<void> confirmPayment(int topupId) async {
-    final n = await (_db.update(_db.topups)..where((t) => t.id.equals(topupId)))
-        .write(const TopupsCompanion(paymentStatus: Value('confirmed')));
-    if (n == 0) throw const NotFoundException('Top-up not found.');
+  Future<void> confirmPayment(String topupId) async {
+    await getById(topupId);
+    await _store.commit(
+        _store.batch()
+          ..update(_col.doc(topupId), {'paymentStatus': 'confirmed'}),
+        'topups.confirm');
     _log.info('payment_confirmed topup_id=$topupId');
   }
 
-  /// Reverses a top-up: subtracts the units it credited back off the member's
-  /// current balance and flags the row. The row is kept for audit, never
-  /// deleted (mirrors [ScanService.reverseScan], PRD §6.3).
-  ///
-  /// Refuses when the member has already spent into those units — that is a
-  /// refund, not a reversal, and the balance would otherwise go negative.
-  Future<ReversalResult> reverse(int topupId, String reversedBy) async {
-    final row = await (_db.select(_db.topups)
-          ..where((t) => t.id.equals(topupId)))
-        .getSingleOrNull();
-    if (row == null) {
-      return const ReversalResult(success: false, message: 'Top-up not found.');
+  /// Takes back the units a top-up credited and flags the record — kept for
+  /// audit, never deleted (PRD §6.3). Refuses when some of those units are
+  /// already spent: that's a refund, not a reversal.
+  Future<ReversalResult> reverse(String topupId, String reversedBy) async {
+    final Topup topup;
+    try {
+      topup = await getById(topupId);
+    } on NotFoundException {
+      return const ReversalResult(ReversalCode.topupNotFound);
     }
-    if (row.reversed) {
-      return const ReversalResult(
-          success: false, message: 'This top-up is already reversed.');
+    if (topup.reversed) {
+      return const ReversalResult(ReversalCode.topupAlreadyReversed);
     }
-
-    final member = await (_db.select(_db.members)
-          ..where((m) => m.id.equals(row.memberId)))
-        .getSingleOrNull();
-    if (member == null) {
-      return const ReversalResult(success: false, message: 'Member not found.');
+    final memberRow =
+        await _store.cachedDoc(_store.doc(Col.members, topup.memberId));
+    if (memberRow == null) {
+      return const ReversalResult(ReversalCode.memberNotFound);
     }
-    if (member.lunchBalance < row.lunchUnits ||
-        member.breakfastBalance < row.breakfastUnits ||
-        member.brunchBalance < row.brunchUnits) {
-      return const ReversalResult(
-        success: false,
-        message: 'Some of these units have already been used. '
-            'Process a refund instead.',
-      );
+    final balances = Member.fromJson(memberRow).balances;
+    if (balances.lunch < topup.lunchUnits ||
+        balances.breakfast < topup.breakfastUnits ||
+        balances.brunch < topup.brunchUnits) {
+      return const ReversalResult(ReversalCode.topupUnitsUsed);
     }
 
-    final now = DateTime.now().toUtc();
-    await _db.transaction(() async {
-      await (_db.update(_db.members)..where((m) => m.id.equals(member.id)))
-          .write(MembersCompanion(
-        lunchBalance: Value(member.lunchBalance - row.lunchUnits),
-        breakfastBalance: Value(member.breakfastBalance - row.breakfastUnits),
-        brunchBalance: Value(member.brunchBalance - row.brunchUnits),
-        updatedAt: Value(now),
-      ));
-      await (_db.update(_db.topups)..where((t) => t.id.equals(topupId))).write(
-        TopupsCompanion(
-          reversed: const Value(true),
-          reversedAt: Value(now),
-          reversedBy: Value(reversedBy),
-        ),
-      );
-    });
-
-    _log.info('reversed topup_id=$topupId member_id=${member.id} '
-        'by=$reversedBy');
-    return const ReversalResult(
-        success: true, message: 'Top-up reversed and balance corrected.');
+    final now = DateTime.now().toUtc().toIso8601String();
+    final b = _store.batch()
+      ..update(_col.doc(topupId), {
+        'reversed': true,
+        'reversedAt': now,
+        'reversedBy': reversedBy,
+      })
+      ..update(
+          _store.doc(Col.members, topup.memberId),
+          MemberService.balanceDelta(
+              UnitCounts(
+                lunch: topup.lunchUnits,
+                breakfast: topup.breakfastUnits,
+                brunch: topup.brunchUnits,
+              ),
+              sign: -1));
+    await _store.commit(b, 'topups.reverse $topupId');
+    _log.info('reversed topup_id=$topupId by=$reversedBy');
+    return const ReversalResult(ReversalCode.topupReversed);
   }
 
-  /// Raw bytes of the stored bill PDF, for the API to stream.
-  Future<Uint8List> billPdf(int topupId) async {
-    final row = await (_db.select(_db.topups)
-          ..where((t) => t.id.equals(topupId)))
-        .getSingleOrNull();
-    if (row?.billPdfPath == null) {
-      throw const NotFoundException('No bill for this top-up.');
-    }
-    return _artifacts.read(row!.billPdfPath!);
-  }
-
-  Future<Uint8List> upiQr(int topupId) async {
-    final row = await (_db.select(_db.topups)
-          ..where((t) => t.id.equals(topupId)))
-        .getSingleOrNull();
-    if (row?.upiQrPath == null) {
-      throw const NotFoundException('No UPI QR for this top-up.');
-    }
-    return _artifacts.read(row!.upiQrPath!);
+  Future<Uint8List> upiQr(String topupId) async {
+    final topup = await getById(topupId);
+    final settings = await _settings.read();
+    final uri = _billing.upiPaymentUri(
+      amount: topup.amount,
+      note: 'Canteen topup ${topup.id}',
+      upiId: settings.upiId,
+      upiPayeeName: settings.upiPayeeName,
+    );
+    if (uri == null) throw const NotFoundException(ErrorCode.topupNotFound);
+    return _qr.renderPng(uri);
   }
 }

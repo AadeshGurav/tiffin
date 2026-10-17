@@ -1,3 +1,4 @@
+import 'package:tiffin/l10n/app_localizations.dart';
 import 'package:tiffin/ui/shared_widgets/motion.dart';
 import 'package:tiffin/ui/theme/app_theme.dart';
 import 'package:tiffin/ui/theme/theme_catalog.dart';
@@ -18,6 +19,8 @@ void main() {
   }) async {
     late MotionTokens seen;
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme: buildTiffinTheme(theme, Brightness.light, motion: themeMotion),
       home: MediaQuery(
         data: MediaQueryData(disableAnimations: disableAnimations),
@@ -68,6 +71,8 @@ void main() {
   testWidgets('with motion off, a press does not scale the surface',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme:
           buildTiffinTheme(TiffinThemeId.clay, Brightness.light, motion: false),
       home: Scaffold(
@@ -79,6 +84,8 @@ void main() {
 
   testWidgets('with motion on, a press scales the surface', (tester) async {
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme: buildTiffinTheme(TiffinThemeId.clay, Brightness.light),
       home: Scaffold(
         body: PressEffect(onTap: () {}, child: const Text('tap me')),
@@ -89,6 +96,8 @@ void main() {
 
   testWidgets('a non-tappable surface gets no gesture wrapper', (tester) async {
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme: buildTiffinTheme(TiffinThemeId.clay, Brightness.light),
       home: const Scaffold(body: PressEffect(child: Text('static'))),
     ));
@@ -100,6 +109,8 @@ void main() {
       (tester) async {
     for (final motion in [true, false]) {
       await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppText.localizationsDelegates,
+        supportedLocales: AppText.supportedLocales,
         theme: buildTiffinTheme(TiffinThemeId.neobrutal, Brightness.light,
             motion: motion),
         home: Scaffold(
@@ -120,6 +131,8 @@ void main() {
   testWidgets('a route pushed with motion off has no transition',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme: buildTiffinTheme(TiffinThemeId.frost, Brightness.light,
           motion: false),
       home: Builder(

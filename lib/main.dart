@@ -1,24 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
+import 'app/app_gate.dart';
 import 'app/appearance_providers.dart';
 import 'app/bootstrap.dart';
 import 'app/locale_providers.dart';
-import 'app/mode_gate.dart';
-import 'app/providers.dart';
-import 'core/app_mode.dart';
 import 'core/logging.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/locale_store.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/theme/tokens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Required by flutter_foreground_task before any service call (PRD §13.3).
-  FlutterForegroundTask.initCommunicationPort();
+
+  final prefs = await bootstrap();
 
   // Nothing fails silently (PRD §7, CLAUDE.md §8): every uncaught framework or
   // async error is written to the log and shown as a readable panel instead of
@@ -29,19 +28,17 @@ Future<void> main() async {
     crash.severe('flutter framework error', details.exception, details.stack);
     priorOnError?.call(details);
   };
-  ErrorWidget.builder = (details) => _FriendlyErrorWidget(details: details);
+  final crashText = lookupAppText(LocaleStore(prefs).read().locale);
+  ErrorWidget.builder =
+      (details) => _FriendlyErrorWidget(details: details, text: crashText);
   PlatformDispatcher.instance.onError = (error, stack) {
     crash.severe('uncaught async error', error, stack);
     return true;
   };
 
-  final b = await bootstrap();
   runApp(
     ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(b.prefs),
-        appModeStoreProvider.overrideWithValue(b.modeStore),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       child: const TiffinApp(),
     ),
   );
@@ -56,6 +53,10 @@ class TiffinApp extends ConsumerWidget {
     // follows the OS without us watching for brightness changes ourselves.
     final appearance = ref.watch(effectiveAppearanceProvider);
     final localeId = ref.watch(deviceLocaleProvider);
+    final appName = ref.watch(hostGreetingProvider).asData?.value.appName;
+    // Every DateFormat in the app follows the chosen language from here, so
+    // no screen has to remember to pass a locale.
+    Intl.defaultLocale = localeId.code;
     ThemeData themeFor(Brightness brightness) => buildTiffinTheme(
           appearance.theme,
           brightness,
@@ -63,14 +64,13 @@ class TiffinApp extends ConsumerWidget {
         );
 
     return MaterialApp(
-      title: 'Tiffin',
+      onGenerateTitle: (context) => appName ?? AppText.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: themeFor(Brightness.light),
       darkTheme: themeFor(Brightness.dark),
       themeMode: appearance.mode,
-      // English, Hindi, Marathi (CLAUDE.md §13, PRD i18n plan §15.2). The
-      // device's own saved choice drives this, never the OS locale — see
-      // LocaleStore's doc comment for why.
+      // English, Hindi, Marathi (CLAUDE.md §13). The device's own saved
+      // choice drives this, never the OS locale — see LocaleStore.
       locale: localeId.locale,
       localizationsDelegates: const [
         AppText.delegate,
@@ -79,61 +79,21 @@ class TiffinApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppText.supportedLocales,
-      // WithForegroundTask lets the plugin manage the app lifecycle cleanly
-      // while the host-keep-alive service runs (PRD §13.3).
-      home: const WithForegroundTask(child: _AppRoot()),
+      home: const AppGate(),
     );
   }
-}
-
-/// Re-arms the LAN layer whenever the app comes back to the foreground: a
-/// client that was asleep re-runs discovery, a host re-checks its server is
-/// up. Discovery and mDNS registration both go stale across sleep/wake and
-/// Wi-Fi changes (CLAUDE.md §4.6).
-class _AppRoot extends ConsumerStatefulWidget {
-  const _AppRoot();
-
-  @override
-  ConsumerState<_AppRoot> createState() => _AppRootState();
-}
-
-class _AppRootState extends ConsumerState<_AppRoot>
-    with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    switch (ref.read(currentModeProvider)) {
-      case AppMode.client:
-        ref.read(hostBrowserProvider).restart();
-      case AppMode.host:
-        ref.read(hostServingProvider.notifier).ensureStarted();
-      case null:
-        break;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => const ModeGate();
 }
 
 /// Replaces Flutter's grey/yellow error box with something an operator can read
 /// and report — the message, and (debug only) where it came from.
 class _FriendlyErrorWidget extends StatelessWidget {
-  const _FriendlyErrorWidget({required this.details});
+  const _FriendlyErrorWidget({required this.details, required this.text});
 
   final FlutterErrorDetails details;
+
+  /// Looked up once at startup: this can render above MaterialApp, where
+  /// there are no localizations to ask.
+  final AppText text;
 
   @override
   Widget build(BuildContext context) {
@@ -159,13 +119,11 @@ class _FriendlyErrorWidget extends StatelessWidget {
           children: [
             Icon(Icons.bug_report, color: foreground, size: 40),
             const SizedBox(height: NbSpace.sm),
-            Text('This screen hit a problem.',
+            Text(text.crashTitle,
                 textAlign: TextAlign.center, style: labelStyle),
             const SizedBox(height: NbSpace.xs),
             Text(
-              kReleaseMode
-                  ? 'Go back and try again — it has been written to the log.'
-                  : '${details.exception}',
+              kReleaseMode ? text.crashBody : '${details.exception}',
               textAlign: TextAlign.center,
               style: bodyStyle,
             ),

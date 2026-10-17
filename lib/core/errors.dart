@@ -1,69 +1,142 @@
 /// Typed application errors shared by every layer.
 ///
-/// The whole point (PRD §7, CLAUDE.md §8): a failure carries *what* went wrong
-/// as a specific type and a human-readable message, never a bare `throw` or a
-/// generic 500. The server's error middleware maps each type to an HTTP status
-/// (see `server/middleware/error_middleware.dart`); the client's API layer maps
-/// the status back to the same type, so host mode and client mode surface an
-/// identical error to the UI.
+/// A failure carries *what* went wrong as a specific [ErrorCode] plus the
+/// values a sentence about it needs ([args]) — never prose. The UI turns the
+/// code into a sentence in the operator's language (`localizeError` in
+/// `ui/shared_widgets/nb_feedback.dart`), so a service never has to know which
+/// language the person holding the phone reads (CLAUDE.md §8, §13).
 library;
+
+/// Every expected, explainable failure. Grouped by the domain that raises it.
+enum ErrorCode {
+  // auth & accounts
+  badCredentials,
+  notSignedIn,
+  roleNotAllowedOnDevice,
+  alreadySetUp,
+  usernameRequired,
+  usernameLength,
+  usernameChars,
+  usernameTaken,
+  passwordTooShort,
+  cannotDeactivateSelf,
+  cannotDeleteSelf,
+  noSuchAccount,
+  userNotFound,
+  onlineAccountsDisabled,
+
+  // devices & firebase
+  deviceNotApproved,
+  needsInternet,
+  permissionDenied,
+  firebaseConfigUnreadable,
+  firebaseConfigWrongApp,
+
+  // members
+  memberNotFound,
+  memberStudentHasStaffId,
+  memberStaffHasClass,
+  memberUnknownType,
+  memberHasHistory,
+
+  // top-ups & refunds
+  topupNeedsUnits,
+  topupNotFound,
+  refundNeedsUnits,
+  refundExceedsBalance,
+
+  // menu
+  categoryNameBlank,
+  categoryExists,
+  categoryNotFound,
+  unknownCategory,
+  menuItemsRequired,
+  headcountNegative,
+  menuEntryExists,
+  menuEntryNotFound,
+
+  // kitchen
+  ingredientNameUnitRequired,
+  ingredientExists,
+  ingredientNotFound,
+  nothingToUpdate,
+  recipeDishBlank,
+  recipeNeedsIngredient,
+  recipeQuantityPositive,
+  recipeUnknownIngredient,
+  recipeExists,
+  recipeNotFound,
+  purchaseRangeInvalid,
+  purchaseQuantityRequired,
+  purchaseItemNotFound,
+  expenseAmountNegative,
+
+  // settings
+  settingsNegative,
+  settingsBadTimezone,
+  settingsBadTime,
+  settingsWindowOrder,
+  settingsBlank,
+
+  // notifications
+  notificationNotFound,
+
+  // backup & import
+  backupUnreadable,
+  backupNotTiffin,
+  backupNeedsPassphrase,
+  backupWrongPassphrase,
+  backupNewerVersion,
+  backupTargetNotEmpty,
+
+  // anything else
+  internal,
+}
 
 /// Base class for every expected, explainable failure in the system.
 ///
-/// `message` is safe to show a user as-is. `code` is a short stable slug for
-/// logs and for the client to switch on without string-matching the message.
+/// [message] is for logs only — English, with the args inlined. Users see
+/// [code] rendered through the ARB files.
 sealed class AppException implements Exception {
-  const AppException(this.message, {required this.code});
+  const AppException(this.code, [this.args = const {}]);
 
-  final String message;
-  final String code;
+  final ErrorCode code;
+  final Map<String, Object> args;
+
+  String get message => args.isEmpty ? code.name : '${code.name} $args';
 
   @override
-  String toString() => '$runtimeType($code): $message';
+  String toString() => '$runtimeType($message)';
 }
 
-/// Input failed a business or schema rule. HTTP 400.
+/// Input failed a business or schema rule.
 class ValidationException extends AppException {
-  const ValidationException(super.message, {super.code = 'validation'});
+  const ValidationException(super.code, [super.args]);
 }
 
-/// The requested record does not exist. HTTP 404.
+/// The requested record does not exist.
 class NotFoundException extends AppException {
-  const NotFoundException(super.message, {super.code = 'not_found'});
+  const NotFoundException(super.code, [super.args]);
 }
 
-/// The action conflicts with current state (duplicate key, already-reversed
-/// scan, member with history that can't be deleted). HTTP 409.
+/// The action conflicts with current state (duplicate name, member with
+/// history that can't be deleted).
 class ConflictException extends AppException {
-  const ConflictException(super.message, {super.code = 'conflict'});
+  const ConflictException(super.code, [super.args]);
 }
 
-/// No valid session, or the session expired. HTTP 401.
+/// No valid session, or the credentials were wrong.
 class AuthException extends AppException {
-  const AuthException(super.message, {super.code = 'unauthenticated'});
+  const AuthException(super.code, [super.args]);
 }
 
-/// A valid session, but the role isn't allowed this action. HTTP 403.
+/// Signed in, but this role or this device may not do it.
 class ForbiddenException extends AppException {
-  const ForbiddenException(super.message, {super.code = 'forbidden'});
+  const ForbiddenException(super.code, [super.args]);
 }
 
-/// Client mode only: the discovered host stopped answering (PRD §13.2). Distinct
-/// from a generic network error so the UI can offer "retry / re-discover"
-/// instead of a blank failure.
-class HostUnreachableException extends AppException {
-  const HostUnreachableException([
-    super.message =
-        'The host device is not responding. It may be offline or on a different network.',
-  ]) : super(code: 'host_unreachable');
-}
-
-/// A dependency that isn't business logic failed in a way the caller can't fix
-/// (PDF engine, cert generation, filesystem). HTTP 500. The message is
-/// deliberately vague to the user; the real detail goes to the log.
+/// A dependency that isn't business logic failed in a way the caller can't
+/// fix (PDF engine, filesystem). The detail goes to the log.
 class InternalException extends AppException {
-  const InternalException([
-    super.message =
-        'Something went wrong on the host. Check the host device logs.',
-  ]) : super(code: 'internal');
+  const InternalException() : super(ErrorCode.internal);
 }

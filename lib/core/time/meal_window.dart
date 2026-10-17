@@ -1,6 +1,6 @@
 import 'package:timezone/timezone.dart' as tz;
 
-import '../app_mode.dart';
+import '../meal_type.dart';
 
 /// Meal-window and day-of-week resolution — a direct port of the v1
 /// `app/utils/meal_window.py`, kept as pure, testable functions with no I/O

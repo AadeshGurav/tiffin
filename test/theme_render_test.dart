@@ -1,3 +1,4 @@
+import 'package:tiffin/l10n/app_localizations.dart';
 import 'package:tiffin/ui/shared_widgets/app_logo.dart';
 import 'package:tiffin/ui/shared_widgets/brand_splash.dart';
 import 'package:tiffin/ui/shared_widgets/nb_button.dart';
@@ -56,6 +57,8 @@ void main() {
         final number = TextEditingController();
         addTearDown(number.dispose);
         await tester.pumpWidget(MaterialApp(
+          localizationsDelegates: AppText.localizationsDelegates,
+          supportedLocales: AppText.supportedLocales,
           theme: buildTiffinTheme(id, brightness),
           home: gallery(number),
         ));
@@ -65,6 +68,8 @@ void main() {
 
       testWidgets('$label renders the splash', (tester) async {
         await tester.pumpWidget(MaterialApp(
+          localizationsDelegates: AppText.localizationsDelegates,
+          supportedLocales: AppText.supportedLocales,
           theme: buildTiffinTheme(id, brightness),
           home: const BrandSplash(message: 'Preparing…'),
         ));
@@ -82,6 +87,8 @@ void main() {
         addTearDown(number.dispose);
 
         await tester.pumpWidget(MaterialApp(
+          localizationsDelegates: AppText.localizationsDelegates,
+          supportedLocales: AppText.supportedLocales,
           theme: buildTiffinTheme(id, brightness),
           home: gallery(number),
         ));
@@ -96,6 +103,8 @@ void main() {
     for (final id in TiffinThemeId.values) {
       late TiffinTokens? seen;
       await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppText.localizationsDelegates,
+        supportedLocales: AppText.supportedLocales,
         theme: buildTiffinTheme(id, Brightness.light),
         home: Builder(builder: (context) {
           seen = context.maybeTokens;
@@ -109,6 +118,8 @@ void main() {
   testWidgets('motion:false collapses the theme to still', (tester) async {
     late MotionTokens motion;
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme:
           buildTiffinTheme(TiffinThemeId.clay, Brightness.light, motion: false),
       home: Builder(builder: (context) {
@@ -123,6 +134,8 @@ void main() {
   testWidgets('reduceTransparency makes Frost opaque', (tester) async {
     late TiffinShape shape;
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppText.localizationsDelegates,
+      supportedLocales: AppText.supportedLocales,
       theme: buildTiffinTheme(TiffinThemeId.frost, Brightness.light,
           reduceTransparency: true),
       home: Builder(builder: (context) {

@@ -1,235 +1,206 @@
-import 'dart:convert';
+import 'package:collection/collection.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:drift/drift.dart';
-import 'package:timezone/timezone.dart' as tz;
-
-import '../core/app_mode.dart';
 import '../core/errors.dart';
+import '../core/meal_type.dart';
 import '../core/role.dart';
 import '../core/time/meal_window.dart';
-import '../data/local/database.dart' hide Notification;
-import '../data/local/mappers.dart';
+import '../data/store.dart';
+import '../domain/inventory.dart';
+import '../domain/menu.dart';
 import '../domain/ops.dart';
 import '../domain/settings.dart';
+import 'scan_service.dart' show ymd;
 import 'settings_service.dart';
 
-/// Persistent in-app reminders — a port of v1
-/// `app/services/notification_service.py` (PRD §6.5.2). No scheduled job:
-/// [generateDue] is called on each `GET /notifications` poll, and the upserts
-/// are idempotent so polling never duplicates.
+/// Persistent in-app reminders (PRD §6.5.2). No scheduled job: [generateDue]
+/// runs on each poll from whichever phones are open. Each reminder's id is
+/// derived from what it is about (`prep_reminder_2026-10-17_lunch`), so every
+/// phone computing the same reminder writes the same document — polling, and
+/// several phones polling, never duplicates.
+///
+/// A notification stores its kind and the values the sentence needs, never
+/// the sentence: each phone words it in its own language.
 class NotificationService {
-  NotificationService(this._db, this._settings);
+  NotificationService(this._store, this._settings);
 
-  final AppDatabase _db;
+  final Store _store;
   final SettingsService _settings;
+
+  CollectionReference<Json> get _col => _store.col(Col.notifications);
 
   Future<void> generateDue(DateTime nowUtc) async {
     final s = await _settings.read();
     final localNow = toLocal(nowUtc, s.localTimezone);
-    await _generatePrepReminders(localNow, s);
-    await _generatePurchaseReminders(localNow, s);
-    await _generateLowStock();
-    await _generateHeadcountOverrun(localNow);
+    final due = <String, Json>{};
+    void upsert(String type, String key, Json params, List<Role> roles) =>
+        due['${type}_$key'] = {
+          'type': type,
+          'params': params,
+          'visibleRoles': roles.map((r) => r.wire).toList(),
+        };
+
+    await _prepReminders(localNow, s, upsert);
+    await _purchaseReminders(localNow, s, upsert);
+    await _lowStock(upsert);
+    await _headcountOverrun(localNow, upsert);
+
+    // Every open phone polls, so writing unconditionally would spend the free
+    // tier's daily write budget on no-ops. Only new or changed reminders are
+    // written; an existing one keeps its creation time and dismissals.
+    final b = _store.batch();
+    var writes = 0;
+    for (final MapEntry(key: id, value: body) in due.entries) {
+      final existing = await _store.cachedDoc(_col.doc(id));
+      if (existing == null) {
+        b.set(_col.doc(id), {...body, 'createdAt': nowUtc.toIso8601String()});
+      } else if (!_sameJson(existing['params'], body['params'])) {
+        b.update(_col.doc(id), {'params': body['params']});
+      } else {
+        continue;
+      }
+      writes++;
+    }
+    if (writes > 0) await _store.commit(b, 'notifications.generate');
   }
 
-  /// One alert per ingredient that is at or below its threshold. Visible to
-  /// everyone who can act on it, including whoever is at the scanner.
-  Future<void> _generateLowStock() async {
-    final low = await (_db.select(_db.ingredients)
-          ..where((i) =>
-              i.lowStockAt.isNotNull() &
-              i.stockQty.isSmallerOrEqual(i.lowStockAt)))
-        .get();
-    for (final ing in low) {
-      await _upsert(
-        type: 'low_stock',
-        dateKey: 'ing-${ing.id}',
-        mealType: null,
-        title: 'Low stock: ${ing.name}',
-        message: '${_num(ing.stockQty)} ${ing.unit} left '
-            '(alert at ${_num(ing.lowStockAt!)} ${ing.unit}). Restock soon.',
-        visibleRoles: const [Role.admin, Role.counter, Role.scanner],
-      );
+  static bool _sameJson(Object? a, Object? b) =>
+      const DeepCollectionEquality().equals(a, b);
+
+  Future<void> _lowStock(_Upsert upsert) async {
+    final ingredients = (await _store.cached(_store.col(Col.ingredients)))
+        .map(Ingredient.fromJson);
+    for (final ing in ingredients.where((i) => i.isLow)) {
+      upsert('low_stock', ing.id, {
+        'name': ing.name,
+        'qty': ing.stockQty,
+        'threshold': ing.lowStockAt,
+        'unit': ing.unit,
+      }, const [
+        Role.admin,
+        Role.counter,
+        Role.scanner
+      ]);
     }
   }
 
-  /// One alert per (day, meal, category) whose accepted scans have met or
-  /// passed the planned plate count.
-  Future<void> _generateHeadcountOverrun(tz.TZDateTime localNow) async {
-    final today = DateTime.utc(localNow.year, localNow.month, localNow.day);
-    final bounds = dayBounds(localNow);
-    final entries = await (_db.select(_db.menuEntries)
-          ..where(
-              (e) => e.date.equals(today) & e.headcount.isBiggerThanValue(0)))
-        .get();
+  Future<void> _headcountOverrun(DateTime localNow, _Upsert upsert) async {
+    final day = ymd(localNow);
+    final entries = (await _store
+            .cached(_store.col(Col.menu).where('date', isEqualTo: day)))
+        .map(MenuEntry.fromJson)
+        .where((e) => e.headcount > 0);
     for (final entry in entries) {
-      final countExp = _db.scans.id.count();
-      final served = await (_db.selectOnly(_db.scans)
-            ..addColumns([countExp])
-            ..where(_db.scans.mealType.equals(entry.mealType) &
-                _db.scans.memberCategory.equals(entry.category) &
-                _db.scans.reversed.equals(false) &
-                _db.scans.result.equals('accepted') &
-                _db.scans.scannedAt
-                    .isBetweenValues(bounds.start.toUtc(), bounds.end.toUtc())))
-          .map((row) => row.read(countExp))
-          .getSingle();
-      if ((served ?? 0) < entry.headcount) continue;
-      await _upsert(
-        type: 'headcount_overrun',
-        dateKey: '${_ymd(today)}-${entry.category}',
-        mealType: entry.mealType,
-        title: 'More ${entry.category} ${entry.mealType} plates than planned',
-        message: 'Planned ~${entry.headcount}, served $served so far.',
-        visibleRoles: const [Role.admin, Role.counter],
-      );
+      final served = (await _store.cached(_store
+              .col(Col.scans)
+              .where('day', isEqualTo: day)
+              .where('mealType', isEqualTo: entry.mealType.wire)
+              .where('memberCategory', isEqualTo: entry.category)
+              .where('reversed', isEqualTo: false)))
+          .length;
+      if (served < entry.headcount) continue;
+      upsert('headcount_overrun',
+          '${day}_${entry.mealType.wire}_${entry.category}', {
+        'category': entry.category,
+        'meal': entry.mealType.wire,
+        'planned': entry.headcount,
+        'served': served,
+      }, const [
+        Role.admin,
+        Role.counter
+      ]);
     }
   }
 
-  Future<void> _generatePrepReminders(
-      DateTime localNow, SettingsSnapshot s) async {
-    final today = DateTime.utc(localNow.year, localNow.month, localNow.day);
+  Future<void> _prepReminders(
+      DateTime localNow, SettingsSnapshot s, _Upsert upsert) async {
+    final day = ymd(localNow);
     final meals = isSaturday(localNow)
         ? const [MealType.brunch]
         : const [MealType.breakfast, MealType.lunch];
-
     for (final meal in meals) {
       final window = s.mealWindows[meal.wire];
       if (window == null) continue;
-
-      final planned = await (_db.select(_db.menuEntries)
-                ..where(
-                    (e) => e.date.equals(today) & e.mealType.equals(meal.wire))
-                ..limit(1))
-              .getSingleOrNull() !=
-          null;
+      final planned = (await _store.cached(_store
+              .col(Col.menu)
+              .where('date', isEqualTo: day)
+              .where('mealType', isEqualTo: meal.wire)
+              .limit(1)))
+          .isNotEmpty;
       if (!planned) continue;
 
       final parts = window.start.split(':');
-      final startLocal = DateTime(
-        localNow.year,
-        localNow.month,
-        localNow.day,
-        int.parse(parts[0]),
-        int.parse(parts[1]),
-      );
+      final startLocal = DateTime(localNow.year, localNow.month, localNow.day,
+          int.parse(parts[0]), int.parse(parts[1]));
       final minutesUntil = startLocal.difference(localNow).inSeconds / 60.0;
       if (minutesUntil < 0 || minutesUntil > s.prepLeadMinutes) continue;
-
-      await _upsert(
-        type: 'prep_reminder',
-        dateKey: _ymd(today),
-        mealType: meal.wire,
-        title: 'Start prepping ${meal.wire}',
-        message:
-            '${_capitalize(meal.wire)} service starts at ${window.start} — '
-            'about ${minutesUntil.round()} minute(s) from now.',
-        visibleRoles: const [Role.admin, Role.counter],
-      );
+      upsert('prep_reminder', '${day}_${meal.wire}', {
+        'meal': meal.wire,
+        'start': window.start,
+        'minutes': minutesUntil.round(),
+      }, const [
+        Role.admin,
+        Role.counter
+      ]);
     }
   }
 
-  Future<void> _generatePurchaseReminders(
-      DateTime localNow, SettingsSnapshot s) async {
-    final target = DateTime.utc(localNow.year, localNow.month, localNow.day)
-        .add(Duration(days: s.purchaseLeadDays));
-    final pending = await (_db.select(_db.purchaseScheduleItems)
-          ..where((p) => p.date.equals(target) & p.purchased.equals(false)))
-        .get();
-    if (pending.isEmpty) return;
-
-    await _upsert(
-      type: 'purchase_due',
-      dateKey: _ymd(target),
-      mealType: null,
-      title: 'Ingredient purchase due',
-      message:
-          '${pending.length} item(s) still need buying for ${_ymd(target)}.',
-      visibleRoles: const [Role.admin, Role.counter],
-    );
+  Future<void> _purchaseReminders(
+      DateTime localNow, SettingsSnapshot s, _Upsert upsert) async {
+    final target = ymd(DateTime(localNow.year, localNow.month, localNow.day)
+        .add(Duration(days: s.purchaseLeadDays)));
+    final pending = (await _store.cached(_store
+            .col(Col.purchaseSchedule)
+            .where('date', isEqualTo: target)
+            .where('purchased', isEqualTo: false)))
+        .length;
+    if (pending == 0) return;
+    upsert('purchase_due', target, {'count': pending, 'date': target},
+        const [Role.admin, Role.counter]);
   }
 
-  /// Idempotent upsert keyed on (type, dateKey, mealType). Done by hand rather
-  /// than a DB unique constraint because SQLite treats NULL mealType values as
-  /// distinct, which would let `purchase_due` reminders pile up.
-  Future<void> _upsert({
-    required String type,
-    required String dateKey,
-    required String? mealType,
-    required String title,
-    required String message,
-    required List<Role> visibleRoles,
+  /// Raised by a phone whose offline scan the server refused on sync — the
+  /// person was already served this meal on another phone.
+  Future<void> raiseScanRejectedOnSync({
+    required String memberName,
+    required MealType meal,
+    required String day,
   }) async {
     final now = DateTime.now().toUtc();
-    final match = _db.select(_db.notifications)
-      ..where((n) => n.type.equals(type) & n.dateKey.equals(dateKey));
-    if (mealType == null) {
-      match.where((n) => n.mealType.isNull());
-    } else {
-      match.where((n) => n.mealType.equals(mealType));
-    }
-    final existing = await match.getSingleOrNull();
-
-    final rolesJson = jsonEncode(visibleRoles.map((r) => r.wire).toList());
-    if (existing == null) {
-      await _db.into(_db.notifications).insert(NotificationsCompanion.insert(
-            type: type,
-            dateKey: dateKey,
-            mealType: Value(mealType),
-            title: title,
-            message: message,
-            visibleRolesJson: rolesJson,
-            createdAt: now,
-            updatedAt: now,
-          ));
-    } else {
-      await (_db.update(_db.notifications)
-            ..where((n) => n.id.equals(existing.id)))
-          .write(NotificationsCompanion(
-        title: Value(title),
-        message: Value(message),
-        visibleRolesJson: Value(rolesJson),
-        updatedAt: Value(now),
-      ));
-    }
+    final b = _store.batch()
+      ..set(_col.doc('scan_rejected_on_sync_${now.millisecondsSinceEpoch}'), {
+        'type': 'scan_rejected_on_sync',
+        'params': {'name': memberName, 'meal': meal.wire, 'date': day},
+        'visibleRoles': const ['admin', 'counter'],
+        'createdAt': now.toIso8601String(),
+      });
+    await _store.commit(b, 'notifications.scanRejected');
   }
 
-  /// Active + undismissed for this user, newest first.
+  /// Visible to [role] and not dismissed by [username], newest first.
   Future<List<AppNotification>> listFor(Role role, String username) async {
-    final rows = await (_db.select(_db.notifications)
-          ..orderBy([(n) => OrderingTerm.desc(n.createdAt)]))
-        .get();
+    final rows = await _store
+        .cached(_col.where('visibleRoles', arrayContains: role.wire));
     return rows
-        .where((n) {
-          final roles =
-              (jsonDecode(n.visibleRolesJson) as List<dynamic>).cast<String>();
-          final dismissed =
-              (jsonDecode(n.dismissedByJson) as List<dynamic>).cast<String>();
-          return roles.contains(role.wire) && !dismissed.contains(username);
-        })
-        .map(notificationFromRow)
-        .toList();
+        .where((n) => !(n['dismissedBy'] as List<dynamic>? ?? const [])
+            .contains(username))
+        .map(AppNotification.fromJson)
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
-  Future<void> dismiss(int id, String username) async {
-    final row = await (_db.select(_db.notifications)
-          ..where((n) => n.id.equals(id)))
-        .getSingleOrNull();
-    if (row == null) throw const NotFoundException('Notification not found.');
-    final dismissed = (jsonDecode(row.dismissedByJson) as List<dynamic>)
-        .cast<String>()
-        .toSet()
-      ..add(username);
-    await (_db.update(_db.notifications)..where((n) => n.id.equals(id))).write(
-      NotificationsCompanion(
-          dismissedByJson: Value(jsonEncode(dismissed.toList()))),
-    );
+  Future<void> dismiss(String id, String username) async {
+    if (await _store.cachedDoc(_col.doc(id)) == null) {
+      throw const NotFoundException(ErrorCode.notificationNotFound);
+    }
+    await _store.commit(
+        _store.batch()
+          ..update(_col.doc(id), {
+            'dismissedBy': FieldValue.arrayUnion([username])
+          }),
+        'notifications.dismiss');
   }
-
-  String _ymd(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  String _capitalize(String s) =>
-      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
-  String _num(double x) =>
-      x == x.roundToDouble() ? x.toStringAsFixed(0) : x.toString();
 }
+
+typedef _Upsert = void Function(
+    String type, String key, Json params, List<Role> roles);

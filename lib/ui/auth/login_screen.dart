@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,10 +5,9 @@ import '../../app/appearance_providers.dart';
 import '../../app/credential_store.dart';
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
-import '../../core/app_mode.dart';
-import '../../core/errors.dart';
+import '../../core/role.dart';
+import '../../l10n/messages.dart';
 import '../shared_widgets/brand_splash.dart';
-import '../shared_widgets/ios_host_advisory.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
@@ -71,46 +68,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _password.text,
             rememberPassword: _rememberPassword,
           );
-      // This screen can be PUSHED (from the client discovery screen), so
-      // ModeGate swapping its home underneath isn't enough — pop back to the
-      // root, or the operator keeps staring at the login form.
+      // The gate swaps the root route's child; anything pushed above it (a
+      // settings route left over from signing out) has to come off too.
       if (mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
-    } on AppException catch (e) {
-      setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = AppText.of(context).loginFailed(e.toString()));
+      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  /// Sets a new password for an account on this host, on the host device only.
+  /// Sets a new password for an offline account, offered on admin phones only.
   Future<void> _recoverPassword() async {
-    final container = await ref.read(hostContainerProvider.future);
-    if (!mounted) return;
+    final auth = ref.read(backendProvider).auth;
     final username = _username.text.trim();
     final result = await showDialog<({String username, String password})>(
       context: context,
       builder: (_) => _RecoverPasswordDialog(
         initialUsername: username.isEmpty ? 'admin' : username,
-        suggestion: container.auth.suggestPassword(),
+        suggestion: auth.suggestPassword(),
       ),
     );
     if (result == null) return;
 
     setState(() => _busy = true);
     try {
-      await container.auth.resetPasswordFor(result.username, result.password);
+      await auth.resetPasswordFor(result.username, result.password);
       _username.text = result.username;
       _password.text = result.password;
       setState(() => _error = null);
       if (mounted) {
         showNbSnack(context, AppText.of(context).loginPasswordResetSnack);
       }
-    } on AppException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -121,7 +114,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final t = context.tokens;
     final text = AppText.of(context);
     final greeting = ref.watch(hostGreetingProvider);
-    final isHost = ref.watch(currentModeProvider) == AppMode.host;
+    // Recovery is offered on admin phones only: such a phone can already
+    // manage every account from Settings, so it grants nothing new.
+    final isAdminPhone = ref.watch(grantProvider)?.role == Role.admin;
 
     // While a saved token is being offered to the host, show the splash
     // rather than a login form that may be about to disappear.
@@ -151,8 +146,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           greeting.asData?.value.appName ?? text.appTitle,
                           style: t.text.heading,
                         ),
-                        if (isHost)
-                          Text(text.loginHostDeviceLabel, style: t.text.label),
                         const SizedBox(height: NbSpace.xs),
                         Text(text.loginSignInLabel, style: t.text.body),
                         const SizedBox(height: NbSpace.lg),
@@ -206,27 +199,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       if (login.password != null) _submit();
                     },
                   ),
-                  // Recovery is offered only on the host device, and never
-                  // over the network: it runs against the local database, so
-                  // it grants nothing that holding this phone didn't already
-                  // grant — the same phone can wipe the database outright.
-                  if (isHost)
+                  if (isAdminPhone)
                     TextButton.icon(
                       icon: const Icon(Icons.lock_reset, size: 18),
                       label: Text(text.loginForgotPasswordButton),
                       onPressed: _busy ? null : _recoverPassword,
                     ),
-                  if (isHost && Platform.isIOS) ...[
-                    const SizedBox(height: NbSpace.md),
-                    const IosHostAdvisory(),
-                  ],
-                  const SizedBox(height: NbSpace.md),
-                  TextButton.icon(
-                    icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: Text(text.loginSwitchRoleButton),
-                    onPressed: () =>
-                        ref.read(currentModeProvider.notifier).clear(),
-                  ),
                 ],
               ),
             ),
@@ -321,7 +299,8 @@ class _RecoverPasswordDialogState extends State<_RecoverPasswordDialog> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final text = AppText.of(context);
-    final armed = _confirm.text.trim().toUpperCase() == 'RESET';
+    final armed =
+        confirmWordMatches(_confirm.text, text.confirmWordReset, 'RESET');
     return AlertDialog(
       title: Text(text.loginRecoverDialogTitle, style: t.text.heading),
       content: SingleChildScrollView(

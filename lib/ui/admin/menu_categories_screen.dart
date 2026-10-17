@@ -22,7 +22,8 @@ class MenuCategoriesScreen extends ConsumerWidget {
     final t = context.tokens;
     final categories = ref.watch(_categoriesProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(AppText.of(context).menuCategoriesScreenTitle)),
+      appBar:
+          AppBar(title: Text(AppText.of(context).menuCategoriesScreenTitle)),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
@@ -68,8 +69,8 @@ class MenuCategoriesScreen extends ConsumerWidget {
                         context,
                         () =>
                             ref.read(backendProvider).deleteMenuCategory(c.id),
-                        successMessage:
-                            AppText.of(context).menuCategoriesScreenDeleteSuccess,
+                        successMessage: AppText.of(context)
+                            .menuCategoriesScreenDeleteSuccess,
                       );
                       if (ok) ref.invalidate(_categoriesProvider);
                     },
@@ -104,8 +105,7 @@ class MenuCategoriesScreen extends ConsumerWidget {
                 controller: name),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-                label:
-                    AppText.of(context).menuCategoriesScreenDescriptionLabel,
+                label: AppText.of(context).menuCategoriesScreenDescriptionLabel,
                 controller: desc),
           ],
         ),

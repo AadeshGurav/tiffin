@@ -7,13 +7,17 @@ import '../../app/providers.dart';
 import '../../domain/ledger.dart';
 import '../../domain/member.dart';
 import '../../domain/settings.dart';
+import 'package:printing/printing.dart';
+
 import '../shared_widgets/member_picker.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
+import 'bill_view.dart';
 import 'topup_history_screen.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>(
     (ref) => ref.watch(backendProvider).listMembers(status: 'active'));
@@ -81,12 +85,12 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             breakfastUnits: _breakfast,
             brunchUnits: _brunch,
             paymentMethod: _method,
-            createdBy: '', // host/client backend fills this in
+            createdBy: '', // the backend stamps the signed-in name
           ));
     }, successMessage: AppText.of(context).topupScreenBalancesCreditedMessage);
     if (mounted) setState(() => _busy = false);
     if (!ok || created == null || !mounted) return;
-    await _showBillDialog(created!, s);
+    await _showBillDialog(created!, s, _member!);
     if (mounted) {
       setState(() {
         _lunch = _breakfast = _brunch = 0;
@@ -96,7 +100,8 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
     }
   }
 
-  Future<void> _showBillDialog(Topup topup, SettingsSnapshot s) async {
+  Future<void> _showBillDialog(
+      Topup topup, SettingsSnapshot s, Member member) async {
     Uint8List? upiQr;
     if (topup.paymentMethod == PaymentMethod.upi && topup.hasUpiQr) {
       try {
@@ -106,19 +111,26 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
     }
     if (!mounted) return;
     final t = context.tokens;
+    final text = AppText.of(context);
+    final billKey = GlobalKey();
     await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(AppText.of(context).topupScreenBillDialogTitle(topup.id),
+        title: Text(text.topupScreenBillDialogTitle(shortCode(topup.id)),
             style: t.text.heading),
-        content: Column(
+        content: SingleChildScrollView(
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppText.of(context).topupScreenBillAmount(
-                topup.amount.toStringAsFixed(2),
-                topup.paymentMethod.wire.toUpperCase())),
-            Text(AppText.of(context).topupScreenBillStatus(topup.paymentStatus)),
+            // The bill itself, which is also exactly what "Share bill" sends.
+            RepaintBoundary(
+              key: billKey,
+              child: BillView(topup: topup, member: member, appName: s.appName),
+            ),
+            const SizedBox(height: NbSpace.sm),
+            Text(text.topupScreenBillStatus(
+                text.paymentStatusLabel(topup.paymentStatus))),
             if (upiQr != null) ...[
               const SizedBox(height: NbSpace.md),
               Text(AppText.of(context).topupScreenScanQrPrompt),
@@ -126,8 +138,17 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
               Image.memory(upiQr, width: 220, height: 220),
             ],
           ],
-        ),
+        )),
         actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.share),
+            label: Text(text.topupScreenShareBill),
+            onPressed: () => runGuarded(context, () async {
+              await Printing.sharePdf(
+                  bytes: await billPdfFrom(billKey),
+                  filename: 'bill-${shortCode(topup.id)}.pdf');
+            }),
+          ),
           if (topup.paymentMethod == PaymentMethod.upi)
             NbButton.secondary(
               label: AppText.of(context).topupScreenMarkReceivedButton,

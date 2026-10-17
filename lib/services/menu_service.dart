@@ -1,184 +1,154 @@
-import 'dart:convert';
-
-import 'package:drift/drift.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/errors.dart';
+import '../core/meal_type.dart';
 import '../core/sentinels.dart';
-import '../data/local/database.dart' hide MenuCategory, MenuEntry;
-import '../data/local/mappers.dart';
+import '../data/store.dart';
 import '../domain/menu.dart';
+import 'scan_service.dart' show ymd;
 
-/// Menu categories + menu entries — a port of v1 `app/routers/menu_categories.py`
-/// and `app/routers/menu.py` (PRD §6.5). Categories are a first-class editable
+/// Menu categories + menu entries (PRD §6.5). Categories are an editable
 /// list, not an enum.
 class MenuService {
-  MenuService(this._db);
+  MenuService(this._store);
 
-  final AppDatabase _db;
+  final Store _store;
+
+  /// One entry per (day, meal, category), so the id *is* the uniqueness rule
+  /// and the scanner can look today's plate up without a query.
+  static String entryId(String day, MealType meal, String category) =>
+      '${day}_${meal.wire}_${category.trim().toLowerCase().replaceAll('/', '_')}';
+
+  CollectionReference<Json> get _categories => _store.col(Col.menuCategories);
+  CollectionReference<Json> get _entries => _store.col(Col.menu);
 
   // ---- categories --------------------------------------------------
 
-  Future<List<MenuCategory>> listCategories() async {
-    final rows = await (_db.select(_db.menuCategories)
-          ..orderBy([(c) => OrderingTerm.asc(c.name)]))
-        .get();
-    return rows.map(menuCategoryFromRow).toList();
-  }
+  Future<List<MenuCategory>> listCategories() async =>
+      (await _store.cached(_categories)).map(MenuCategory.fromJson).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
 
   Future<MenuCategory> createCategory(String name, String? description) async {
-    if (name.trim().isEmpty) {
-      throw const ValidationException('Category name cannot be blank.');
+    final clean = name.trim();
+    if (clean.isEmpty) {
+      throw const ValidationException(ErrorCode.categoryNameBlank);
     }
+    await _requireFreeName(clean);
     final now = DateTime.now().toUtc();
-    try {
-      final id = await _db.into(_db.menuCategories).insert(
-            MenuCategoriesCompanion.insert(
-              name: name,
-              description: Value(description),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-      final row = await (_db.select(_db.menuCategories)
-            ..where((c) => c.id.equals(id)))
-          .getSingle();
-      return menuCategoryFromRow(row);
-    } on Exception catch (e) {
-      if (_isUnique(e)) {
-        throw ConflictException("Menu category '$name' already exists.");
-      }
-      rethrow;
-    }
+    final category = MenuCategory(
+      id: _store.newId(Col.menuCategories),
+      name: clean,
+      description: description,
+      createdAt: now,
+      updatedAt: now,
+    );
+    final b = _store.batch()
+      ..set(_categories.doc(category.id), category.toJson()..remove('id'));
+    await _store.commit(b, 'menuCategories.create');
+    return category;
   }
 
   Future<MenuCategory> updateCategory(
-    int id, {
+    String id, {
     String? name,
     Object? description = kUnset,
   }) async {
-    final companion = MenuCategoriesCompanion(
-      name: name == null ? const Value.absent() : Value(name),
-      description: identical(description, kUnset)
-          ? const Value.absent()
-          : Value(description as String?),
-      updatedAt: Value(DateTime.now().toUtc()),
-    );
-    try {
-      final n = await (_db.update(_db.menuCategories)
-            ..where((c) => c.id.equals(id)))
-          .write(companion);
-      if (n == 0) throw const NotFoundException('Menu category not found.');
-    } on Exception catch (e) {
-      if (_isUnique(e)) {
-        throw ConflictException("Menu category '$name' already exists.");
-      }
-      rethrow;
+    final existing = await _store.cachedDoc(_categories.doc(id));
+    if (existing == null) {
+      throw const NotFoundException(ErrorCode.categoryNotFound);
     }
-    final row = await (_db.select(_db.menuCategories)
-          ..where((c) => c.id.equals(id)))
-        .getSingle();
-    return menuCategoryFromRow(row);
+    if (name != null) await _requireFreeName(name.trim(), except: id);
+    final changes = <String, dynamic>{
+      if (name != null) 'name': name.trim(),
+      if (!identical(description, kUnset)) 'description': description,
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    };
+    await _store.commit(_store.batch()..update(_categories.doc(id), changes),
+        'menuCategories.update');
+    return MenuCategory.fromJson({...existing, ...changes});
   }
 
-  Future<void> deleteCategory(int id) async {
-    final n = await (_db.delete(_db.menuCategories)
-          ..where((c) => c.id.equals(id)))
-        .go();
-    if (n == 0) throw const NotFoundException('Menu category not found.');
+  Future<void> deleteCategory(String id) async {
+    if (await _store.cachedDoc(_categories.doc(id)) == null) {
+      throw const NotFoundException(ErrorCode.categoryNotFound);
+    }
+    await _store.commit(
+        _store.batch()..delete(_categories.doc(id)), 'menuCategories.delete');
+  }
+
+  Future<void> _requireFreeName(String name, {String? except}) async {
+    final taken = (await listCategories()).any(
+        (c) => c.name.toLowerCase() == name.toLowerCase() && c.id != except);
+    if (taken) {
+      throw ConflictException(ErrorCode.categoryExists, {'name': name});
+    }
   }
 
   // ---- entries ---------------------------------------------------
 
   Future<List<MenuEntry>> listEntries({DateTime? start, DateTime? end}) async {
-    final query = _db.select(_db.menuEntries)
-      ..orderBy([(e) => OrderingTerm.asc(e.date)]);
-    if (start != null) {
-      query.where((e) => e.date.isBiggerOrEqualValue(_dateOnly(start)));
-    }
-    if (end != null) {
-      query.where((e) => e.date.isSmallerOrEqualValue(_dateOnly(end)));
-    }
-    return (await query.get()).map(menuEntryFromRow).toList();
+    Query<Json> q = _entries;
+    if (start != null) q = q.where('date', isGreaterThanOrEqualTo: ymd(start));
+    if (end != null) q = q.where('date', isLessThanOrEqualTo: ymd(end));
+    return (await _store.cached(q)).map(MenuEntry.fromJson).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
   }
 
   Future<MenuEntry> addEntry(MenuEntryDraft draft) async {
     if (draft.items.isEmpty) {
-      throw const ValidationException('At least one item is required.');
+      throw const ValidationException(ErrorCode.menuItemsRequired);
     }
     if (draft.headcount < 0) {
-      throw const ValidationException('Headcount cannot be negative.');
+      throw const ValidationException(ErrorCode.headcountNegative);
     }
-    await _validateCategoryName(draft.category);
+    final known = (await listCategories()).any((c) => c.name == draft.category);
+    if (!known) {
+      throw ValidationException(
+          ErrorCode.unknownCategory, {'name': draft.category});
+    }
 
-    try {
-      final id =
-          await _db.into(_db.menuEntries).insert(MenuEntriesCompanion.insert(
-                date: _dateOnly(draft.date),
-                mealType: draft.mealType.wire,
-                category: draft.category,
-                headcount: Value(draft.headcount),
-                itemsJson: jsonEncode(draft.items),
-                createdBy: draft.createdBy,
-              ));
-      final row = await (_db.select(_db.menuEntries)
-            ..where((e) => e.id.equals(id)))
-          .getSingle();
-      return menuEntryFromRow(row);
-    } on Exception catch (e) {
-      if (_isUnique(e)) {
-        throw ConflictException(
-          "There's already a ${draft.mealType.wire} entry for "
-          "'${draft.category}' on that date — edit it instead.",
-        );
-      }
-      rethrow;
+    final id = entryId(ymd(draft.date), draft.mealType, draft.category);
+    if (await _store.cachedDoc(_entries.doc(id)) != null) {
+      throw ConflictException(ErrorCode.menuEntryExists,
+          {'meal': draft.mealType.wire, 'category': draft.category});
     }
+    final json = {...draft.toJson(), 'id': id};
+    await _store.commit(
+        _store.batch()..set(_entries.doc(id), draft.toJson()), 'menu.add');
+    return MenuEntry.fromJson(json);
   }
 
   /// Change the plate contents and/or the expected headcount of an entry.
   Future<MenuEntry> updateEntry(
-    int id, {
+    String id, {
     List<String>? items,
     int? headcount,
   }) async {
     if (items != null && items.isEmpty) {
-      throw const ValidationException('At least one item is required.');
+      throw const ValidationException(ErrorCode.menuItemsRequired);
     }
     if (headcount != null && headcount < 0) {
-      throw const ValidationException('Headcount cannot be negative.');
+      throw const ValidationException(ErrorCode.headcountNegative);
     }
-    final n = await (_db.update(_db.menuEntries)..where((e) => e.id.equals(id)))
-        .write(MenuEntriesCompanion(
-      itemsJson:
-          items == null ? const Value.absent() : Value(jsonEncode(items)),
-      headcount: headcount == null ? const Value.absent() : Value(headcount),
-    ));
-    if (n == 0) throw const NotFoundException('Menu entry not found.');
-    final row = await (_db.select(_db.menuEntries)
-          ..where((e) => e.id.equals(id)))
-        .getSingle();
-    return menuEntryFromRow(row);
-  }
-
-  Future<void> deleteEntry(int id) async {
-    final n =
-        await (_db.delete(_db.menuEntries)..where((e) => e.id.equals(id))).go();
-    if (n == 0) throw const NotFoundException('Menu entry not found.');
-  }
-
-  Future<void> _validateCategoryName(String name) async {
-    final exists = await (_db.select(_db.menuCategories)
-              ..where((c) => c.name.equals(name)))
-            .getSingleOrNull() !=
-        null;
-    if (!exists) {
-      throw ValidationException(
-        "Unknown menu category '$name'. Create it first.",
-      );
+    final existing = await _store.cachedDoc(_entries.doc(id));
+    if (existing == null) {
+      throw const NotFoundException(ErrorCode.menuEntryNotFound);
     }
+    final changes = <String, dynamic>{
+      if (items != null) 'items': items,
+      if (headcount != null) 'headcount': headcount,
+    };
+    if (changes.isEmpty) return MenuEntry.fromJson(existing);
+    await _store.commit(
+        _store.batch()..update(_entries.doc(id), changes), 'menu.update');
+    return MenuEntry.fromJson({...existing, ...changes});
   }
 
-  DateTime _dateOnly(DateTime d) => DateTime.utc(d.year, d.month, d.day);
-
-  bool _isUnique(Exception e) => e.toString().toLowerCase().contains('unique');
+  Future<void> deleteEntry(String id) async {
+    if (await _store.cachedDoc(_entries.doc(id)) == null) {
+      throw const NotFoundException(ErrorCode.menuEntryNotFound);
+    }
+    await _store.commit(
+        _store.batch()..delete(_entries.doc(id)), 'menu.delete');
+  }
 }

@@ -8,7 +8,7 @@ build/
 .idea/
 .vscode/
 
-# Generated (codegen output — regenerate with `make gen`)
+# Generated (codegen output)
 *.g.dart
 *.freezed.dart
 *.mocks.dart
@@ -39,3 +39,7 @@ lib/l10n/app_localizations*.dart
 
 # Built APKs handed off manually
 /dist/
+
+# graphify: the graph is tracked (CLAUDE.md §19.1), its machine-local
+# scratch files are not.
+graphify-out/.graphify_*

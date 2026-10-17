@@ -156,8 +156,7 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
                 ],
               ),
             ),
-          _section(
-              t, AppText.of(context).settingsConfigScreenSectionTimezone),
+          _section(t, AppText.of(context).settingsConfigScreenSectionTimezone),
           NbPickerField(
             label: AppText.of(context).settingsConfigScreenTimezoneFieldLabel,
             value: zones.contains(_timezone) ? _timezone : zones.first,
@@ -167,7 +166,8 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
           _section(t, AppText.of(context).settingsConfigScreenSectionGrace),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(AppText.of(context).settingsConfigScreenGraceEnabledLabel,
+            title: Text(
+                AppText.of(context).settingsConfigScreenGraceEnabledLabel,
                 style: t.text.body),
             value: _graceEnabled,
             onChanged: (v) => setState(() => _graceEnabled = v),

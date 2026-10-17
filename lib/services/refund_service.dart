@@ -1,84 +1,81 @@
-import 'package:drift/drift.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/errors.dart';
 import '../core/logging.dart';
-import '../data/local/database.dart' hide Refund;
-import '../data/local/mappers.dart';
+import '../data/store.dart';
 import '../domain/ledger.dart';
+import '../domain/member.dart';
+import 'member_service.dart';
 import 'settings_service.dart';
 
-/// Refunds — a port of v1 `app/routers/refunds.py`. Keeps the unit ledger
-/// accurate and records what/when/why; the actual payout happens outside the
-/// app (PRD §6.7). Amount is computed from configured prices, never typed in.
+/// Refunds (PRD §6.7). Keeps the unit ledger accurate and records what, when
+/// and why; the payout itself happens outside the app. The amount comes from
+/// the configured prices, never typed in.
 class RefundService {
-  RefundService(this._db, this._settings);
+  RefundService(this._store, this._settings);
 
-  final AppDatabase _db;
+  final Store _store;
   final SettingsService _settings;
   final _log = log('refund');
 
-  Future<List<Refund>> list({int? memberId}) async {
-    final query = _db.select(_db.refunds)
-      ..orderBy([(r) => OrderingTerm.desc(r.createdAt)]);
-    if (memberId != null) query.where((r) => r.memberId.equals(memberId));
-    return (await query.get()).map(refundFromRow).toList();
+  CollectionReference<Json> get _col => _store.col(Col.refunds);
+
+  Future<List<Refund>> list({String? memberId}) async {
+    Query<Json> q = _col.orderBy('createdAt', descending: true);
+    if (memberId != null) q = q.where('memberId', isEqualTo: memberId);
+    return (await _store.fresh(q)).map(Refund.fromJson).toList();
   }
 
   Future<Refund> create(RefundDraft draft) async {
     if (draft.isAllZero) {
-      throw const ValidationException('A refund needs at least one unit.');
+      throw const ValidationException(ErrorCode.refundNeedsUnits);
     }
-    final member = await (_db.select(_db.members)
-          ..where((m) => m.id.equals(draft.memberId)))
-        .getSingleOrNull();
-    if (member == null) throw const NotFoundException('Member not found.');
-
-    _rejectOverRefund('lunch', draft.lunchUnits, member.lunchBalance);
-    _rejectOverRefund(
-        'breakfast', draft.breakfastUnits, member.breakfastBalance);
-    _rejectOverRefund('brunch', draft.brunchUnits, member.brunchBalance);
+    final memberRow =
+        await _store.cachedDoc(_store.doc(Col.members, draft.memberId));
+    if (memberRow == null) {
+      throw const NotFoundException(ErrorCode.memberNotFound);
+    }
+    final balances = Member.fromJson(memberRow).balances;
+    _rejectOverRefund('lunch', draft.lunchUnits, balances.lunch);
+    _rejectOverRefund('breakfast', draft.breakfastUnits, balances.breakfast);
+    _rejectOverRefund('brunch', draft.brunchUnits, balances.brunch);
 
     final prices = (await _settings.read()).unitPrices;
-    final amount = draft.lunchUnits * prices.lunch +
-        draft.breakfastUnits * prices.breakfast +
-        draft.brunchUnits * prices.brunch;
-
-    final now = DateTime.now().toUtc();
-    final id = await _db.transaction(() async {
-      await (_db.update(_db.members)..where((m) => m.id.equals(member.id)))
-          .write(
-        MembersCompanion(
-          lunchBalance: Value(member.lunchBalance - draft.lunchUnits),
-          breakfastBalance:
-              Value(member.breakfastBalance - draft.breakfastUnits),
-          brunchBalance: Value(member.brunchBalance - draft.brunchUnits),
-          updatedAt: Value(now),
-        ),
-      );
-      return _db.into(_db.refunds).insert(RefundsCompanion.insert(
-            memberId: draft.memberId,
-            lunchUnits: Value(draft.lunchUnits),
-            breakfastUnits: Value(draft.breakfastUnits),
-            brunchUnits: Value(draft.brunchUnits),
-            refundAmount: amount,
-            reason: Value(draft.reason),
-            processedBy: draft.processedBy,
-            createdAt: now,
-          ));
-    });
-
-    _log.info('created member_id=${draft.memberId} refund_id=$id '
-        'amount=${amount.toStringAsFixed(2)} by=${draft.processedBy}');
-    final row = await (_db.select(_db.refunds)..where((r) => r.id.equals(id)))
-        .getSingle();
-    return refundFromRow(row);
+    final refund = Refund(
+      id: _store.newId(Col.refunds),
+      memberId: draft.memberId,
+      lunchUnits: draft.lunchUnits,
+      breakfastUnits: draft.breakfastUnits,
+      brunchUnits: draft.brunchUnits,
+      refundAmount: draft.lunchUnits * prices.lunch +
+          draft.breakfastUnits * prices.breakfast +
+          draft.brunchUnits * prices.brunch,
+      reason: draft.reason,
+      processedBy: draft.processedBy,
+      createdAt: DateTime.now().toUtc(),
+    );
+    final b = _store.batch()
+      ..set(_col.doc(refund.id), refund.toJson()..remove('id'))
+      ..update(
+          _store.doc(Col.members, draft.memberId),
+          MemberService.balanceDelta(
+              UnitCounts(
+                lunch: draft.lunchUnits,
+                breakfast: draft.breakfastUnits,
+                brunch: draft.brunchUnits,
+              ),
+              sign: -1));
+    await _store.commit(b, 'refunds.create ${refund.id}');
+    _log.info('created member_id=${draft.memberId} refund_id=${refund.id} '
+        'amount=${refund.refundAmount.toStringAsFixed(2)} '
+        'by=${draft.processedBy}');
+    return refund;
   }
 
   void _rejectOverRefund(String meal, int requested, int available) {
     if (requested > available) {
-      throw ValidationException(
-        'Cannot refund $requested $meal units — member only has $available.',
-      );
+      throw ValidationException(ErrorCode.refundExceedsBalance,
+          {'requested': requested, 'meal': meal, 'available': available});
     }
   }
 }

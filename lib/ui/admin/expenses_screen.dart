@@ -45,12 +45,11 @@ class ExpensesScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _stat(t, AppText.of(context).expensesScreenRevenue,
-                      s.revenue),
+                  _stat(
+                      t, AppText.of(context).expensesScreenRevenue, s.revenue),
                   _stat(t, AppText.of(context).expensesScreenExpenses,
                       s.expenses),
-                  _stat(t, AppText.of(context).expensesScreenProfit,
-                      s.profit),
+                  _stat(t, AppText.of(context).expensesScreenProfit, s.profit),
                 ],
               ),
             ),

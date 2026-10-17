@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../domain/ops.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/messages.dart';
 import '../settings/settings_screen.dart';
 import '../theme/tokens.dart';
 import 'frosted_panel.dart';
@@ -39,6 +40,7 @@ class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
       title: Text(title),
       actions: [
         ...?actions,
+        const _SyncIndicator(),
         const _NotificationBell(),
         if (showSettingsButton)
           IconButton(
@@ -65,11 +67,14 @@ class _NotificationBell extends ConsumerWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.notifications_none),
+          tooltip: AppText.of(context).tooltipNotifications,
           onPressed: () => _open(context, ref, notes),
         ),
         if (notes.isNotEmpty)
-          Positioned(
-            right: 6,
+          PositionedDirectional(
+            // Directional, so the badge sits on the icon's trailing edge in
+            // either reading direction.
+            end: 6,
             top: 8,
             child: Container(
               padding: const EdgeInsets.all(4),
@@ -119,10 +124,14 @@ class _NotificationBell extends ConsumerWidget {
                         side: BorderSide(
                             color: t.color.ink, width: t.shape.borderBase),
                       ),
-                      title: Text(n.title, style: t.text.label),
-                      subtitle: Text(n.message, style: t.text.body),
+                      title: Text(AppText.of(context).notificationText(n).title,
+                          style: t.text.label),
+                      subtitle: Text(
+                          AppText.of(context).notificationText(n).body,
+                          style: t.text.body),
                       trailing: IconButton(
                         icon: const Icon(Icons.close),
+                        tooltip: AppText.of(context).tooltipDismiss,
                         onPressed: () async {
                           await runGuarded(
                             context,
@@ -141,6 +150,30 @@ class _NotificationBell extends ConsumerWidget {
           ),
         ),
       )),
+    );
+  }
+}
+
+/// "Offline — changes will sync": shown only while this phone can't reach
+/// Firestore, so the operator knows scans are being kept and will go up
+/// later rather than wondering whether they counted (Nielsen #1).
+class _SyncIndicator extends ConsumerWidget {
+  const _SyncIndicator();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sync = ref.watch(syncStateProvider).asData?.value;
+    if (sync == null || sync.online) return const SizedBox.shrink();
+    final label = AppText.of(context).syncOffline;
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        label: label,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: NbSpace.sm),
+          child: Icon(Icons.cloud_off),
+        ),
+      ),
     );
   }
 }
