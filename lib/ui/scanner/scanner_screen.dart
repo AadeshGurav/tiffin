@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../app/providers.dart';
+import '../../core/screen_awake.dart';
 import '../../domain/ledger.dart';
 import '../shared_widgets/app_shell.dart';
 import '../shared_widgets/motion.dart';
@@ -43,8 +44,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   String? _lastCode;
   DateTime _lastAt = DateTime.fromMillisecondsSinceEpoch(0);
 
+  // A scan point sits open for a whole meal service; it must not dim.
+  static const _screen = ScreenAwake();
+
+  @override
+  void initState() {
+    super.initState();
+    _screen.set(enabled: true);
+  }
+
   @override
   void dispose() {
+    _screen.set(enabled: false);
     _controller.dispose();
     super.dispose();
   }
@@ -113,6 +124,29 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
           const _ReticleOverlay(),
+          // Offline is fine for scanning, but the operator should know the
+          // scans are being kept on this phone until the network is back.
+          if (ref.watch(syncStateProvider).asData?.value.online == false)
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(NbSpace.sm),
+                child: NbSurface(
+                  background: t.color.warn,
+                  intensity: NbIntensity.full,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: NbSpace.md, vertical: NbSpace.sm),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.cloud_off, color: t.color.onWarn),
+                    const SizedBox(width: NbSpace.sm),
+                    Flexible(
+                      child: Text(text.syncOffline,
+                          style: t.text.label.copyWith(color: t.color.onWarn)),
+                    ),
+                  ]),
+                ),
+              ),
+            ),
           if (_busy)
             Center(
               child: CircularProgressIndicator(color: t.color.surface),
@@ -230,7 +264,7 @@ class _ResultOverlay extends StatelessWidget {
                     child: Text(
                         text.scannerHeadcountBadge(
                           result.plannedCount ?? 0,
-                          result.memberCategory?.toUpperCase() ?? '',
+                          result.memberCategory ?? '',
                           result.servedCount ?? 0,
                         ),
                         textAlign: TextAlign.center,

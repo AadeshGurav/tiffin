@@ -99,7 +99,7 @@ class _MemberTile extends ConsumerWidget {
           ),
           Text(
             AppText.of(context).membersScreenTypeSummary(
-              member.type,
+              member.type, // an ICU select on the stored value
               member.className ?? '—',
               member.rollNumber ?? '—',
               member.staffId ?? '—',

@@ -74,7 +74,7 @@ class NbMemberField extends StatelessWidget {
 
 String _describe(Member m) => m.type == 'student'
     ? '${m.name} · ${m.className ?? '—'} ${m.rollNumber ?? ''}'.trim()
-    : '${m.name} · ${m.staffId ?? 'staff'}';
+    : [m.name, if (m.staffId?.isNotEmpty ?? false) m.staffId].join(' · ');
 
 bool _memberMatches(Member m, String q) {
   if (q.isEmpty) return true;

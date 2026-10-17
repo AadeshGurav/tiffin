@@ -13,6 +13,7 @@ import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'menu_categories_screen.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _monthProvider = StateProvider.autoDispose<DateTime>(
     (_) => DateTime(DateTime.now().year, DateTime.now().month));
@@ -65,12 +66,14 @@ class MenuScreen extends ConsumerWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
+                tooltip: AppText.of(context).tooltipPreviousMonth,
                 onPressed: () => ref.read(_monthProvider.notifier).state =
                     DateTime(month.year, month.month - 1),
               ),
               Text(DateFormat('MMMM y').format(month), style: t.text.label),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
+                tooltip: AppText.of(context).tooltipNextMonth,
                 onPressed: () => ref.read(_monthProvider.notifier).state =
                     DateTime(month.year, month.month + 1),
               ),
@@ -180,7 +183,9 @@ class MenuScreen extends ConsumerWidget {
                   isExpanded: true,
                   items: [
                     for (final m in MealType.values)
-                      DropdownMenuItem(value: m, child: Text(m.wire)),
+                      DropdownMenuItem(
+                          value: m,
+                          child: Text(AppText.of(context).mealLabel(m))),
                   ],
                   onChanged: (m) => setLocal(() => meal = m ?? meal),
                 ),
@@ -300,7 +305,8 @@ class MenuScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('${entry.mealType.wire.toUpperCase()} · ${entry.category}',
+        title: Text(
+            '${AppText.of(context).mealLabel(entry.mealType)} · ${entry.category}',
             style: t.text.heading),
         content: SingleChildScrollView(
           child: Column(
@@ -414,7 +420,12 @@ class _MonthGrid extends StatelessWidget {
         children: [
           Row(
             children: [
-              for (final d in const ['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+              // Narrow weekday names in the chosen language. 1 Jan 2024 was a
+              // Monday, so these seven dates give Mon..Sun.
+              for (final d in [
+                for (var i = 1; i <= 7; i++)
+                  DateFormat.EEEEE().format(DateTime(2024, 1, i)),
+              ])
                 Expanded(
                   child: Center(
                     child: Text(d, style: t.text.label),
@@ -558,7 +569,7 @@ class _DayPanel extends StatelessWidget {
                         children: [
                           Text(
                               AppText.of(context).menuScreenDayEntrySummary(
-                                  e.mealType.wire.toUpperCase(),
+                                  AppText.of(context).mealLabel(e.mealType),
                                   e.category,
                                   e.headcount),
                               style: t.text.label),
@@ -568,6 +579,7 @@ class _DayPanel extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
+                      tooltip: AppText.of(context).tooltipDelete,
                       onPressed: () => onDelete(e.id),
                     ),
                   ],

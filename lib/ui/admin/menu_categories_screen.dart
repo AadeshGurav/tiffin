@@ -64,6 +64,7 @@ class MenuCategoriesScreen extends ConsumerWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
+                    tooltip: AppText.of(context).tooltipDelete,
                     onPressed: () async {
                       final ok = await runGuarded(
                         context,

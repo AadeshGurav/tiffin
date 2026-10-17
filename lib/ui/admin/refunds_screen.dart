@@ -12,6 +12,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _refundsProvider = FutureProvider.autoDispose<List<Refund>>(
     (ref) => ref.watch(backendProvider).listRefunds());
@@ -64,7 +65,7 @@ class RefundsScreen extends ConsumerWidget {
                           r.lunchUnits,
                           r.breakfastUnits,
                           r.brunchUnits,
-                          r.refundAmount.toStringAsFixed(2)),
+                          AppText.of(context).money(r.refundAmount)),
                       style: t.text.body),
                   Text(
                       AppText.of(context).refundsScreenLineInfo(

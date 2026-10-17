@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 import '../theme/tokens.dart';
 import 'nb_text_field.dart';
 
@@ -74,7 +75,8 @@ class _NbUnitFieldState extends State<NbUnitField> {
           isExpanded: true,
           items: [
             for (final u in kCommonUnits)
-              DropdownMenuItem(value: u, child: Text(u)),
+              DropdownMenuItem(
+                  value: u, child: Text(AppText.of(context).unitLabel(u))),
             DropdownMenuItem(
                 value: _customSentinel,
                 child: Text(AppText.of(context).unitFieldCustomOption)),

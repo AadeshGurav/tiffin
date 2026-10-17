@@ -10,6 +10,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _expensesProvider = FutureProvider.autoDispose<List<Expense>>(
     (ref) => ref.watch(backendProvider).listExpenses());
@@ -86,9 +87,7 @@ class ExpensesScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Text(
-                            AppText.of(context).expensesScreenAmount(
-                                e.amount.toStringAsFixed(2)),
+                        Text(AppText.of(context).money(e.amount),
                             style: t.text.body),
                       ],
                     ),
@@ -102,12 +101,13 @@ class ExpensesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _stat(TiffinTokens t, String label, double value) => Column(
-        children: [
-          Text(label.toUpperCase(), style: t.text.label),
-          Text('Rs. ${value.toStringAsFixed(0)}', style: t.text.heading),
-        ],
-      );
+  Widget _stat(TiffinTokens t, String label, double value) => Builder(
+      builder: (context) => Column(
+            children: [
+              Text(label, style: t.text.label),
+              Text(AppText.of(context).money(value), style: t.text.heading),
+            ],
+          ));
 
   Future<void> _form(BuildContext context, WidgetRef ref) async {
     final t = context.tokens;

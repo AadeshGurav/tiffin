@@ -10,6 +10,7 @@ import '../shared_widgets/nb_text_field.dart';
 import '../shared_widgets/unit_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final ingredientsProvider = FutureProvider.autoDispose<List<Ingredient>>(
     (ref) => ref.watch(backendProvider).listIngredients());
@@ -55,7 +56,8 @@ class IngredientsTab extends ConsumerWidget {
                       Text(ing.name, style: t.text.body),
                       Text(
                           AppText.of(context).ingredientsScreenInStock(
-                              _num(ing.stockQty), ing.unit),
+                              _num(ing.stockQty),
+                              AppText.of(context).unitLabel(ing.unit)),
                           style: t.text.label),
                     ],
                   ),
@@ -74,6 +76,7 @@ class IngredientsTab extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
+                  tooltip: AppText.of(context).tooltipDelete,
                   onPressed: () async {
                     final ok = await runGuarded(
                       context,
@@ -108,11 +111,13 @@ class IngredientsTab extends ConsumerWidget {
           children: [
             Text(
                 AppText.of(context).ingredientsScreenAdjustNowText(
-                    _num(ing.stockQty), ing.unit),
+                    _num(ing.stockQty),
+                    AppText.of(context).unitLabel(ing.unit)),
                 style: t.text.label),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: AppText.of(context).ingredientsScreenChangeLabel(ing.unit),
+              label: AppText.of(context).ingredientsScreenChangeLabel(
+                  AppText.of(context).unitLabel(ing.unit)),
               controller: delta,
               keyboardType: const TextInputType.numberWithOptions(
                   signed: true, decimal: true),

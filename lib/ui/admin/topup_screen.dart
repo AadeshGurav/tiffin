@@ -216,20 +216,20 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             ),
             const SizedBox(height: NbSpace.md),
             _UnitRow(
-              label: AppText.of(context)
-                  .topupScreenLunchLabel(s.unitPrices.lunch.toStringAsFixed(0)),
+              label: AppText.of(context).topupScreenLunchLabel(
+                  AppText.of(context).money(s.unitPrices.lunch)),
               value: _lunch,
               onChanged: (v) => setState(() => _lunch = v),
             ),
             _UnitRow(
               label: AppText.of(context).topupScreenBreakfastLabel(
-                  s.unitPrices.breakfast.toStringAsFixed(0)),
+                  AppText.of(context).money(s.unitPrices.breakfast)),
               value: _breakfast,
               onChanged: (v) => setState(() => _breakfast = v),
             ),
             _UnitRow(
               label: AppText.of(context).topupScreenBrunchLabel(
-                  s.unitPrices.brunch.toStringAsFixed(0)),
+                  AppText.of(context).money(s.unitPrices.brunch)),
               value: _brunch,
               onChanged: (v) => setState(() => _brunch = v),
             ),
@@ -255,7 +255,7 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
                 children: [
                   Text(AppText.of(context).topupScreenTotalLabel,
                       style: t.text.label),
-                  Text('Rs. ${_amount(s).toStringAsFixed(2)}',
+                  Text(AppText.of(context).money(_amount(s)),
                       style: t.text.heading),
                 ],
               ),
@@ -294,11 +294,13 @@ class _UnitRow extends StatelessWidget {
           Expanded(child: Text(label, style: t.text.body)),
           IconButton(
             icon: const Icon(Icons.remove),
+            tooltip: AppText.of(context).tooltipLess,
             onPressed: value > 0 ? () => onChanged(value - 1) : null,
           ),
           Text('$value', style: t.text.heading),
           IconButton(
             icon: const Icon(Icons.add),
+            tooltip: AppText.of(context).tooltipMore,
             onPressed: () => onChanged(value + 1),
           ),
         ],

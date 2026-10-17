@@ -73,9 +73,11 @@ class TopupHistoryTab extends ConsumerWidget {
                         tp.lunchUnits,
                         tp.breakfastUnits,
                         tp.brunchUnits,
-                        tp.amount.toStringAsFixed(2),
-                        tp.paymentMethod.wire.toUpperCase(),
-                        tp.paymentStatus),
+                        AppText.of(context).money(tp.amount),
+                        AppText.of(context)
+                            .paymentMethodLabel(tp.paymentMethod),
+                        AppText.of(context)
+                            .paymentStatusLabel(tp.paymentStatus)),
                     style: t.text.label),
                 Text(
                     AppText.of(context).topupHistoryCreatedInfo(

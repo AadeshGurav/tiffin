@@ -10,38 +10,18 @@ import 'tokens.dart';
 /// dark is a mode, not a fifth theme (CLAUDE.md §11.5.10).
 ///
 /// [wire] is the stored/transmitted name: it must stay stable, because it is
-/// persisted per device and can also be pushed from the host.
+/// persisted per device and can also be set for the whole canteen.
 enum TiffinThemeId {
-  neobrutal(
-    wire: 'neobrutal',
-    label: 'Neobrutal',
-    blurb: 'Hard borders, offset shadows, loud colour. The Tiffin original.',
-  ),
-  clean(
-    wire: 'clean',
-    label: 'Clean',
-    blurb: 'Flat and quiet. Easiest on the eyes for a long admin shift.',
-  ),
-  frost(
-    wire: 'frost',
-    label: 'Frost',
-    blurb: 'Frosted glass bars and sheets over solid content.',
-  ),
-  clay(
-    wire: 'clay',
-    label: 'Clay',
-    blurb: 'Soft, round and warm. Friendliest of the four.',
-  );
+  neobrutal(wire: 'neobrutal'),
+  clean(wire: 'clean'),
+  frost(wire: 'frost'),
+  clay(wire: 'clay');
 
-  const TiffinThemeId({
-    required this.wire,
-    required this.label,
-    required this.blurb,
-  });
+  const TiffinThemeId({required this.wire});
 
+  /// Stored and synced name; its words live in the ARB files
+  /// (`themeLabel` / `themeBlurb` in `l10n/labels.dart`).
   final String wire;
-  final String label;
-  final String blurb;
 
   /// Falls back to the default rather than throwing: a theme name can arrive
   /// from another device's settings, and an unknown one should degrade to a

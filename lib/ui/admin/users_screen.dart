@@ -10,6 +10,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _usersProvider = FutureProvider.autoDispose<List<AppUser>>(
     (ref) => ref.watch(backendProvider).listUsers());
@@ -57,13 +58,15 @@ class UsersScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(u.username, style: t.text.body),
-                        Text('${u.role.wire} · ${u.status}',
+                        Text(
+                            '${AppText.of(context).roleLabel(u.role)} · ${AppText.of(context).statusLabel(u.status)}',
                             style: t.text.label),
                       ],
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
+                    tooltip: AppText.of(context).tooltipDelete,
                     onPressed: () async {
                       final ok = await runGuarded(
                         context,
@@ -123,7 +126,9 @@ class UsersScreen extends ConsumerWidget {
                   isExpanded: true,
                   items: [
                     for (final r in Role.values)
-                      DropdownMenuItem(value: r, child: Text(r.wire)),
+                      DropdownMenuItem(
+                          value: r,
+                          child: Text(AppText.of(context).roleLabel(r))),
                   ],
                   onChanged: (r) => setLocal(() => role = r ?? role),
                 ),

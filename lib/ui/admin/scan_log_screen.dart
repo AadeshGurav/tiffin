@@ -9,6 +9,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 import '../../l10n/messages.dart';
 
 final _scansProvider = FutureProvider.autoDispose<List<ScanRecord>>(
@@ -50,7 +51,8 @@ class ScanLogScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text('${s.memberName} · ${s.mealType.wire}',
+                        child: Text(
+                            '${s.memberName} · ${AppText.of(context).mealLabel(s.mealType)}',
                             style: t.text.body),
                       ),
                       if (s.reversed)

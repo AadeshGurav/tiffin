@@ -271,6 +271,23 @@ Future<bool> showImportDialog(BuildContext context) async {
   final text = AppText.of(context);
   final backups =
       ProviderScope.containerOf(context).read(backendProvider).backups;
+  // Say where the file comes from before opening a file picker on someone.
+  final go = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(text.importTitle),
+      content: Text(text.importBody),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(text.backupScreenCancelButton)),
+        TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(text.importPickButton)),
+      ],
+    ),
+  );
+  if (go != true || !context.mounted) return false;
   final picked = await FilePicker.pickFile();
   if (picked == null || !context.mounted) return false;
   final bytes = await picked.readAsBytes();
