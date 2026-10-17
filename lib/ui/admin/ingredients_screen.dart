@@ -68,7 +68,8 @@ class IngredientsTab extends ConsumerWidget {
                   ),
                 IconButton(
                   icon: const Icon(Icons.tune),
-                  tooltip: AppText.of(context).ingredientsScreenAdjustStockTooltip,
+                  tooltip:
+                      AppText.of(context).ingredientsScreenAdjustStockTooltip,
                   onPressed: () => _adjustStock(context, ref, ing),
                 ),
                 IconButton(
@@ -99,8 +100,7 @@ class IngredientsTab extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(
-            AppText.of(context).ingredientsScreenAdjustTitle(ing.name),
+        title: Text(AppText.of(context).ingredientsScreenAdjustTitle(ing.name),
             style: t.text.heading),
         content: Column(
           mainAxisSize: MainAxisSize.min,

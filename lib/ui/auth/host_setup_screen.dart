@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
-import '../../core/errors.dart';
+import '../../l10n/messages.dart';
+import '../admin/backup_screen.dart' show showImportDialog;
 import '../shared_widgets/app_logo.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
@@ -10,7 +11,8 @@ import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
-/// First run on a host device: the operator creates the admin account.
+/// First run on a new canteen: the operator creates the admin account (or
+/// brings over an earlier canteen's records, accounts included).
 ///
 /// This replaced a scheme that generated a password and showed it once on the
 /// login screen. The account existed, but the password was held only in
@@ -18,7 +20,7 @@ import '../../l10n/app_localizations.dart';
 /// nobody could sign in as, recoverable only by wiping the database. Choosing
 /// your own credentials cannot be lost by looking away.
 ///
-/// Shown whenever the users table is empty, so it also comes back correctly
+/// Shown whenever there are no accounts, so it also comes back correctly
 /// after a data reset instead of being a one-shot.
 class HostSetupScreen extends ConsumerStatefulWidget {
   const HostSetupScreen({super.key});
@@ -44,8 +46,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
   }
 
   Future<void> _suggest() async {
-    final container = await ref.read(hostContainerProvider.future);
-    final suggestion = container.auth.suggestPassword();
+    final suggestion = ref.read(backendProvider).auth.suggestPassword();
     setState(() {
       _password.text = suggestion;
       _confirm.text = suggestion;
@@ -66,21 +67,17 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
       _error = null;
     });
     try {
-      final container = await ref.read(hostContainerProvider.future);
-      await container.auth.createInitialAdmin(
-        username: _username.text.trim(),
-        password: _password.text,
-      );
+      await ref.read(backendProvider).auth.createInitialAdmin(
+            username: _username.text.trim(),
+            password: _password.text,
+          );
       ref.invalidate(setupRequiredProvider);
       // Straight in, rather than making someone retype what they just chose.
       await ref
           .read(sessionProvider.notifier)
           .login(_username.text.trim(), _password.text);
-    } on AppException catch (e) {
-      setState(() => _error = e.message);
     } catch (e) {
-      setState(
-          () => _error = AppText.of(context).hostSetupFailed(e.toString()));
+      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -189,11 +186,17 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: NbSpace.md),
+                  // Offered before choosing credentials: an imported backup
+                  // brings its own accounts, and replaces anything made here.
                   TextButton.icon(
-                    icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: Text(text.hostSetupSwitchToClient),
-                    onPressed: () =>
-                        ref.read(currentModeProvider.notifier).clear(),
+                    icon: const Icon(Icons.drive_file_move_outline, size: 18),
+                    label: Text(text.importTitle),
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            final imported = await showImportDialog(context);
+                            if (imported) ref.invalidate(setupRequiredProvider);
+                          },
                   ),
                 ],
               ),

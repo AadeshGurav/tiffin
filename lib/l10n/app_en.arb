@@ -470,9 +470,10 @@
   "@topupHistoryUnknownMember": {
     "placeholders": {
       "id": {
-        "type": "int"
+        "type": "String"
       }
-    }
+    },
+    "description": "id is a short record code like 3F9A2C."
   },
   "topupHistoryReversedBadge": "REVERSED",
   "topupHistoryLineSummary": "L{lunch} B{breakfast} Br{brunch}  ·  Rs. {amount}  ·  {method} ({status})",
@@ -659,9 +660,10 @@
   "@topupScreenBillDialogTitle": {
     "placeholders": {
       "id": {
-        "type": "int"
+        "type": "String"
       }
-    }
+    },
+    "description": "id is a short record code like 3F9A2C."
   },
   "topupScreenBillAmount": "Amount: Rs. {amount} ({method})",
   "@topupScreenBillAmount": {
@@ -1037,5 +1039,694 @@
   },
   "unitFieldLabel": "UNIT",
   "unitFieldCustomOption": "Custom…",
-  "unitFieldCustomLabel": "Custom unit"
+  "unitFieldCustomLabel": "Custom unit",
+  "mealBreakfast": "Breakfast",
+  "@mealBreakfast": {
+    "description": "Meal name."
+  },
+  "mealLunch": "Lunch",
+  "@mealLunch": {
+    "description": "Meal name."
+  },
+  "mealBrunch": "Brunch",
+  "@mealBrunch": {
+    "description": "Meal name (Saturday service)."
+  },
+  "roleAdmin": "Admin",
+  "@roleAdmin": {
+    "description": "Account / phone role."
+  },
+  "roleCounter": "Counter",
+  "@roleCounter": {
+    "description": "Account / phone role: takes payments and scans."
+  },
+  "roleScanner": "Scanner",
+  "@roleScanner": {
+    "description": "Account / phone role: scans only."
+  },
+  "memberTypeStudent": "Student",
+  "@memberTypeStudent": {
+    "description": "Member type."
+  },
+  "memberTypeStaff": "Staff",
+  "@memberTypeStaff": {
+    "description": "Member type."
+  },
+  "statusActive": "Active",
+  "@statusActive": {
+    "description": "Account or member status."
+  },
+  "statusInactive": "Inactive",
+  "@statusInactive": {
+    "description": "Account or member status."
+  },
+  "paymentCash": "Cash",
+  "@paymentCash": {
+    "description": "Payment method."
+  },
+  "paymentUpi": "UPI",
+  "@paymentUpi": {
+    "description": "Payment method; UPI is a proper noun, keep as is."
+  },
+  "paymentPending": "Pending",
+  "@paymentPending": {
+    "description": "Payment status: not yet received."
+  },
+  "paymentConfirmed": "Confirmed",
+  "@paymentConfirmed": {
+    "description": "Payment status: received."
+  },
+  "commonYes": "Yes",
+  "commonNo": "No",
+  "unitKg": "kg",
+  "@unitKg": {
+    "description": "Unit of measure, short form."
+  },
+  "unitG": "g",
+  "@unitG": {
+    "description": "Unit of measure, short form."
+  },
+  "unitLitre": "litre",
+  "@unitLitre": {
+    "description": "Unit of measure."
+  },
+  "unitMl": "ml",
+  "@unitMl": {
+    "description": "Unit of measure, short form."
+  },
+  "unitPcs": "pcs",
+  "@unitPcs": {
+    "description": "Unit of measure: pieces."
+  },
+  "unitPacket": "packet",
+  "@unitPacket": {
+    "description": "Unit of measure."
+  },
+  "unitDozen": "dozen",
+  "@unitDozen": {
+    "description": "Unit of measure."
+  },
+  "unitBunch": "bunch",
+  "@unitBunch": {
+    "description": "Unit of measure: a bunch of greens."
+  },
+  "unitBottle": "bottle",
+  "@unitBottle": {
+    "description": "Unit of measure."
+  },
+  "unitCan": "can",
+  "@unitCan": {
+    "description": "Unit of measure: a tin can."
+  },
+  "unitBox": "box",
+  "@unitBox": {
+    "description": "Unit of measure."
+  },
+  "reportSheetSummary": "Summary",
+  "@reportSheetSummary": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetMembers": "Members",
+  "@reportSheetMembers": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetBalances": "Balances",
+  "@reportSheetBalances": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetScans": "Scans",
+  "@reportSheetScans": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetTopups": "Top-ups",
+  "@reportSheetTopups": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetRefunds": "Refunds",
+  "@reportSheetRefunds": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetExpenses": "Expenses",
+  "@reportSheetExpenses": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetMenu": "Menu",
+  "@reportSheetMenu": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportColFigure": "Figure",
+  "@reportColFigure": {
+    "description": "Column header in the summary tab."
+  },
+  "reportColValue": "Value",
+  "@reportColValue": {
+    "description": "Column header in the summary tab."
+  },
+  "reportGenerated": "Generated",
+  "@reportGenerated": {
+    "description": "Summary row: when the file was made."
+  },
+  "reportTimezone": "Time zone",
+  "reportRangeFrom": "From",
+  "@reportRangeFrom": {
+    "description": "Summary row: start of the date range."
+  },
+  "reportRangeTo": "To",
+  "@reportRangeTo": {
+    "description": "Summary row: end of the date range."
+  },
+  "reportRangeBeginning": "the beginning",
+  "@reportRangeBeginning": {
+    "description": "Shown when no start date was chosen."
+  },
+  "reportRangeToday": "today",
+  "@reportRangeToday": {
+    "description": "Shown when no end date was chosen."
+  },
+  "reportRevenue": "Revenue (confirmed top-ups)",
+  "reportProfit": "Profit",
+  "reportNoSections": "No sections were selected.",
+  "reportColId": "ID",
+  "reportColType": "Type",
+  "reportColName": "Name",
+  "reportColClass": "Class",
+  "reportColRoll": "Roll no.",
+  "reportColStaffId": "Staff ID",
+  "reportColQr": "QR code",
+  "reportColStatus": "Status",
+  "reportColAdded": "Added",
+  "reportColTotal": "Total",
+  "reportColWhen": "When",
+  "reportColMember": "Member",
+  "reportColMeal": "Meal",
+  "reportColOnGrace": "On grace",
+  "@reportColOnGrace": {
+    "description": "Scan was allowed on the grace allowance."
+  },
+  "reportColReversed": "Reversed",
+  "reportColReversedBy": "Reversed by",
+  "reportColAmount": "Amount",
+  "reportColMethod": "Method",
+  "@reportColMethod": {
+    "description": "Payment method column."
+  },
+  "reportColBy": "By",
+  "@reportColBy": {
+    "description": "Who recorded the row."
+  },
+  "reportColReason": "Reason",
+  "reportColDate": "Date",
+  "reportColCategory": "Category",
+  "reportColDescription": "Description",
+  "reportColPlates": "Plates",
+  "@reportColPlates": {
+    "description": "Planned number of plates."
+  },
+  "reportColItems": "Items",
+  "@reportColItems": {
+    "description": "Dishes on the menu."
+  },
+  "billId": "Bill ID",
+  "billMember": "Member",
+  "billUnitsPurchased": "Units purchased",
+  "billNewBalances": "New balances",
+  "billAmount": "Amount",
+  "errBadCredentials": "Incorrect username or password.",
+  "errNotSignedIn": "You're signed out. Sign in again.",
+  "errRoleNotAllowedOnDevice": "This phone is approved as a {deviceRole} phone, so {role} accounts can’t sign in here.",
+  "@errRoleNotAllowedOnDevice": {
+    "description": "deviceRole and role are role names (Admin, Counter, Scanner).",
+    "placeholders": {
+      "deviceRole": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "errAlreadySetUp": "This canteen is already set up. Sign in instead.",
+  "errUsernameRequired": "Choose a username.",
+  "errUsernameLength": "Usernames are 3 to 50 characters.",
+  "errUsernameChars": "Usernames can use letters, digits, and _ . - only.",
+  "errUsernameTaken": "The username {name} is already taken.",
+  "@errUsernameTaken": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errPasswordTooShort": "Use at least {min} characters.",
+  "@errPasswordTooShort": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "errCannotDeactivateSelf": "You can't deactivate your own account.",
+  "errCannotDeleteSelf": "You can't delete your own account.",
+  "errNoSuchAccount": "There's no account called {name}.",
+  "@errNoSuchAccount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errUserNotFound": "That account no longer exists.",
+  "errOnlineAccountsDisabled": "Online accounts are turned off for this canteen.",
+  "errDeviceNotApproved": "This phone isn't approved yet. Ask the admin to approve it in Settings ▸ Devices.",
+  "errNeedsInternet": "This needs an internet connection. Connect and try again.",
+  "errPermissionDenied": "This phone isn't allowed to do that. Ask the admin to check its role in Settings ▸ Devices.",
+  "errFirebaseConfigUnreadable": "That isn't a Firebase config file. Download google-services.json (Android) or GoogleService-Info.plist (iPhone) from the Firebase console.",
+  "errFirebaseConfigWrongApp": "That file is for a different app. In the Firebase console, add an app with the ID {appId} and download its file.",
+  "@errFirebaseConfigWrongApp": {
+    "description": "appId is a package name like com.canteen.canteen_coupon; keep it as is.",
+    "placeholders": {
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "errMemberNotFound": "That member no longer exists.",
+  "errMemberStudentHasStaffId": "A student can't have a staff ID.",
+  "errMemberStaffHasClass": "Staff members don't have a class or roll number.",
+  "errMemberUnknownType": "Unknown member type: {type}.",
+  "@errMemberUnknownType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "errMemberHasHistory": "This member has scans, top-ups or refunds, so they can't be deleted. Set them to inactive instead.",
+  "errTopupNeedsUnits": "A top-up needs at least one unit.",
+  "errTopupNotFound": "That top-up no longer exists.",
+  "errRefundNeedsUnits": "A refund needs at least one unit.",
+  "errRefundExceedsBalance": "Can't refund {requested} {meal} units — the member has only {available}.",
+  "@errRefundExceedsBalance": {
+    "placeholders": {
+      "requested": {
+        "type": "int"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      }
+    }
+  },
+  "errCategoryNameBlank": "Give the category a name.",
+  "errCategoryExists": "There's already a category called {name}.",
+  "@errCategoryExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errCategoryNotFound": "That category no longer exists.",
+  "errUnknownCategory": "There's no menu category called {name}. Create it first.",
+  "@errUnknownCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errMenuItemsRequired": "Add at least one item.",
+  "errHeadcountNegative": "Plates can't be negative.",
+  "errMenuEntryExists": "There's already a {meal} entry for {category} on that day — edit it instead.",
+  "@errMenuEntryExists": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "errMenuEntryNotFound": "That menu entry no longer exists.",
+  "errIngredientNameUnitRequired": "An ingredient needs a name and a unit.",
+  "errIngredientExists": "There's already an ingredient called {name}.",
+  "@errIngredientExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errIngredientNotFound": "That ingredient no longer exists.",
+  "errNothingToUpdate": "Nothing has changed.",
+  "errRecipeDishBlank": "Give the dish a name.",
+  "errRecipeNeedsIngredient": "A recipe needs at least one ingredient.",
+  "errRecipeQuantityPositive": "Every ingredient needs a quantity above zero.",
+  "errRecipeUnknownIngredient": "One of these ingredients no longer exists. Pick it again.",
+  "errRecipeExists": "There's already a recipe for {name}.",
+  "@errRecipeExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errRecipeNotFound": "That recipe no longer exists.",
+  "errPurchaseRangeInvalid": "The start date must be on or before the end date.",
+  "errPurchaseQuantityRequired": "Enter how much to buy.",
+  "errPurchaseItemNotFound": "That shopping item no longer exists.",
+  "errExpenseAmountNegative": "The amount can't be negative.",
+  "errSettingsNegative": "These values can't be negative.",
+  "errSettingsBadTimezone": "{name} isn't a time zone. Pick one from the list.",
+  "@errSettingsBadTimezone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errSettingsBadTime": "{meal} times must be in 24-hour HH:MM form.",
+  "@errSettingsBadTime": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "errSettingsWindowOrder": "{meal} must start before it ends ({start} – {end}).",
+  "@errSettingsWindowOrder": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "errSettingsBlank": "The canteen name can't be empty.",
+  "errNotificationNotFound": "That notification has already gone.",
+  "errBackupUnreadable": "That backup is damaged or incomplete.",
+  "errBackupNotTiffin": "That isn't a Tiffin backup file.",
+  "errBackupNeedsPassphrase": "This backup is password-protected. Enter its password.",
+  "errBackupWrongPassphrase": "That password doesn't open this backup.",
+  "errBackupNewerVersion": "That backup was made by a newer version of Tiffin. Update the app first.",
+  "errBackupTargetNotEmpty": "This canteen already has members. To replace them, use Settings ▸ Backup & restore.",
+  "errInternal": "Something went wrong on this phone. It has been written to the log.",
+  "errUnexpected": "Something unexpected went wrong. It has been written to the log.",
+  "reversalScanReversed": "Scan reversed — {meal} balance is now {restored}.",
+  "@reversalScanReversed": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "restored": {
+        "type": "int"
+      }
+    }
+  },
+  "reversalScanNotFound": "That scan no longer exists.",
+  "reversalScanAlreadyReversed": "That scan was already reversed.",
+  "reversalScanWindowExpired": "Scans can only be reversed within {minutes, plural, =1{1 minute} other{{minutes} minutes}}.",
+  "@reversalScanWindowExpired": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "reversalTopupReversed": "Top-up reversed and the balance corrected.",
+  "reversalTopupNotFound": "That top-up no longer exists.",
+  "reversalTopupAlreadyReversed": "This top-up is already reversed.",
+  "reversalTopupUnitsUsed": "Some of these units have already been used. Process a refund instead.",
+  "reversalMemberNotFound": "That member no longer exists.",
+  "notifPrepTitle": "Start prepping {meal}",
+  "@notifPrepTitle": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPrepBody": "{meal} starts at {start} — in about {minutes, plural, =1{1 minute} other{{minutes} minutes}}.",
+  "@notifPrepBody": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "notifPurchaseTitle": "Ingredient purchase due",
+  "notifPurchaseBody": "{count, plural, =1{1 item still needs} other{{count} items still need}} buying for {date}.",
+  "@notifPurchaseBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifLowStockTitle": "Low stock: {name}",
+  "@notifLowStockTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifLowStockBody": "{qty} {unit} left (alert at {threshold} {unit}). Restock soon.",
+  "@notifLowStockBody": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "notifOverrunTitle": "More {category} {meal} plates than planned",
+  "@notifOverrunTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "notifOverrunBody": "Planned about {planned}, served {served} so far.",
+  "@notifOverrunBody": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "served": {
+        "type": "int"
+      }
+    }
+  },
+  "notifScanRejectedTitle": "Offline scan not counted",
+  "notifScanRejectedBody": "{name} had already been served {meal} on {date} on another phone, so this scan was dropped and the unit kept.",
+  "@notifScanRejectedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifUnknown": "Notice",
+  "@notifUnknown": {
+    "description": "Title for a notification type this app version does not know."
+  },
+  "connectTitle": "Connect to your Firebase project",
+  "connectBody": "Tiffin keeps the canteen's records in your own Firebase project. Pick the config file you downloaded from the Firebase console — google-services.json on Android, GoogleService-Info.plist on iPhone.",
+  "connectPickButton": "Choose config file",
+  "connectHelp": "Where is it? Firebase console ▸ Project settings ▸ Your apps ▸ the app with ID {appId} ▸ download the config file.",
+  "@connectHelp": {
+    "description": "appId is a package name; keep it as is.",
+    "placeholders": {
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "connectConnecting": "Connecting…",
+  "deviceSetupTitle": "Set up this phone",
+  "deviceSetupBody": "Give this phone a name the admin will recognise, then join. This needs internet once; after that the phone works offline too.",
+  "deviceSetupNameLabel": "Phone name",
+  "deviceSetupNameHint": "e.g. Counter 1",
+  "deviceSetupJoinButton": "Join this canteen",
+  "deviceSetupOnlineButton": "Sign in with an online account instead",
+  "deviceSetupProject": "Firebase project: {projectId}",
+  "@deviceSetupProject": {
+    "placeholders": {
+      "projectId": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSetupChangeProject": "Use a different Firebase project",
+  "newCanteenTitle": "Start a new canteen?",
+  "newCanteenBody": "Nobody has set up this Firebase project yet. This phone will become the first admin phone.",
+  "newCanteenButton": "Start the canteen on this phone",
+  "waitingTitle": "Waiting for approval",
+  "waitingBody": "Ask the admin to open Settings ▸ Devices on their phone and approve {name}. This screen moves on by itself once they do.",
+  "@waitingBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingCode": "Phone code: {code}",
+  "@waitingCode": {
+    "description": "A short code the admin matches against the Devices list.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingRevoked": "The admin removed this phone. Ask them to approve it again.",
+  "waitingRequestAgain": "Ask for approval again",
+  "waitingStartOver": "Start over",
+  "onlineSignInTitle": "Online account",
+  "onlineEmailLabel": "Email",
+  "onlinePasswordLabel": "Password",
+  "onlineSignInButton": "Sign in",
+  "onlineForgotButton": "Email me a reset link",
+  "onlineResetSent": "Check {email} for a link to reset the password.",
+  "@onlineResetSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineInactive": "This online account is turned off. Ask the admin.",
+  "onlineSignOutButton": "Sign out",
+  "onlineBack": "Back",
+  "onlineAccountsTitle": "Online accounts",
+  "onlineAccountsSubtitle": "Email sign-in that works on any phone",
+  "onlineAccountsToggle": "Allow online accounts",
+  "onlineAccountsExplainer": "Online accounts sign in with an email and password on any phone, without the phone being approved first. They need internet to sign in. Offline accounts keep working either way.",
+  "onlineAccountsAdd": "Add online account",
+  "onlineAccountsEmpty": "No online accounts yet.",
+  "onlineAccountsTurnOff": "Turn off",
+  "onlineAccountsTurnOn": "Turn on",
+  "onlineAccountsCreated": "Created {email}.",
+  "@onlineAccountsCreated": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineAccountsOff": "Online accounts are off. Turn them on to add one.",
+  "splashPreparing": "Getting ready…",
+  "splashSyncing": "Downloading the canteen's records…",
+  "syncOffline": "Offline — changes will sync",
+  "noAccountsTitle": "No accounts yet",
+  "noAccountsBody": "The admin hasn't created any accounts. Set them up on the admin phone first.",
+  "devicesTitle": "Devices",
+  "devicesSubtitle": "Phones that can use this canteen",
+  "devicesPending": "Waiting for approval",
+  "devicesApproveButton": "Approve",
+  "devicesRoleLabel": "Role on this phone",
+  "devicesRemoveButton": "Remove",
+  "devicesRemoveConfirm": "Remove {name}? It will need approving again before it can be used.",
+  "@devicesRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesThisPhone": "This phone",
+  "devicesEmpty": "No other phones yet.",
+  "devicesRoleExplainer": "A phone's role limits who can sign in on it: an admin phone allows everyone, a counter phone allows counter and scanner accounts, a scanner phone allows scanner accounts only.",
+  "settingsScreenGroupAccess": "Access",
+  "settingsScreenFirebaseTitle": "Firebase project",
+  "settingsScreenFirebaseSubtitle": "Connected to {projectId}",
+  "@settingsScreenFirebaseSubtitle": {
+    "placeholders": {
+      "projectId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenChangeFirebaseDialogTitle": "Use a different Firebase project?",
+  "settingsScreenChangeFirebaseDialogBody": "This phone signs out and forgets its copy of this canteen's records. Nothing is deleted from Firebase. Changes not yet synced from this phone will be lost.",
+  "settingsScreenChangeButton": "Change",
+  "importTitle": "Bring over existing records?",
+  "importBody": "If this canteen used the earlier version of Tiffin, make a backup there (Settings ▸ Backup & restore) and pick that .tiffin file here.",
+  "importPickButton": "Pick a .tiffin backup",
+  "importSkipButton": "Start empty",
+  "importDone": "{count, plural, =1{Imported 1 record.} other{Imported {count} records.}}",
+  "@importDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importPassphraseLabel": "Backup password (if it has one)",
+  "confirmWordReset": "RESET",
+  "@confirmWordReset": {
+    "description": "A word the user must type to confirm a destructive action. Keep it one short word; the English word is accepted too."
+  },
+  "confirmWordReplace": "REPLACE",
+  "@confirmWordReplace": {
+    "description": "A word the user must type to confirm replacing all data. Keep it one short word; the English word is accepted too."
+  },
+  "themeNeobrutalLabel": "Neobrutal",
+  "themeNeobrutalBlurb": "Hard borders, offset shadows, loud colour. The Tiffin original.",
+  "themeCleanLabel": "Clean",
+  "themeCleanBlurb": "Flat and quiet. Easiest on the eyes for a long admin shift.",
+  "themeFrostLabel": "Frost",
+  "themeFrostBlurb": "Frosted glass bars and sheets over solid content.",
+  "themeClayLabel": "Clay",
+  "themeClayBlurb": "Soft, round and warm. Friendliest of the four.",
+  "crashTitle": "This screen hit a problem.",
+  "crashBody": "Go back and try again — it has been written to the log.",
+  "tooltipBack": "Back",
+  "tooltipAdd": "Add",
+  "tooltipEdit": "Edit",
+  "tooltipDelete": "Delete",
+  "tooltipNotifications": "Notifications",
+  "tooltipDismiss": "Dismiss",
+  "tooltipPreviousMonth": "Previous month",
+  "tooltipNextMonth": "Next month",
+  "tooltipAdjustStock": "Adjust stock",
+  "tooltipCategories": "Menu categories",
+  "tooltipGenerate": "Generate from the menu",
+  "errEmailInUse": "An online account with that email already exists.",
+  "restartTitle": "Close and reopen Tiffin",
+  "restartBody": "The new Firebase project is saved. It takes effect the next time the app starts.",
+  "topupScreenShareBill": "Share bill"
 }

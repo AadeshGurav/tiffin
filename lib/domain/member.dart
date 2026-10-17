@@ -1,4 +1,4 @@
-import '../core/app_mode.dart';
+import '../core/meal_type.dart';
 
 /// Plain domain models — no drift, no HTTP, no Flutter. Shared by every layer
 /// so host mode and client mode speak the same types. (§13.7 lists interfaces
@@ -48,7 +48,7 @@ class Member {
   });
 
   factory Member.fromJson(Map<String, dynamic> j) => Member(
-        id: j['id'] as int,
+        id: j['id'] as String,
         type: j['type'] as String,
         name: j['name'] as String,
         className: j['className'] as String?,
@@ -63,7 +63,7 @@ class Member {
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 
-  final int id;
+  final String id;
   final String type; // 'student' | 'staff'
   final String name;
   final String? className;

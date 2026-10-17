@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../app/providers.dart';
-import '../../core/errors.dart';
 import '../../domain/ledger.dart';
 import '../shared_widgets/app_shell.dart';
 import '../shared_widgets/motion.dart';
@@ -13,6 +12,7 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/messages.dart';
 
 /// The counter scan point (PRD §6.4). Native camera, full-intensity
 /// neobrutalism result state (PRD §14.2): the accept/reject verdict fills the
@@ -66,10 +66,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     try {
       final result = await ref.read(backendProvider).scan(code);
       if (mounted) setState(() => _result = result);
-    } on AppException catch (e) {
-      if (mounted) setState(() => _errorMessage = e.message);
     } catch (e) {
-      if (mounted) setState(() => _errorMessage = '$e');
+      if (mounted) {
+        setState(() => _errorMessage = AppText.of(context).errorText(e));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -200,7 +200,7 @@ class _ResultOverlay extends StatelessWidget {
                     style: t.text.heading.copyWith(color: fg)),
               const SizedBox(height: NbSpace.sm),
               Text(
-                result.message,
+                text.scanText(result),
                 textAlign: TextAlign.center,
                 style: t.text.body.copyWith(color: fg, fontSize: 18),
               ),

@@ -15,10 +15,8 @@ import UIKit
     registerScreenChannel(engineBridge)
   }
 
-  /// `tiffin/screen` — keeps the display awake while this device is hosting.
-  /// Disabling the idle timer is the only lever iOS gives an app here; it
-  /// cannot keep a backgrounded app alive, which the Hosting screen says
-  /// plainly.
+  /// `tiffin/screen` — keeps the display awake while the scanner is open.
+  /// Disabling the idle timer is the only lever iOS gives an app here.
   private func registerScreenChannel(_ engineBridge: FlutterImplicitEngineBridge) {
     guard let messenger = engineBridge.pluginRegistry.registrar(forPlugin: "TiffinScreen")?.messenger()
     else { return }

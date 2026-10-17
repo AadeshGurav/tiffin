@@ -1,4 +1,5 @@
-import '../core/app_mode.dart';
+import '../core/meal_type.dart';
+import 'member.dart';
 
 /// Scan, top-up and refund models — the unit ledger (PRD §5–§6). Plain,
 /// JSON-serializable, shared by host and client.
@@ -46,12 +47,11 @@ class ScanResult {
     this.memberCategory,
     this.plannedCount,
     this.servedCount,
-    required this.message,
   });
 
   factory ScanResult.fromJson(Map<String, dynamic> j) => ScanResult(
         outcome: ScanOutcome.fromWire(j['outcome'] as String),
-        scanId: j['scanId'] as int?,
+        scanId: j['scanId'] as String?,
         memberName: j['memberName'] as String?,
         memberType: j['memberType'] as String?,
         mealType: j['mealType'] == null
@@ -62,11 +62,10 @@ class ScanResult {
         memberCategory: j['memberCategory'] as String?,
         plannedCount: j['plannedCount'] as int?,
         servedCount: j['servedCount'] as int?,
-        message: j['message'] as String,
       );
 
   final ScanOutcome outcome;
-  final int? scanId;
+  final String? scanId;
   final String? memberName;
   final String? memberType;
   final MealType? mealType;
@@ -87,8 +86,6 @@ class ScanResult {
       servedCount != null &&
       servedCount! >= plannedCount!;
 
-  final String message;
-
   Map<String, dynamic> toJson() => {
         'outcome': outcome.wire,
         'scanId': scanId,
@@ -100,7 +97,6 @@ class ScanResult {
         'memberCategory': memberCategory,
         'plannedCount': plannedCount,
         'servedCount': servedCount,
-        'message': message,
       };
 }
 
@@ -121,8 +117,8 @@ class ScanRecord {
   });
 
   factory ScanRecord.fromJson(Map<String, dynamic> j) => ScanRecord(
-        id: j['id'] as int,
-        memberId: j['memberId'] as int,
+        id: j['id'] as String,
+        memberId: j['memberId'] as String,
         memberName: j['memberName'] as String,
         mealType: MealType.fromWire(j['mealType'] as String),
         scannedAt: DateTime.parse(j['scannedAt'] as String),
@@ -136,8 +132,8 @@ class ScanRecord {
         memberCategory: j['memberCategory'] as String?,
       );
 
-  final int id;
-  final int memberId;
+  final String id;
+  final String memberId;
   final String memberName;
   final MealType mealType;
   final DateTime scannedAt;
@@ -163,18 +159,34 @@ class ScanRecord {
       };
 }
 
+/// Why a reversal did or didn't happen. The UI words it (CLAUDE.md §13).
+enum ReversalCode {
+  scanReversed,
+  scanNotFound,
+  scanAlreadyReversed,
+  scanWindowExpired,
+  topupReversed,
+  topupNotFound,
+  topupAlreadyReversed,
+  topupUnitsUsed,
+  memberNotFound,
+}
+
 class ReversalResult {
-  const ReversalResult({required this.success, required this.message});
+  const ReversalResult(this.code,
+      {this.restored, this.mealType, this.windowMinutes});
 
-  factory ReversalResult.fromJson(Map<String, dynamic> j) => ReversalResult(
-        success: j['success'] as bool,
-        message: j['message'] as String,
-      );
+  final ReversalCode code;
 
-  final bool success;
-  final String message;
+  /// Units put back, for [ReversalCode.scanReversed].
+  final int? restored;
+  final MealType? mealType;
 
-  Map<String, dynamic> toJson() => {'success': success, 'message': message};
+  /// The configured window, for [ReversalCode.scanWindowExpired].
+  final int? windowMinutes;
+
+  bool get success =>
+      code == ReversalCode.scanReversed || code == ReversalCode.topupReversed;
 }
 
 // ---------------------------------------------------------------------------
@@ -204,7 +216,7 @@ class TopupDraft {
   });
 
   factory TopupDraft.fromJson(Map<String, dynamic> j) => TopupDraft(
-        memberId: j['memberId'] as int,
+        memberId: j['memberId'] as String,
         lunchUnits: (j['lunchUnits'] as num?)?.toInt() ?? 0,
         breakfastUnits: (j['breakfastUnits'] as num?)?.toInt() ?? 0,
         brunchUnits: (j['brunchUnits'] as num?)?.toInt() ?? 0,
@@ -212,7 +224,7 @@ class TopupDraft {
         createdBy: j['createdBy'] as String,
       );
 
-  final int memberId;
+  final String memberId;
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
@@ -249,11 +261,12 @@ class Topup {
     this.reversed = false,
     this.reversedAt,
     this.reversedBy,
+    this.balancesAfter,
   });
 
   factory Topup.fromJson(Map<String, dynamic> j) => Topup(
-        id: j['id'] as int,
-        memberId: j['memberId'] as int,
+        id: j['id'] as String,
+        memberId: j['memberId'] as String,
         lunchUnits: j['lunchUnits'] as int,
         breakfastUnits: j['breakfastUnits'] as int,
         brunchUnits: j['brunchUnits'] as int,
@@ -269,10 +282,13 @@ class Topup {
             ? null
             : DateTime.parse(j['reversedAt'] as String),
         reversedBy: j['reversedBy'] as String?,
+        balancesAfter: j['balancesAfter'] == null
+            ? null
+            : UnitCounts.fromJson(j['balancesAfter'] as Map<String, dynamic>),
       );
 
-  final int id;
-  final int memberId;
+  final String id;
+  final String memberId;
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
@@ -286,6 +302,9 @@ class Topup {
   final bool reversed;
   final DateTime? reversedAt;
   final String? reversedBy;
+
+  /// The member's balances right after this top-up — printed on the bill.
+  final UnitCounts? balancesAfter;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -303,6 +322,7 @@ class Topup {
         'reversed': reversed,
         'reversedAt': reversedAt?.toUtc().toIso8601String(),
         'reversedBy': reversedBy,
+        'balancesAfter': balancesAfter?.toJson(),
       };
 }
 
@@ -321,7 +341,7 @@ class RefundDraft {
   });
 
   factory RefundDraft.fromJson(Map<String, dynamic> j) => RefundDraft(
-        memberId: j['memberId'] as int,
+        memberId: j['memberId'] as String,
         lunchUnits: (j['lunchUnits'] as num?)?.toInt() ?? 0,
         breakfastUnits: (j['breakfastUnits'] as num?)?.toInt() ?? 0,
         brunchUnits: (j['brunchUnits'] as num?)?.toInt() ?? 0,
@@ -329,7 +349,7 @@ class RefundDraft {
         processedBy: j['processedBy'] as String,
       );
 
-  final int memberId;
+  final String memberId;
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
@@ -363,8 +383,8 @@ class Refund {
   });
 
   factory Refund.fromJson(Map<String, dynamic> j) => Refund(
-        id: j['id'] as int,
-        memberId: j['memberId'] as int,
+        id: j['id'] as String,
+        memberId: j['memberId'] as String,
         lunchUnits: j['lunchUnits'] as int,
         breakfastUnits: j['breakfastUnits'] as int,
         brunchUnits: j['brunchUnits'] as int,
@@ -374,8 +394,8 @@ class Refund {
         createdAt: DateTime.parse(j['createdAt'] as String),
       );
 
-  final int id;
-  final int memberId;
+  final String id;
+  final String memberId;
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;

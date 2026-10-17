@@ -44,15 +44,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   Future<void> _exportReport() async {
     setState(() => _busy = true);
+    final text = AppText.of(context);
     await runGuarded(context, () async {
-      final container = await ref.read(hostContainerProvider.future);
-      final bytes = await container.reports.build(
-        start: _range?.start,
-        end: _range?.end,
-        sections: _sections,
-      );
-      await _share(bytes, container.reports.fileName());
-    }, successMessage: AppText.of(context).reportsScreenReadyMessage);
+      final backend = ref.read(backendProvider);
+      // Written in the language of whoever exports it.
+      final bytes = await backend.buildReport(text,
+          start: _range?.start, end: _range?.end, sections: _sections);
+      await _share(bytes, backend.reports.fileName());
+    }, successMessage: text.reportsScreenReadyMessage);
     if (mounted) setState(() => _busy = false);
   }
 
@@ -104,7 +103,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     if (_range != null)
                       IconButton(
                         icon: const Icon(Icons.clear),
-                        tooltip: AppText.of(context).reportsScreenAllDatesTooltip,
+                        tooltip:
+                            AppText.of(context).reportsScreenAllDatesTooltip,
                         onPressed: () => setState(() => _range = null),
                       ),
                   ],
@@ -115,7 +115,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   children: [
                     for (final section in ReportSection.values)
                       FilterChip(
-                        label: Text(section.label),
+                        label: Text(section.label(AppText.of(context))),
                         selected: _sections.contains(section),
                         onSelected: _busy
                             ? null

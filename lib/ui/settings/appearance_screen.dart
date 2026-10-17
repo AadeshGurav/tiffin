@@ -204,9 +204,8 @@ class _LanguageSelector extends StatelessWidget {
                 id.nativeName,
                 textAlign: TextAlign.center,
                 style: t.text.label.copyWith(
-                    color: value == id
-                        ? t.color.on(t.color.accent)
-                        : t.color.ink),
+                    color:
+                        value == id ? t.color.on(t.color.accent) : t.color.ink),
               ),
             ),
           ),
@@ -242,9 +241,8 @@ class _EnforceCardState extends ConsumerState<_EnforceCard> {
             appearanceMode: widget.appearance.mode.name,
             appearanceMotion: widget.appearance.motion,
           )),
-      successMessage: enforce
-          ? l.apprScreenEnforceOnToast
-          : l.apprScreenEnforceOffToast,
+      successMessage:
+          enforce ? l.apprScreenEnforceOnToast : l.apprScreenEnforceOffToast,
     );
     if (ok) ref.invalidate(appearancePolicyProvider);
     if (mounted) setState(() => _busy = false);
@@ -323,8 +321,11 @@ class _SavedLoginsCard extends ConsumerWidget {
                     const SizedBox(width: NbSpace.sm),
                     Expanded(
                       child: Text(
-                        l.apprScreenSavedLoginsRow(host.name,
-                            host.logins.map((login) => login.username).join(', ')),
+                        l.apprScreenSavedLoginsRow(
+                            host.name,
+                            host.logins
+                                .map((login) => login.username)
+                                .join(', ')),
                         style: t.text.body,
                       ),
                     ),

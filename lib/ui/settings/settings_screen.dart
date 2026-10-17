@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
-import '../../core/app_mode.dart';
+import '../../l10n/messages.dart';
+import '../../services/backup_service.dart';
 import '../admin/backup_screen.dart';
-import '../admin/hosting_screen.dart';
+import 'devices_screen.dart';
+import 'online_accounts_screen.dart';
 import '../admin/menu_categories_screen.dart';
 import '../admin/reports_screen.dart';
 import '../admin/settings_config_screen.dart';
@@ -30,8 +32,7 @@ class SettingsScreen extends ConsumerWidget {
     final t = context.tokens;
     final text = AppText.of(context);
     final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
-    final isHost = ref.watch(currentModeProvider) == AppMode.host;
-    final serving = isHost && ref.watch(hostRunningProvider);
+    final project = ref.watch(firebaseConfigProvider)?.projectId ?? '';
 
     void go(Widget screen) =>
         Navigator.of(context).push(tiffinRoute<void>(context, () => screen));
@@ -71,15 +72,20 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: text.settingsScreenAppearanceSubtitle,
             onTap: () => go(const AppearanceScreen()),
           ),
-          if (isAdmin && isHost) ...[
-            _group(t, text.settingsScreenGroupThisHost),
+          if (isAdmin) ...[
+            _group(t, text.settingsScreenGroupAccess),
             SettingsRow(
-              icon: serving ? Icons.wifi_tethering : Icons.wifi_off,
-              title: text.settingsScreenHostingTitle,
-              subtitle: serving
-                  ? text.settingsScreenHostingSubtitleServing
-                  : text.settingsScreenHostingSubtitleNotServing,
-              onTap: () => go(const HostingScreen()),
+              icon: Icons.devices,
+              title: text.devicesTitle,
+              subtitle: text.devicesSubtitle,
+              onTap: () => go(const DevicesScreen()),
+            ),
+            const SizedBox(height: NbSpace.sm),
+            SettingsRow(
+              icon: Icons.alternate_email,
+              title: text.onlineAccountsTitle,
+              subtitle: text.onlineAccountsSubtitle,
+              onTap: () => go(const OnlineAccountsScreen()),
             ),
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
@@ -103,16 +109,14 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: text.settingsScreenSignOutSubtitle,
             onTap: () => _confirmSignOut(context, ref),
           ),
+          const SizedBox(height: NbSpace.sm),
+          SettingsRow(
+            icon: Icons.cloud_outlined,
+            title: text.settingsScreenFirebaseTitle,
+            subtitle: text.settingsScreenFirebaseSubtitle(project),
+            onTap: () => _confirmChangeProject(context, ref),
+          ),
           if (isAdmin) ...[
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.swap_horiz,
-              title: text.settingsScreenSwitchRoleTitle,
-              subtitle: text.settingsScreenSwitchRoleSubtitle,
-              onTap: () => _confirmSwitchRole(context, ref),
-            ),
-          ],
-          if (isAdmin && isHost) ...[
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.delete_forever,
@@ -159,25 +163,27 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmSwitchRole(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmChangeProject(
+      BuildContext context, WidgetRef ref) async {
     final text = AppText.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(text.settingsScreenSwitchRoleDialogTitle),
-        content: Text(text.settingsScreenSwitchRoleDialogBody),
+        title: Text(text.settingsScreenChangeFirebaseDialogTitle),
+        content: Text(text.settingsScreenChangeFirebaseDialogBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(text.settingsScreenCancelButton)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(text.settingsScreenSwitchButton)),
+              child: Text(text.settingsScreenChangeButton)),
         ],
       ),
     );
     if (ok != true) return;
-    await ref.read(currentModeProvider.notifier).clear();
+    await ref.read(sessionMemoryProvider).signOut();
+    await ref.read(firebaseConfigProvider.notifier).forget();
     if (context.mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
@@ -191,7 +197,16 @@ class SettingsScreen extends ConsumerWidget {
     if (ok == true && context.mounted) {
       await runGuarded(
         context,
-        () => ref.read(hostServingProvider.notifier).resetAllData(),
+        () async {
+          // Restoring an empty backup is exactly "delete every record": one
+          // code path for wiping, and it refuses to run offline.
+          await ref
+              .read(backendProvider)
+              .backups
+              .restore(const BackupContents(collections: {}));
+          await ref.read(sessionMemoryProvider).signOut();
+          ref.invalidate(setupRequiredProvider);
+        },
         successMessage: AppText.of(context).settingsScreenResetSuccessSnack,
       );
     }
@@ -218,7 +233,8 @@ class _ResetConfirmDialogState extends State<_ResetConfirmDialog> {
   @override
   Widget build(BuildContext context) {
     final text = AppText.of(context);
-    final armed = _field.text.trim() == 'RESET';
+    final armed =
+        confirmWordMatches(_field.text, text.confirmWordReset, 'RESET');
     return AlertDialog(
       title: Text(text.settingsScreenResetDialogTitle),
       content: Column(
@@ -230,9 +246,7 @@ class _ResetConfirmDialogState extends State<_ResetConfirmDialog> {
           TextField(
             controller: _field,
             autofocus: true,
-            // The confirmation word itself is a fixed literal token the
-            // operator must type verbatim, not translatable prose.
-            decoration: const InputDecoration(hintText: 'RESET'),
+            decoration: InputDecoration(hintText: text.confirmWordReset),
             onChanged: (_) => setState(() {}),
           ),
         ],

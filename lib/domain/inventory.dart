@@ -15,7 +15,7 @@ class Ingredient {
   });
 
   factory Ingredient.fromJson(Map<String, dynamic> j) => Ingredient(
-        id: j['id'] as int,
+        id: j['id'] as String,
         name: j['name'] as String,
         unit: j['unit'] as String,
         stockQty: (j['stockQty'] as num?)?.toDouble() ?? 0,
@@ -24,7 +24,7 @@ class Ingredient {
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 
-  final int id;
+  final String id;
   final String name;
   final String unit;
 
@@ -56,14 +56,14 @@ class RecipeIngredient {
   const RecipeIngredient({required this.ingredientId, required this.quantity});
 
   factory RecipeIngredient.fromJson(Map<String, dynamic> j) => RecipeIngredient(
-        ingredientId: j['ingredientId'] as int,
+        ingredientId: j['ingredientId'] as String,
         // Tolerate the pre-v6 shape ({quantityNote: "2kg per 50"}) in case a
         // row slips through unmigrated — take the leading number.
         quantity: (j['quantity'] as num?)?.toDouble() ??
             _leadingNumber(j['quantityNote'] as String?),
       );
 
-  final int ingredientId;
+  final String ingredientId;
   final double quantity;
 
   Map<String, dynamic> toJson() =>
@@ -91,7 +91,7 @@ class Recipe {
   });
 
   factory Recipe.fromJson(Map<String, dynamic> j) => Recipe(
-        id: j['id'] as int,
+        id: j['id'] as String,
         dishName: j['dishName'] as String,
         ingredients: (j['ingredients'] as List<dynamic>)
             .map((e) => RecipeIngredient.fromJson(e as Map<String, dynamic>))
@@ -100,7 +100,7 @@ class Recipe {
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 
-  final int id;
+  final String id;
   final String dishName;
   final List<RecipeIngredient> ingredients;
   final DateTime createdAt;
@@ -154,9 +154,9 @@ class PurchaseScheduleItem {
 
   factory PurchaseScheduleItem.fromJson(Map<String, dynamic> j) =>
       PurchaseScheduleItem(
-        id: j['id'] as int,
+        id: j['id'] as String,
         date: DateTime.parse(j['date'] as String),
-        ingredientId: j['ingredientId'] as int,
+        ingredientId: j['ingredientId'] as String,
         ingredientName: j['ingredientName'] as String,
         ingredientUnit: j['ingredientUnit'] as String,
         quantityNote: j['quantityNote'] as String,
@@ -172,9 +172,9 @@ class PurchaseScheduleItem {
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 
-  final int id;
+  final String id;
   final DateTime date;
-  final int ingredientId;
+  final String ingredientId;
   final String ingredientName;
   final String ingredientUnit;
   final String quantityNote;

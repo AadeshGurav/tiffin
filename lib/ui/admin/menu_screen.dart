@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/providers.dart';
-import '../../core/app_mode.dart';
+import '../../core/meal_type.dart';
 import '../../domain/menu.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
@@ -259,13 +259,13 @@ class MenuScreen extends ConsumerWidget {
               label: AppText.of(context).menuScreenAddButton,
               onPressed: () {
                 if (category == null) {
-                  setLocal(() => error =
-                      AppText.of(context).menuScreenErrorPickCategory);
+                  setLocal(() =>
+                      error = AppText.of(context).menuScreenErrorPickCategory);
                   return;
                 }
                 if (parseItems().isEmpty) {
-                  setLocal(() => error =
-                      AppText.of(context).menuScreenErrorAddItem);
+                  setLocal(
+                      () => error = AppText.of(context).menuScreenErrorAddItem);
                   return;
                 }
                 Navigator.pop(context, true);
@@ -512,7 +512,7 @@ class _DayPanel extends StatelessWidget {
   final DateTime day;
   final List<MenuEntry> entries;
   final ValueChanged<MenuEntry> onEdit;
-  final ValueChanged<int> onDelete;
+  final ValueChanged<String> onDelete;
   final VoidCallback onAdd;
 
   @override

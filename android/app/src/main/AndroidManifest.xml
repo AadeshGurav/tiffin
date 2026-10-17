@@ -1,39 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- LAN operation: HTTP client + the embedded server binding a socket. -->
+    <!-- Firestore sync and Firebase Auth. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <!-- mDNS / NSD host discovery (PRD §13.5) needs multicast. -->
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
-
-    <!-- Offline hotspot mode: host a router-less Wi-Fi via startLocalOnlyHotspot.
-         NEARBY_WIFI_DEVICES on 33+, FINE_LOCATION on 26-32 (that API gated it
-         behind location back then). neverForLocation: we only need the AP, not
-         the user's position. -->
-    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="32" />
 
     <!-- Native QR scan point (PRD §6.4, §13.6). -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
 
-    <!-- Keep the host server alive across Android's aggressive process death
-         (PRD §13.3) — the foreground-service task handler is a documented
-         follow-up; the declarations live here so wiring it needs no manifest
-         change. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-
     <application
         android:label="Tiffin"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -52,13 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <!-- flutter_foreground_task service (host-keep-alive). -->
-        <service
-            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="dataSync"
-            android:exported="false"
-            android:stopWithTask="true" />
 
         <meta-data
             android:name="flutterEmbedding"

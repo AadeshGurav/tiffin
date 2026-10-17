@@ -50,13 +50,13 @@ class SessionMemory {
       await _ref.read(credentialStoreProvider).remember(
             hostId: greeting.hostId,
             hostName: greeting.appName,
-            baseUrl: _ref.read(selectedHostProvider)?.baseUrl ?? '',
+            baseUrl: '',
             username: username,
             password: rememberPassword ? password : null,
             forgetPassword: !rememberPassword,
             token: session?.token,
-            // Mirrors the host's 12h session TTL. Treated as a hint only: the
-            // host is still asked to confirm the token before it is trusted.
+            // Mirrors the 12h session TTL. A hint only: the token is still
+            // checked against this phone's sessions before it is trusted.
             tokenExpiresAt:
                 DateTime.now().toUtc().add(const Duration(hours: 12)),
           );

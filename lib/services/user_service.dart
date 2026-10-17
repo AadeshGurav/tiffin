@@ -1,125 +1,95 @@
-import 'package:drift/drift.dart';
-
 import '../core/errors.dart';
 import '../core/logging.dart';
-import '../data/local/database.dart';
-import '../data/local/mappers.dart';
+import '../data/store.dart';
 import '../domain/ops.dart';
 import 'auth_service.dart';
 
-/// Login-account management — a port of v1 `app/routers/users.py` (PRD §4).
-/// Admin-only at the router layer. Never returns a password hash.
+/// Offline-account management (PRD §4). Admin-only by the rules and the UI.
+/// Never returns a password hash.
 class UserService {
-  UserService(this._db, this._auth);
+  UserService(this._store, this._auth);
 
-  final AppDatabase _db;
+  final Store _store;
   final AuthService _auth;
   final _log = log('user');
 
   static final _usernamePattern = RegExp(r'^[a-zA-Z0-9_.-]+$');
 
   Future<List<AppUser>> list() async {
-    final rows = await (_db.select(_db.users)
-          ..orderBy([(u) => OrderingTerm.asc(u.username)]))
-        .get();
-    return rows.map(userFromRow).toList();
+    final rows = await _store.cached(_store.col(Col.users));
+    return rows.map(AppUser.fromJson).toList()
+      ..sort((a, b) => a.username.compareTo(b.username));
   }
 
   Future<AppUser> create(UserDraft draft) async {
     _validateUsername(draft.username);
-    if (draft.password.length < 8) {
-      throw const ValidationException(
-          'Password must be at least 8 characters.');
-    }
-    final now = DateTime.now().toUtc();
-    try {
-      final id = await _db.into(_db.users).insert(UsersCompanion.insert(
-            username: draft.username,
-            passwordHash: _auth.hashPassword(draft.password),
-            role: draft.role.wire,
-            createdAt: now,
-            updatedAt: now,
-          ));
-      _log.info('created username=${draft.username} role=${draft.role.wire}');
-      final row = await (_db.select(_db.users)..where((u) => u.id.equals(id)))
-          .getSingle();
-      return userFromRow(row);
-    } on Exception catch (e) {
-      if (e.toString().toLowerCase().contains('unique')) {
-        throw ConflictException(
-            "Username '${draft.username}' is already taken.");
-      }
-      rethrow;
-    }
+    _auth.requireStrongPassword(draft.password);
+    await _requireFreeUsername(draft.username);
+    final user =
+        await _auth.writeUser(draft.username, draft.password, draft.role);
+    _log.info('created username=${draft.username} role=${draft.role.wire}');
+    return user;
   }
 
   /// [actingUserId] guards the "can't deactivate/delete yourself" rules.
-  Future<AppUser> update(int id, UserPatch patch,
-      {required int actingUserId}) async {
-    if (patch.username != null) _validateUsername(patch.username!);
-    final companion = UsersCompanion(
-      username: patch.username == null
-          ? const Value.absent()
-          : Value(patch.username!),
-      passwordHash: patch.password == null
-          ? const Value.absent()
-          : Value(_auth.hashPassword(patch.password!)),
-      role: patch.role == null ? const Value.absent() : Value(patch.role!.wire),
-      status:
-          patch.status == null ? const Value.absent() : Value(patch.status!),
-      updatedAt: Value(DateTime.now().toUtc()),
-    );
-    if (patch.status == 'inactive' && id == actingUserId) {
-      throw const ValidationException("You can't deactivate your own account.");
-    }
-    if (patch.password != null && patch.password!.length < 8) {
-      throw const ValidationException(
-          'Password must be at least 8 characters.');
-    }
-
-    final int n;
-    try {
-      n = await (_db.update(_db.users)..where((u) => u.id.equals(id)))
-          .write(companion);
-    } on Exception catch (e) {
-      if (e.toString().toLowerCase().contains('unique')) {
-        throw ConflictException(
-            "Username '${patch.username}' is already taken.");
-      }
-      rethrow;
-    }
-    if (n == 0) throw const NotFoundException('User not found.');
-
-    // Sessions carry a denormalised copy of the username (it is what the app
-    // bar shows and what request logs record), so a rename has to reach them
-    // too or the operator keeps seeing their old name until the token expires.
+  Future<AppUser> update(String id, UserPatch patch,
+      {required String actingUserId}) async {
     if (patch.username != null) {
-      await (_db.update(_db.sessions)..where((s) => s.userId.equals(id)))
-          .write(SessionsCompanion(username: Value(patch.username!)));
+      _validateUsername(patch.username!);
+      await _requireFreeUsername(patch.username!, except: id);
     }
+    if (patch.status == 'inactive' && id == actingUserId) {
+      throw const ValidationException(ErrorCode.cannotDeactivateSelf);
+    }
+    if (patch.password != null) _auth.requireStrongPassword(patch.password!);
 
+    final ref = _store.doc(Col.users, id);
+    final existing = await _store.cachedDoc(ref);
+    if (existing == null) throw const NotFoundException(ErrorCode.userNotFound);
+
+    final changes = <String, dynamic>{
+      if (patch.username != null) 'username': patch.username,
+      if (patch.password != null)
+        'passwordHash': _auth.hashPassword(patch.password!),
+      if (patch.role != null) 'role': patch.role!.wire,
+      if (patch.status != null) 'status': patch.status,
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    };
+    final b = _store.batch()..update(ref, changes);
+    await _store.commit(b, 'users.update');
     _log.info('updated user_id=$id');
-    final row = await (_db.select(_db.users)..where((u) => u.id.equals(id)))
-        .getSingle();
-    return userFromRow(row);
+    return AppUser.fromJson({...existing, ...changes});
   }
 
-  Future<void> delete(int id, {required int actingUserId}) async {
+  Future<void> delete(String id, {required String actingUserId}) async {
     if (id == actingUserId) {
-      throw const ValidationException("You can't delete your own account.");
+      throw const ValidationException(ErrorCode.cannotDeleteSelf);
     }
-    final n = await (_db.delete(_db.users)..where((u) => u.id.equals(id))).go();
-    if (n == 0) throw const NotFoundException('User not found.');
+    final ref = _store.doc(Col.users, id);
+    if (await _store.cachedDoc(ref) == null) {
+      throw const NotFoundException(ErrorCode.userNotFound);
+    }
+    await _store.commit(_store.batch()..delete(ref), 'users.delete');
     _log.warning('deleted user_id=$id');
+  }
+
+  /// Checked against the synced list. Two offline admins could still pick the
+  /// same name at the same moment; sign-in then takes the first match.
+  /// ponytail: good enough for a handful of staff accounts.
+  Future<void> _requireFreeUsername(String username, {String? except}) async {
+    final taken =
+        (await list()).any((u) => u.username == username && u.id != except);
+    if (taken) {
+      throw ConflictException(ErrorCode.usernameTaken, {'name': username});
+    }
   }
 
   void _validateUsername(String username) {
     if (username.length < 3 || username.length > 50) {
-      throw const ValidationException('Username must be 3–50 characters.');
+      throw const ValidationException(ErrorCode.usernameLength);
     }
     if (!_usernamePattern.hasMatch(username)) {
-      throw const ValidationException(
-          'Username may only contain letters, digits, and _ . -');
+      throw const ValidationException(ErrorCode.usernameChars);
     }
   }
 }

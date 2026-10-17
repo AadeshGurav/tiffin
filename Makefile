@@ -1,34 +1,21 @@
-.PHONY: setup gen watch run apk ios analyze test format clean doctor schema icons
+.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons
 
 # Zero-touch setup (CLAUDE.md §9): one command from a fresh checkout to a
-# runnable app.
+# runnable app. The Firebase project is not configured here — the app asks
+# for its config file on first launch (README "Firebase setup").
 setup:
 	flutter pub get
-	dart run build_runner build
+	flutter gen-l10n
 
-# Regenerate codegen output (drift schema, riverpod providers, l10n). Run
-# after changing a @DriftDatabase table, a @riverpod provider, or an .arb file.
-gen:
-	dart run build_runner build
-
-# Same, but rebuilds on save during development.
-watch:
-	dart run build_runner watch
-
-# Snapshot the current schema and regenerate the migration-test helpers.
-# Run this AFTER bumping AppDatabase.schemaVersion and changing a table, so
-# test/migration_test.dart can run the real migration against the real
-# previous version — the host's database is the only copy of the data.
-schema:
-	dart run drift_dev schema dump lib/data/local/database.dart drift_schemas/
-	dart run drift_dev schema generate drift_schemas/ test/generated_migrations/
-	dart run drift_dev schema steps drift_schemas/ lib/data/local/schema_versions.dart
+# Regenerate the AppText classes after editing an .arb file.
+l10n:
+	flutter gen-l10n
 
 # Run on a connected Android device / emulator.
 run:
 	flutter run
 
-# Build the release APK (PRD §13.8: Android only for v1).
+# Build the release APK.
 apk:
 	flutter build apk --release
 
@@ -44,10 +31,13 @@ icons:
 
 analyze:
 	dart analyze --fatal-infos
-	node --check assets/web_admin/app.js
 
 test:
 	flutter test --exclude-tags tool
+
+# firestore.rules on the Firestore emulator (needs Node and Java 17+).
+rules-test:
+	cd tool/rules-test && npm install --no-audit --no-fund && npm test
 
 format:
 	dart format lib test
@@ -57,4 +47,3 @@ doctor:
 
 clean:
 	flutter clean
-	rm -f lib/**/*.g.dart

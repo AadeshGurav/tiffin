@@ -269,8 +269,8 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
         ));
       }
     },
-        successMessage: AppText.of(context)
-            .membersScreenSaveSuccess(_isEdit.toString()));
+        successMessage:
+            AppText.of(context).membersScreenSaveSuccess(_isEdit.toString()));
     if (mounted) setState(() => _busy = false);
     if (ok && mounted) Navigator.pop(context, true);
   }

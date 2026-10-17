@@ -1,211 +1,136 @@
-import 'dart:math';
-
-import 'package:drift/drift.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../core/errors.dart';
 import '../core/logging.dart';
-import '../data/local/database.dart';
+import '../data/store.dart';
 import '../domain/settings.dart';
 
-/// Reads and validates the single global settings row (PRD §6.8). The row is
-/// seeded on database creation (see `AppDatabase.migration`), so `read()` is a
-/// plain lookup with no create-if-missing branch — the v1 upsert race that
-/// motivated `get_global_settings`'s comment doesn't exist here (one process,
-/// one writer).
+/// The single global settings document, `meta/settings` (PRD §6.8). A missing
+/// document — a canteen that has never saved settings — reads as the defaults,
+/// so there is no seeding step to forget.
 class SettingsService {
-  SettingsService(this._db);
+  SettingsService(this._store);
 
-  final AppDatabase _db;
+  final Store _store;
   final _log = log('settings');
 
   static final _hhmm = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
 
+  static const defaults = SettingsSnapshot(
+    graceAllowanceEnabled: false,
+    graceAllowanceUnits: 0,
+    reversalWindowMinutes: 10,
+    mealWindows: {
+      'breakfast': MealWindowConfig(start: '07:00', end: '09:30'),
+      'lunch': MealWindowConfig(start: '12:00', end: '14:30'),
+      'brunch': MealWindowConfig(start: '09:00', end: '12:00'),
+    },
+    // A canteen's meal windows are local wall-clock times, so UTC would be
+    // wrong everywhere it runs; this is the deployment's own zone.
+    localTimezone: 'Asia/Kolkata',
+    upiId: '',
+    upiPayeeName: '',
+    unitPrices: UnitPrices(lunch: 0, breakfast: 0, brunch: 0),
+    appName: 'Tiffin',
+    prepLeadMinutes: 60,
+    purchaseLeadDays: 1,
+  );
+
+  DocumentRef get _ref => _store.doc(Col.meta, 'settings');
+
   Future<SettingsSnapshot> read() async {
-    final row = await (_db.select(_db.appSettings)
-          ..where((s) => s.id.equals(0)))
-        .getSingle();
-    return _toSnapshot(row);
+    final stored = await _store.cachedDoc(_ref) ?? await _freshOrNull();
+    if (stored == null) return defaults;
+    return SettingsSnapshot.fromJson({...defaults.toJson(), ...stored});
   }
 
-  SettingsSnapshot _toSnapshot(AppSetting r) => SettingsSnapshot(
-        graceAllowanceEnabled: r.graceAllowanceEnabled,
-        graceAllowanceUnits: r.graceAllowanceUnits,
-        reversalWindowMinutes: r.reversalWindowMinutes,
-        mealWindows: {
-          'breakfast':
-              MealWindowConfig(start: r.breakfastStart, end: r.breakfastEnd),
-          'lunch': MealWindowConfig(start: r.lunchStart, end: r.lunchEnd),
-          'brunch': MealWindowConfig(start: r.brunchStart, end: r.brunchEnd),
-        },
-        localTimezone: r.localTimezone,
-        upiId: r.upiId,
-        upiPayeeName: r.upiPayeeName,
-        unitPrices: UnitPrices(
-            lunch: r.lunchPrice,
-            breakfast: r.breakfastPrice,
-            brunch: r.brunchPrice),
-        appName: r.appName,
-        prepLeadMinutes: r.prepLeadMinutes,
-        purchaseLeadDays: r.purchaseLeadDays,
-        enforceAppearance: r.enforceAppearance,
-        appearanceTheme: r.appearanceTheme,
-        appearanceMode: r.appearanceMode,
-        appearanceMotion: r.appearanceMotion,
-      );
-
-  /// What a device needs before anyone has a session: who this host is, the
-  /// branding name, and — if enforced — the appearance to render. Fetching it
-  /// pre-login is what stops the theme snapping after sign-in, and what lets a
-  /// client recognise a host it already has saved logins for.
-  Future<Map<String, dynamic>> readPublicAppearance() async => {
-        ...(await read()).toAppearanceJson(),
-        'hostId': await ensureHostId(),
-      };
-
-  /// This host's stable identity, generated on first read and persisted.
-  ///
-  /// Generated lazily rather than at creation so hosts upgraded from an older
-  /// schema get one too, without a data migration that has to invent values.
-  Future<String> ensureHostId() async {
-    final row = await (_db.select(_db.appSettings)
-          ..where((s) => s.id.equals(0)))
-        .getSingle();
-    if (row.hostId.isNotEmpty) return row.hostId;
-
-    final generated = _newHostId();
-    await (_db.update(_db.appSettings)..where((s) => s.id.equals(0)))
-        .write(AppSettingsCompanion(hostId: Value(generated)));
-    _log.info('host_id_generated');
-    return generated;
+  Future<Json?> _freshOrNull() async {
+    try {
+      return await _store.freshDoc(_ref);
+    } catch (_) {
+      return null; // offline and never synced: the defaults are the answer
+    }
   }
 
-  /// Random, not derived from anything: a MAC- or name-derived id would change
-  /// when the hardware or the canteen's name does, which is the one thing this
-  /// value must not do.
-  String _newHostId() {
-    final random = Random.secure();
-    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
-    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  /// Whether the canteen lets people sign in with online (email) accounts.
+  Future<bool> onlineAccountsEnabled() async =>
+      (await _store.cachedDoc(_ref) ?? await _freshOrNull())?['onlineAccounts']
+          as bool? ??
+      false;
+
+  Future<void> setOnlineAccountsEnabled(bool enabled) async {
+    final b = _store.batch()
+      ..set(_ref, {'onlineAccounts': enabled}, SetOptions(merge: true));
+    await _store.commit(b, 'settings.onlineAccounts');
+    _log.info('online_accounts enabled=$enabled');
   }
 
-  /// The one field the login screen needs before anyone has a session —
-  /// deliberately just this (PRD §6.8, matching v1's `GET /settings/branding`).
-  Future<String> readAppName() async {
-    final row = await (_db.select(_db.appSettings)
-          ..where((s) => s.id.equals(0)))
-        .getSingle();
-    return row.appName;
-  }
+  Future<String> readAppName() async => (await read()).appName;
 
   /// Every IANA zone the bundled tz database knows — backs the Settings
-  /// timezone dropdown so a value it accepts is the only value pickable
-  /// (PRD §6.8, no freehand text).
+  /// timezone dropdown so a value it accepts is the only value pickable.
   List<String> availableTimezones() =>
       tz.timeZoneDatabase.locations.keys.toList()..sort();
 
-  /// Applies a partial update. Only non-null fields in [patch] are written.
-  /// Meal windows merge (send just `lunch` without breakfast/brunch); each
+  /// Applies a partial update. Meal windows merge (send just `lunch`); each
   /// window's start must be before its end. A bad timezone or HH:MM is
-  /// rejected here so it can never reach the scan path (the highest-stakes
-  /// flow) and crash it — same guard as v1's field validators.
+  /// rejected here so it can never reach the scan path and crash it.
   Future<SettingsSnapshot> update(SettingsPatch patch) async {
-    final companion = AppSettingsCompanion(
-      graceAllowanceEnabled: _val(patch.graceAllowanceEnabled),
-      graceAllowanceUnits:
-          _valNonNeg(patch.graceAllowanceUnits, 'grace allowance units'),
-      reversalWindowMinutes:
-          _valNonNeg(patch.reversalWindowMinutes, 'reversal window minutes'),
-      localTimezone: _validatedTz(patch.localTimezone),
-      upiId: _val(patch.upiId),
-      upiPayeeName: _val(patch.upiPayeeName),
-      appName: patch.appName == null
-          ? const Value.absent()
-          : Value(_nonEmpty(patch.appName!, 'app name')),
-      prepLeadMinutes: _valNonNeg(patch.prepLeadMinutes, 'prep lead minutes'),
-      purchaseLeadDays:
-          _valNonNeg(patch.purchaseLeadDays, 'purchase lead days'),
-      lunchPrice: _valPrice(patch.unitPrices?.lunch),
-      breakfastPrice: _valPrice(patch.unitPrices?.breakfast),
-      brunchPrice: _valPrice(patch.unitPrices?.brunch),
-      breakfastStart: _windowStart(patch, 'breakfast'),
-      breakfastEnd: _windowEnd(patch, 'breakfast'),
-      lunchStart: _windowStart(patch, 'lunch'),
-      lunchEnd: _windowEnd(patch, 'lunch'),
-      brunchStart: _windowStart(patch, 'brunch'),
-      brunchEnd: _windowEnd(patch, 'brunch'),
-      enforceAppearance: _val(patch.enforceAppearance),
-      appearanceTheme: _val(patch.appearanceTheme),
-      appearanceMode: _val(patch.appearanceMode),
-      appearanceMotion: _val(patch.appearanceMotion),
-    );
-
-    if (patch.mealWindows != null) {
-      patch.mealWindows!.forEach((meal, w) {
-        _requireHhMm(w.start, '$meal start');
-        _requireHhMm(w.end, '$meal end');
-        if (w.start.compareTo(w.end) >= 0) {
-          throw ValidationException(
-              '$meal window start (${w.start}) must be before end (${w.end}).');
-        }
-      });
+    for (final v in [
+      patch.graceAllowanceUnits,
+      patch.reversalWindowMinutes,
+      patch.prepLeadMinutes,
+      patch.purchaseLeadDays,
+    ]) {
+      if (v != null && v < 0) {
+        throw const ValidationException(ErrorCode.settingsNegative);
+      }
     }
+    final prices = patch.unitPrices;
+    if (prices != null &&
+        [prices.lunch, prices.breakfast, prices.brunch].any((p) => p < 0)) {
+      throw const ValidationException(ErrorCode.settingsNegative);
+    }
+    if (patch.localTimezone != null) {
+      try {
+        tz.getLocation(patch.localTimezone!);
+      } catch (_) {
+        throw ValidationException(
+            ErrorCode.settingsBadTimezone, {'name': patch.localTimezone!});
+      }
+    }
+    if (patch.appName != null && patch.appName!.trim().isEmpty) {
+      throw const ValidationException(ErrorCode.settingsBlank);
+    }
+    patch.mealWindows?.forEach((meal, w) {
+      for (final v in [w.start, w.end]) {
+        if (!_hhmm.hasMatch(v)) {
+          throw ValidationException(ErrorCode.settingsBadTime, {'meal': meal});
+        }
+      }
+      if (w.start.compareTo(w.end) >= 0) {
+        throw ValidationException(ErrorCode.settingsWindowOrder,
+            {'meal': meal, 'start': w.start, 'end': w.end});
+      }
+    });
 
-    await (_db.update(_db.appSettings)..where((s) => s.id.equals(0)))
-        .write(companion);
+    final current = await read();
+    final json = patch.toJson();
+    if (patch.mealWindows != null) {
+      json['mealWindows'] = {
+        ...current.toJson()['mealWindows'] as Map<String, dynamic>,
+        ...json['mealWindows'] as Map<String, dynamic>,
+      };
+    }
+    final b = _store.batch()..set(_ref, json, SetOptions(merge: true));
+    await _store.commit(b, 'settings.update');
     _log.info('updated fields=${patch.changedFields}');
     return read();
   }
-
-  // ---- validation helpers ---------------------------------------------
-
-  Value<T> _val<T>(T? v) => v == null ? const Value.absent() : Value(v);
-
-  Value<int> _valNonNeg(int? v, String label) {
-    if (v == null) return const Value.absent();
-    if (v < 0) throw ValidationException('$label cannot be negative.');
-    return Value(v);
-  }
-
-  Value<double> _valPrice(double? v) {
-    if (v == null) return const Value.absent();
-    if (v < 0) {
-      throw const ValidationException('Unit price cannot be negative.');
-    }
-    return Value(v);
-  }
-
-  Value<String> _validatedTz(String? name) {
-    if (name == null) return const Value.absent();
-    try {
-      tz.getLocation(name);
-    } catch (_) {
-      throw ValidationException(
-          "'$name' is not a valid IANA timezone name (e.g. 'Asia/Kolkata', 'UTC').");
-    }
-    return Value(name);
-  }
-
-  Value<String> _windowStart(SettingsPatch p, String meal) =>
-      p.mealWindows?[meal] == null
-          ? const Value.absent()
-          : Value(p.mealWindows![meal]!.start);
-  Value<String> _windowEnd(SettingsPatch p, String meal) =>
-      p.mealWindows?[meal] == null
-          ? const Value.absent()
-          : Value(p.mealWindows![meal]!.end);
-
-  void _requireHhMm(String v, String label) {
-    if (!_hhmm.hasMatch(v)) {
-      throw ValidationException('$label must be HH:MM in 24-hour form.');
-    }
-  }
-
-  String _nonEmpty(String v, String label) {
-    if (v.trim().isEmpty) throw ValidationException('$label cannot be blank.');
-    return v;
-  }
 }
+
+typedef DocumentRef = DocumentReference<Json>;
 
 /// A partial settings update (PRD §6.8). Every field optional.
 class SettingsPatch {

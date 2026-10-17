@@ -9,6 +9,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/messages.dart';
 
 final _scansProvider = FutureProvider.autoDispose<List<ScanRecord>>(
     (ref) => ref.watch(backendProvider).recentScans(limit: 300));
@@ -66,20 +67,16 @@ class ScanLogScreen extends ConsumerWidget {
                     NbButton.secondary(
                       label: AppText.of(context).scanLogScreenReverseButton,
                       onPressed: () async {
-                        final ok = await runGuarded(
-                          context,
-                          () async {
-                            final r = await ref
-                                .read(backendProvider)
-                                .reverseScan(s.id);
-                            if (!r.success) {
-                              throw _Msg(r.message);
-                            }
-                          },
-                          successMessage:
-                              AppText.of(context).scanLogScreenReverseSuccess,
-                        );
-                        if (ok) ref.invalidate(_scansProvider);
+                        ReversalResult? r;
+                        final ran = await runGuarded(context, () async {
+                          r = await ref.read(backendProvider).reverseScan(s.id);
+                        });
+                        if (!ran || r == null || !context.mounted) return;
+                        // Refused reversals are answers, not crashes: say why.
+                        showNbSnack(
+                            context, AppText.of(context).reversalText(r!),
+                            ok: r!.success);
+                        if (r!.success) ref.invalidate(_scansProvider);
                       },
                     ),
                   ],
@@ -91,11 +88,4 @@ class ScanLogScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _Msg implements Exception {
-  _Msg(this.message);
-  final String message;
-  @override
-  String toString() => message;
 }

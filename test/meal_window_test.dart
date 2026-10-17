@@ -1,4 +1,4 @@
-import 'package:tiffin/core/app_mode.dart';
+import 'package:tiffin/core/meal_type.dart';
 import 'package:tiffin/core/time/meal_window.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;

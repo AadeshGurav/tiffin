@@ -135,8 +135,7 @@ class RefundsScreen extends ConsumerWidget {
                     keyboardType: TextInputType.number),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label:
-                        AppText.of(context).refundsScreenBreakfastUnitsLabel,
+                    label: AppText.of(context).refundsScreenBreakfastUnitsLabel,
                     controller: breakfast,
                     keyboardType: TextInputType.number),
                 const SizedBox(height: NbSpace.sm),

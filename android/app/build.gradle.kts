@@ -22,7 +22,8 @@ android {
         applicationId = "com.canteen.canteen_coupon"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Firebase Auth / Firestore need API 23.
+        minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
@@ -49,11 +50,4 @@ kotlin {
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    // ContextCompat / ActivityCompat for the hotspot MethodChannel permission
-    // flow. Present transitively via the Flutter embedding, but declared so the
-    // import is explicit (CLAUDE.md §10).
-    implementation("androidx.core:core-ktx:1.13.1")
 }

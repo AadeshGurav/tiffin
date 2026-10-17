@@ -116,8 +116,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                                 () => ref
                                     .read(backendProvider)
                                     .deletePurchaseItem(it.id),
-                                successMessage:
-                                    AppText.of(context).purchaseScheduleScreenRemoved,
+                                successMessage: AppText.of(context)
+                                    .purchaseScheduleScreenRemoved,
                               );
                               if (ok) ref.invalidate(_scheduleProvider);
                             },

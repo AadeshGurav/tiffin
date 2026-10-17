@@ -20,7 +20,7 @@ class Expense {
   });
 
   factory Expense.fromJson(Map<String, dynamic> j) => Expense(
-        id: j['id'] as int,
+        id: j['id'] as String,
         category: j['category'] as String,
         description: j['description'] as String,
         amount: (j['amount'] as num).toDouble(),
@@ -28,7 +28,7 @@ class Expense {
         createdBy: j['createdBy'] as String,
       );
 
-  final int id;
+  final String id;
   final String category;
   final String description;
   final double amount;
@@ -113,7 +113,7 @@ class AppUser {
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
-        id: j['id'] as int,
+        id: j['id'] as String,
         username: j['username'] as String,
         role: Role.fromWire(j['role'] as String),
         status: j['status'] as String,
@@ -121,7 +121,7 @@ class AppUser {
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 
-  final int id;
+  final String id;
   final String username;
   final Role role;
   final String status; // 'active' | 'inactive'
@@ -213,30 +213,25 @@ class AppNotification {
   const AppNotification({
     required this.id,
     required this.type,
-    required this.title,
-    required this.message,
+    required this.params,
     required this.createdAt,
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> j) => AppNotification(
-        id: j['id'] as int,
+        id: j['id'] as String,
         type: j['type'] as String,
-        title: j['title'] as String,
-        message: j['message'] as String,
+        params: Map<String, dynamic>.from(j['params'] as Map? ?? const {}),
         createdAt: DateTime.parse(j['createdAt'] as String),
       );
 
-  final int id;
-  final String type; // 'prep_reminder' | 'purchase_due'
-  final String title;
-  final String message;
-  final DateTime createdAt;
+  final String id;
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type,
-        'title': title,
-        'message': message,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+  /// 'prep_reminder' | 'purchase_due' | 'low_stock' | 'headcount_overrun' |
+  /// 'scan_rejected_on_sync'.
+  final String type;
+
+  /// The values the sentence needs (meal, counts, names). Stored instead of
+  /// the sentence itself so each phone shows it in its own language.
+  final Map<String, dynamic> params;
+  final DateTime createdAt;
 }

@@ -1,220 +1,200 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:tiffin/core/errors.dart';
-import 'package:tiffin/core/role.dart';
-import 'package:tiffin/data/local/database.dart';
-import 'package:tiffin/services/backup_service.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:tiffin/core/errors.dart';
+import 'package:tiffin/core/meal_type.dart';
+import 'package:tiffin/data/backend.dart';
+import 'package:tiffin/domain/member.dart';
+import 'package:tiffin/services/backup_service.dart';
 
-/// Restore replaces the only copy of a canteen's data, so the round trip is
-/// asserted end to end: seed, export, wipe, restore, and check every row came
-/// back — plus each way the file itself can be wrong.
+import 'support/fake_backend.dart';
+
+/// Backup is the admin's own copy of the canteen, and the bridge from the
+/// LAN-host build: a v1 `.tiffin` (SQLite inside) must land in Firestore with
+/// its accounts still able to sign in.
 void main() {
-  late Directory tmp;
-  late File dbFile;
-  late AppDatabase db;
-  late BackupService backup;
+  setUpAll(tzdata.initializeTimeZones);
 
-  /// A real file rather than an in-memory database, because `VACUUM INTO` is
-  /// what the export actually relies on.
-  Future<AppDatabase> openAt(File file) async {
-    final opened = AppDatabase.forTesting(NativeDatabase(file));
-    await opened.customSelect('SELECT 1').get();
-    return opened;
-  }
+  late Backend b;
 
   setUp(() async {
-    tmp = Directory.systemTemp.createTempSync('tiffin-backup-test');
-    dbFile = File('${tmp.path}/canteen.sqlite');
-    db = await openAt(dbFile);
-    backup = BackupService(db, appVersion: '2.0.0-test', workingDirectory: tmp);
+    b = (await fakeBackend()).backend;
+    await signInAdmin(b);
   });
 
-  tearDown(() async {
-    await db.close();
-    if (tmp.existsSync()) tmp.deleteSync(recursive: true);
+  Future<Member> member(String name, {int lunch = 0}) =>
+      b.createMember(MemberDraft(
+          type: 'staff', name: name, balances: UnitCounts(lunch: lunch)));
+
+  test('every document survives a plain round trip', () async {
+    final asha = await member('Asha', lunch: 4);
+    await member('Ravi');
+    final bytes = await b.backups.export();
+
+    // Into a different, empty canteen.
+    final other = (await fakeBackend()).backend;
+    final restored =
+        await other.backups.restore(await other.backups.read(bytes));
+    expect(restored, greaterThanOrEqualTo(3)); // 2 members + the admin
+    final back = await other.getMember(asha.id);
+    expect(back.name, 'Asha');
+    expect(back.balances.lunch, 4);
+    expect((await other.login('admin', 'lunchtime99')).username, 'admin',
+        reason: 'accounts come across and still sign in');
   });
 
-  Future<void> seed() async {
-    final now = DateTime.now().toUtc();
-    await db.into(db.members).insert(MembersCompanion.insert(
-          type: 'student',
-          name: 'Aadesh Gurav',
-          qrCodeId: 'qr-1',
-          createdAt: now,
-          updatedAt: now,
-          lunchBalance: const Value(12),
-        ));
-    await db.into(db.users).insert(UsersCompanion.insert(
-          username: 'admin',
-          passwordHash: 'salt\$digest',
-          role: Role.admin.wire,
-          createdAt: now,
-          updatedAt: now,
-        ));
-    await db.into(db.expenses).insert(ExpensesCompanion.insert(
-          category: 'vegetables',
-          description: 'Weekly',
-          amount: 1250.5,
-          date: now,
-          createdBy: 'admin',
-        ));
-  }
+  test('restore replaces what was there instead of merging', () async {
+    final bytes = await b.backups.export();
+    await member('Added after the backup');
+    await b.backups.restore(await b.backups.read(bytes));
+    expect(await b.listMembers(), isEmpty);
+  });
 
-  /// Restores [bytes] over a fresh database and hands it back for inspection.
-  Future<AppDatabase> restoreInto(List<int> bytes, {String? passphrase}) async {
-    final target = File('${tmp.path}/restored.sqlite');
-    await backup.stageRestore(bytes, target, passphrase: passphrase);
-    return openAt(target);
-  }
+  test('an encrypted backup round-trips with its password only', () async {
+    await member('Asha');
+    final bytes = await b.backups.export(passphrase: 'canteen-key');
+    expect(utf8.decode(bytes, allowMalformed: true), isNot(contains('Asha')),
+        reason: 'member names are not readable in a sealed file');
+    expect(b.backups.inspect(bytes).encrypted, isTrue);
 
-  test('every row survives a plain round trip', () async {
-    await seed();
-    final bytes = await backup.export();
+    await expectLater(
+        b.backups.read(bytes),
+        throwsA(isA<ValidationException>()
+            .having((e) => e.code, 'code', ErrorCode.backupNeedsPassphrase)));
+    await expectLater(
+        b.backups.read(bytes, passphrase: 'wrong'),
+        throwsA(isA<ValidationException>()
+            .having((e) => e.code, 'code', ErrorCode.backupWrongPassphrase)));
+    final contents = await b.backups.read(bytes, passphrase: 'canteen-key');
+    expect(contents.collections['members'], hasLength(1));
+  });
 
-    // The wipe stands in for "a new phone, or this one after a reset".
-    await db.wipeAllData();
-    expect(await db.members.count().getSingle(), 0);
+  test('a file that is not a backup is refused before anything is deleted',
+      () async {
+    await member('Asha');
+    await expectLater(
+        b.backups.read([1, 2, 3]),
+        throwsA(isA<ValidationException>()
+            .having((e) => e.code, 'code', ErrorCode.backupNotTiffin)));
+    expect(await b.listMembers(), hasLength(1));
+  });
 
-    final restored = await restoreInto(bytes);
-    final member = await restored.select(restored.members).getSingle();
-    expect(member.name, 'Aadesh Gurav');
-    expect(member.lunchBalance, 12, reason: 'balances must come back exactly');
+  test('a backup from a newer format is refused rather than half-read', () {
+    final manifest =
+        utf8.encode(jsonEncode({'format': 99, 'schemaVersion': 99}));
+    final zip = ZipEncoder().encode(Archive()
+      ..addFile(ArchiveFile('manifest.json', manifest.length, manifest)));
     expect(
-        (await restored.select(restored.users).getSingle()).username, 'admin');
-    expect(
-        (await restored.select(restored.expenses).getSingle()).amount, 1250.5);
-    await restored.close();
+        () => b.backups.inspect(zip),
+        throwsA(isA<ValidationException>()
+            .having((e) => e.code, 'code', ErrorCode.backupNewerVersion)));
   });
 
-  test('the manifest reports what is inside', () async {
-    await seed();
-    final manifest = backup.inspect(await backup.export());
-
-    expect(manifest.schemaVersion, db.schemaVersion);
-    expect(manifest.appVersion, '2.0.0-test');
-    expect(manifest.encrypted, isFalse);
-    expect(manifest.rowCounts['members'], 1);
-    expect(manifest.rowCounts['expenses'], 1);
-    // The settings singleton is seeded on creation, so it is always in there.
-    expect(manifest.rowCounts['app_settings'], 1);
-  });
-
-  test('an encrypted backup round-trips with its password', () async {
-    await seed();
-    final bytes = await backup.export(passphrase: 'canteen-secret');
-
-    expect(backup.inspect(bytes).encrypted, isTrue);
-    final restored = await restoreInto(bytes, passphrase: 'canteen-secret');
-    expect((await restored.select(restored.members).getSingle()).name,
-        'Aadesh Gurav');
-    await restored.close();
-  });
-
-  test('an encrypted backup keeps member names off the wire', () async {
-    await seed();
-    final plain = await backup.export();
-    final sealed = await backup.export(passphrase: 'canteen-secret');
-
-    // The zip is compressed, so the payload has to be extracted before
-    // looking for plaintext — searching the container bytes would pass for
-    // the wrong reason.
-    List<int> payload(List<int> bytes) => ZipDecoder()
-        .decodeBytes(bytes)
-        .files
-        .firstWhere((f) => f.name == BackupService.databaseEntry)
-        .content as List<int>;
-
-    bool holdsName(List<int> bytes) =>
-        String.fromCharCodes(payload(bytes).map((b) => b & 0xFF))
-            .contains('Aadesh Gurav');
-
-    expect(holdsName(plain), isTrue,
-        reason: 'sanity: an unencrypted backup does hold the name');
-    expect(holdsName(sealed), isFalse,
-        reason: 'an encrypted backup must not leak names to anyone with it');
-  });
-
-  test('the wrong password fails clearly, without writing anything', () async {
-    await seed();
-    final bytes = await backup.export(passphrase: 'canteen-secret');
-    final target = File('${tmp.path}/restored.sqlite');
-
+  test('first-run import refuses to merge into a canteen that has members',
+      () async {
+    final bytes = await b.backups.export();
+    await member('Already here');
     await expectLater(
-      backup.stageRestore(bytes, target, passphrase: 'wrong'),
-      throwsA(isA<ValidationException>()),
-    );
-    expect(target.existsSync(), isFalse,
-        reason: 'nothing is written until the file has been proven readable');
+        b.backups.restore(await b.backups.read(bytes), requireEmpty: true),
+        throwsA(isA<ConflictException>()));
   });
 
-  test('a missing password on a sealed backup is refused', () async {
-    await seed();
-    final bytes = await backup.export(passphrase: 'canteen-secret');
-    await expectLater(
-      backup.stageRestore(bytes, File('${tmp.path}/x.sqlite')),
-      throwsA(isA<ValidationException>()),
-    );
-  });
+  group('a v1 backup from the LAN-host build', () {
+    late List<int> legacy;
 
-  test('a file that is not a backup is refused', () async {
-    await expectLater(
-      backup.stageRestore(
-          List<int>.filled(500, 42), File('${tmp.path}/x.sqlite')),
-      throwsA(isA<ValidationException>()),
-    );
-  });
+    // The v1 hash format is the one AuthService still writes, so it can
+    // produce a legacy row's hash too.
+    setUp(() => legacy = _legacyBackup(b.auth.hashPassword('oldpassword1')));
 
-  test('a backup from a newer app is refused rather than half-read', () async {
-    await seed();
-    final bytes = await backup.export();
+    test('imports members, balances, accounts and settings', () async {
+      final fresh = (await fakeBackend()).backend;
+      final contents = await fresh.backups.read(legacy);
+      await fresh.backups.restore(contents, requireEmpty: true);
 
-    // Pretend this app is older than the file it was handed.
-    final older = _PretendOlderDatabase(db, db.schemaVersion - 1);
-    final service =
-        BackupService(older, appVersion: '1.0.0', workingDirectory: tmp);
+      final m = await fresh.getMember('7');
+      expect(m.name, 'Meera');
+      expect(m.balances.lunch, 5);
+      expect(m.qrCodeId, 'abc123def456', reason: 'printed cards keep working');
+      expect((await fresh.getSettings()).appName, 'Hostel Mess');
 
-    await expectLater(
-      service.stageRestore(bytes, File('${tmp.path}/x.sqlite')),
-      throwsA(isA<ValidationException>()),
-    );
-  });
+      // The v1 hash format is unchanged, so the old password still works.
+      expect((await fresh.login('owner', 'oldpassword1')).username, 'owner');
+    });
 
-  test('exporting leaves no snapshot behind', () async {
-    await seed();
-    await backup.export();
-
-    final strays = tmp
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.uri.pathSegments.last.startsWith('backup-'));
-    expect(strays, isEmpty,
-        reason: 'a stray snapshot is a second full copy of everything');
-  });
-
-  test('the filename is dated so exports do not overwrite each other', () {
-    final name = backup.fileName(now: DateTime(2026, 9, 4, 21, 30));
-    expect(name, 'tiffin-backup-2026-09-04-2130.tiffin');
+    test('history keeps its references and scans keep their meal', () async {
+      final fresh = (await fakeBackend()).backend;
+      await fresh.backups.restore(await fresh.backups.read(legacy));
+      final topups = await fresh.listTopups();
+      expect(topups.single.memberId, '7');
+      expect(topups.single.amount, 200);
+      final scans = await fresh.recentScans();
+      expect(scans.single.mealType, MealType.lunch);
+      expect(scans.single.memberName, 'Meera');
+    });
   });
 }
 
-/// Reports an older schema version while delegating everything else, so the
-/// "backup from a newer app" guard can be exercised without a second schema.
-class _PretendOlderDatabase extends AppDatabase {
-  _PretendOlderDatabase(AppDatabase inner, this._version)
-      : super.forTesting(inner.executor);
+/// A minimal format-1 backup: the zip a v2.x host exported, with a SQLite
+/// snapshot using that build's table and column names.
+List<int> _legacyBackup(String hash) {
+  final dir = Directory.systemTemp.createTempSync('tiffin-legacy');
+  final file = File('${dir.path}/tiffin.sqlite');
+  final db = sqlite3.open(file.path);
+  const t = 1760000000; // seconds, as drift stored DateTime
+  db
+    ..execute('CREATE TABLE users (id INTEGER, username TEXT, password_hash '
+        'TEXT, role TEXT, status TEXT, created_at INTEGER, updated_at INTEGER)')
+    ..execute("INSERT INTO users VALUES (1, 'owner', '$hash', 'admin', "
+        "'active', $t, $t)")
+    ..execute('CREATE TABLE members (id INTEGER, type TEXT, name TEXT, '
+        'class_name TEXT, roll_number TEXT, staff_id TEXT, qr_code_id TEXT, '
+        'lunch_balance INTEGER, breakfast_balance INTEGER, brunch_balance '
+        'INTEGER, grace_allowance_override INTEGER, category TEXT, status TEXT, '
+        'created_at INTEGER, updated_at INTEGER)')
+    ..execute("INSERT INTO members VALUES (7, 'student', 'Meera', '8A', '12', "
+        "NULL, 'abc123def456', 5, 0, 0, NULL, 'Normal', 'active', $t, $t)")
+    ..execute('CREATE TABLE topups (id INTEGER, member_id INTEGER, lunch_units '
+        'INTEGER, breakfast_units INTEGER, brunch_units INTEGER, amount REAL, '
+        'payment_method TEXT, payment_status TEXT, bill_pdf_path TEXT, '
+        'upi_qr_path TEXT, created_by TEXT, created_at INTEGER, reversed '
+        'INTEGER, reversed_at INTEGER, reversed_by TEXT)')
+    ..execute("INSERT INTO topups VALUES (3, 7, 5, 0, 0, 200.0, 'cash', "
+        "'confirmed', NULL, NULL, 'owner', $t, 0, NULL, NULL)")
+    ..execute('CREATE TABLE scans (id INTEGER, member_id INTEGER, meal_type '
+        'TEXT, scanned_at INTEGER, result TEXT, via_grace INTEGER, reversed '
+        'INTEGER, reversed_at INTEGER, reversed_by TEXT, member_category TEXT, '
+        'consumed_json TEXT)')
+    ..execute("INSERT INTO scans VALUES (9, 7, 'lunch', $t, 'accepted', 0, 0, "
+        "NULL, NULL, 'Normal', NULL)")
+    ..execute('CREATE TABLE app_settings (id INTEGER, grace_allowance_enabled '
+        'INTEGER, grace_allowance_units INTEGER, reversal_window_minutes '
+        'INTEGER, breakfast_start TEXT, breakfast_end TEXT, lunch_start TEXT, '
+        'lunch_end TEXT, brunch_start TEXT, brunch_end TEXT, local_timezone '
+        'TEXT, upi_id TEXT, upi_payee_name TEXT, lunch_price REAL, '
+        'breakfast_price REAL, brunch_price REAL, app_name TEXT, '
+        'prep_lead_minutes INTEGER, purchase_lead_days INTEGER)')
+    ..execute("INSERT INTO app_settings VALUES (0, 0, 0, 10, '07:00', '09:30', "
+        "'12:00', '14:30', '09:00', '12:00', 'Asia/Kolkata', '', '', 40.0, "
+        "25.0, 50.0, 'Hostel Mess', 60, 1)")
+    ..close();
+  final sqliteBytes = file.readAsBytesSync();
+  dir.deleteSync(recursive: true);
 
-  final int _version;
-
-  @override
-  int get schemaVersion => _version;
-
-  @override
-  Future<void> close() async {
-    // The inner database owns the executor; closing here would pull it out
-    // from under the test's own handle.
-  }
+  final manifest = utf8.encode(jsonEncode({
+    'format': 1,
+    'schemaVersion': 8,
+    'appVersion': '2.1.0',
+    'createdAt': '2026-10-01T10:00:00Z',
+    'encrypted': false,
+    'rowCounts': {'members': 1},
+  }));
+  return ZipEncoder().encode(Archive()
+    ..addFile(
+        ArchiveFile(BackupService.manifestEntry, manifest.length, manifest))
+    ..addFile(ArchiveFile(
+        BackupService.legacyDatabaseEntry, sqliteBytes.length, sqliteBytes)));
 }

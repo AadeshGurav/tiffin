@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors.dart';
+import '../../core/logging.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/messages.dart';
 import '../theme/tokens.dart';
 import 'motion.dart';
 import 'nb_button.dart';
@@ -208,22 +210,11 @@ class ErrorPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final (title, message) = switch (error) {
-      HostUnreachableException e => (
-          AppText.of(context).nbFeedbackHostUnreachable,
-          e.message
-        ),
-      AuthException e => (
-          AppText.of(context).nbFeedbackSessionProblem,
-          e.message
-        ),
-      AppException e => (
-          AppText.of(context).nbFeedbackErrorCode(e.code),
-          e.message
-        ),
-      _ => (AppText.of(context).nbFeedbackSomethingBroke, '$error'),
-    };
-    final isHostDown = error is HostUnreachableException;
+    final text = AppText.of(context);
+    final title = error is AuthException
+        ? text.nbFeedbackSessionProblem
+        : text.nbFeedbackSomethingBroke;
+    final message = text.errorText(error);
     return NbSurface(
       background: t.color.warn,
       intensity: NbIntensity.full,
@@ -246,9 +237,7 @@ class ErrorPanel extends StatelessWidget {
           if (onRetry != null) ...[
             const SizedBox(height: NbSpace.md),
             NbButton(
-              label: isHostDown
-                  ? AppText.of(context).retry
-                  : AppText.of(context).nbFeedbackTryAgain,
+              label: text.nbFeedbackTryAgain,
               icon: Icons.refresh,
               background: t.color.ink,
               foreground: t.color.surface,
@@ -260,6 +249,8 @@ class ErrorPanel extends StatelessWidget {
     );
   }
 }
+
+final _log = log('ui');
 
 /// A short-lived confirmation/error line (Peak-End Rule, CLAUDE.md §11.2).
 void showNbSnack(
@@ -301,7 +292,8 @@ void showNbSnack(
 /// Runs [action] with visible feedback the whole way:
 ///  * an immediate "Working…" line (so a slow action never looks frozen),
 ///  * a success line ([successMessage] or "Done."),
-///  * on failure, the error's own message + code — never a silent no-op.
+///  * on failure, what went wrong in the operator's language — never a silent
+///    no-op, never a raw exception.
 /// Returns true on success.
 Future<bool> runGuarded(
   BuildContext context,
@@ -346,17 +338,10 @@ Future<bool> runGuarded(
       messenger?.clearSnackBars();
     }
     return true;
-  } on AppException catch (e) {
+  } catch (e, st) {
+    if (e is! AppException) _log.severe('unexpected failure', e, st);
     if (context.mounted) {
-      showNbSnack(context, '${e.message}  [${e.code}]',
-          ok: false, duration: const Duration(seconds: 5));
-    } else {
-      messenger?.clearSnackBars();
-    }
-    return false;
-  } catch (e) {
-    if (context.mounted) {
-      showNbSnack(context, AppText.of(context).nbFeedbackUnexpected('$e'),
+      showNbSnack(context, AppText.of(context).errorText(e),
           ok: false, duration: const Duration(seconds: 5));
     } else {
       messenger?.clearSnackBars();

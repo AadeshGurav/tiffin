@@ -4,13 +4,14 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
 import 'package:pointycastle/export.dart';
 
 import '../core/errors.dart';
 import '../core/logging.dart';
-import '../data/local/database.dart';
+import '../data/store.dart';
+import 'legacy_import.dart';
 
 /// What a `.tiffin` file says about itself.
 class BackupManifest {
@@ -42,7 +43,7 @@ class BackupManifest {
   final DateTime createdAt;
   final bool encrypted;
 
-  /// Per-table counts, so a restore can report what it actually put back
+  /// Per-collection counts, so a restore can report what it actually put back
   /// instead of a bare "done".
   final Map<String, int> rowCounts;
 
@@ -62,12 +63,22 @@ class BackupManifest {
       };
 }
 
-/// Full-fidelity backup and restore — the supported way to move a canteen to a
-/// new phone.
+/// What a backup file holds once opened: every data collection, plus the
+/// settings document.
+class BackupContents {
+  const BackupContents({required this.collections, this.settings});
+
+  final Map<String, List<Json>> collections;
+  final Json? settings;
+}
+
+/// Full-fidelity backup and restore — the way to move a canteen to a new
+/// Firebase project, and a copy the admin owns outside Google's.
 ///
-/// The container is a zip holding a manifest and a SQLite snapshot taken with
-/// `VACUUM INTO`, which produces a consistent copy without closing the live
-/// database or reasoning about WAL state.
+/// Format 2 (this build): a zip with a manifest and `data.json`
+/// (`{collection: [documents with id]}`). Format 1 files — the SQLite snapshot
+/// the LAN-host build wrote — are still read, through [LegacyImport]; that is
+/// how an existing canteen's records cross over.
 ///
 /// A passphrase is optional and offered prominently, not forced: the file
 /// carries member names and password hashes, but a mandatory passphrase turns
@@ -75,197 +86,213 @@ class BackupManifest {
 /// failure of the two.
 class BackupService {
   BackupService(
-    this._db, {
+    this._store, {
     required this.appVersion,
     required this.workingDirectory,
   });
 
-  final AppDatabase _db;
+  final Store _store;
   final String appVersion;
 
-  /// Where the temporary snapshot is written. Injected rather than resolved
-  /// from path_provider so this stays a plain service a test can drive.
+  /// Scratch space for unpacking a format-1 SQLite file.
   final Directory workingDirectory;
   final _log = log('backup');
 
   static const manifestEntry = 'manifest.json';
-  static const databaseEntry = 'tiffin.sqlite';
+  static const dataEntry = 'data.json';
+  static const legacyDatabaseEntry = 'tiffin.sqlite';
   static const fileExtension = 'tiffin';
 
-  /// Bumping this rejects files a newer app wrote, rather than letting an
-  /// older app misread them.
-  static const formatVersion = 1;
+  /// Bumping this rejects files a newer app wrote, rather than misreading them.
+  static const formatVersion = 2;
+
+  /// Firestore allows 500 writes per batch; stay clear of it.
+  static const _batchSize = 400;
 
   Future<List<int>> export({String? passphrase}) async {
-    final counts = await _rowCounts();
-    final snapshot = await _snapshot();
+    final collections = <String, List<Json>>{
+      for (final c in Col.data) c: await _store.fresh(_store.col(c)),
+    };
+    final settings = await _store.freshDoc(_store.doc(Col.meta, 'settings'));
+    var bytes = Uint8List.fromList(utf8.encode(jsonEncode({
+      'collections': collections,
+      'settings': settings,
+    })));
 
-    try {
-      var bytes = await snapshot.readAsBytes();
-      String? salt;
-      String? nonce;
-
-      if (passphrase != null && passphrase.isNotEmpty) {
-        final saltBytes = _randomBytes(16);
-        final nonceBytes = _randomBytes(12);
-        bytes = _encrypt(bytes, passphrase, saltBytes, nonceBytes);
-        salt = base64Encode(saltBytes);
-        nonce = base64Encode(nonceBytes);
-      }
-
-      final manifest = BackupManifest(
-        schemaVersion: _db.schemaVersion,
-        appVersion: appVersion,
-        createdAt: DateTime.now().toUtc(),
-        encrypted: salt != null,
-        rowCounts: counts,
-        salt: salt,
-        nonce: nonce,
-      );
-
-      final archive = Archive();
-      final manifestBytes =
-          utf8.encode(const JsonEncoder.withIndent('  ').convert({
-        'format': formatVersion,
-        ...manifest.toJson(),
-      }));
-      archive
-        ..addFile(
-            ArchiveFile(manifestEntry, manifestBytes.length, manifestBytes))
-        ..addFile(ArchiveFile(databaseEntry, bytes.length, bytes));
-
-      _log.info('backup_exported rows=${manifest.totalRows} '
-          'encrypted=${manifest.encrypted}');
-      return ZipEncoder().encode(archive);
-    } finally {
-      // The snapshot is a second copy of everything; don't leave it lying in
-      // the app's documents directory.
-      if (snapshot.existsSync()) snapshot.deleteSync();
+    String? salt;
+    String? nonce;
+    if (passphrase != null && passphrase.isNotEmpty) {
+      final saltBytes = _randomBytes(16);
+      final nonceBytes = _randomBytes(12);
+      bytes = _encrypt(bytes, passphrase, saltBytes, nonceBytes);
+      salt = base64Encode(saltBytes);
+      nonce = base64Encode(nonceBytes);
     }
+
+    final manifest = BackupManifest(
+      schemaVersion: formatVersion,
+      appVersion: appVersion,
+      createdAt: DateTime.now().toUtc(),
+      encrypted: salt != null,
+      rowCounts: collections.map((k, v) => MapEntry(k, v.length)),
+      salt: salt,
+      nonce: nonce,
+    );
+    final manifestBytes = utf8.encode(const JsonEncoder.withIndent('  ')
+        .convert({'format': formatVersion, ...manifest.toJson()}));
+    final archive = Archive()
+      ..addFile(ArchiveFile(manifestEntry, manifestBytes.length, manifestBytes))
+      ..addFile(ArchiveFile(dataEntry, bytes.length, bytes));
+    _log.info('backup_exported rows=${manifest.totalRows} '
+        'encrypted=${manifest.encrypted}');
+    return ZipEncoder().encode(archive);
   }
 
   String fileName({DateTime? now}) =>
       'tiffin-backup-${DateFormat('yyyy-MM-dd-HHmm').format(now ?? DateTime.now())}'
       '.$fileExtension';
 
-  /// Reads and validates a backup without touching the live database, so the
-  /// UI can show what it holds before anyone commits to replacing anything.
-  BackupManifest inspect(List<int> bytes) => _open(bytes).$1;
+  /// Reads and validates a backup without touching any data, so the UI can
+  /// show what it holds before anyone commits to replacing anything.
+  BackupManifest inspect(List<int> bytes) => _open(bytes).manifest;
 
-  /// Validates [bytes], decrypts if needed, and writes the database it
-  /// contains to [destination].
-  ///
-  /// Deliberately stops short of swapping the live file: closing and
-  /// re-opening the database is the caller's business, and staging first means
-  /// a corrupt or wrong-passphrase file fails before anything is destroyed.
-  Future<BackupManifest> stageRestore(
-    List<int> bytes,
-    File destination, {
-    String? passphrase,
-  }) async {
-    final (manifest, payload) = _open(bytes);
-
-    if (manifest.schemaVersion > _db.schemaVersion) {
-      throw ValidationException(
-        'This backup was made by a newer version of Tiffin '
-        '(database v${manifest.schemaVersion}, this app understands '
-        'v${_db.schemaVersion}). Update the app first.',
-      );
-    }
-
-    var data = payload;
+  /// Decrypts and decodes [bytes] fully — every failure (wrong passphrase,
+  /// truncated file, wrong file) happens here, before [restore] deletes a
+  /// single document.
+  Future<BackupContents> read(List<int> bytes, {String? passphrase}) async {
+    final opened = _open(bytes);
+    final manifest = opened.manifest;
+    var payload = opened.payload;
     if (manifest.encrypted) {
       if (passphrase == null || passphrase.isEmpty) {
-        throw const ValidationException(
-            'This backup is password-protected. Enter its password.');
+        throw const ValidationException(ErrorCode.backupNeedsPassphrase);
       }
-      data = _decrypt(
-        payload,
-        passphrase,
-        base64Decode(manifest.salt!),
-        base64Decode(manifest.nonce!),
+      payload = _decrypt(payload, passphrase, base64Decode(manifest.salt!),
+          base64Decode(manifest.nonce!));
+    }
+
+    if (opened.legacy) {
+      if (!_looksLikeSqlite(payload)) {
+        throw const ValidationException(ErrorCode.backupUnreadable);
+      }
+      if (!workingDirectory.existsSync()) {
+        workingDirectory.createSync(recursive: true);
+      }
+      final legacy = await const LegacyImport().read(payload, workingDirectory);
+      return BackupContents(
+          collections: legacy.collections, settings: legacy.settings);
+    }
+
+    try {
+      final json = jsonDecode(utf8.decode(payload)) as Map<String, dynamic>;
+      return BackupContents(
+        collections: {
+          for (final e in (json['collections'] as Map<String, dynamic>).entries)
+            if (Col.data.contains(e.key))
+              e.key: [
+                for (final d in e.value as List<dynamic>)
+                  Map<String, dynamic>.from(d as Map)
+              ],
+        },
+        settings: json['settings'] == null
+            ? null
+            : Map<String, dynamic>.from(json['settings'] as Map),
       );
+    } catch (_) {
+      throw const ValidationException(ErrorCode.backupUnreadable);
+    }
+  }
+
+  /// Replaces every data collection with [contents]. Needs the network: this
+  /// is thousands of writes, and a half-synced restore queued on one phone is
+  /// worse than a clear "connect first".
+  ///
+  /// When [requireEmpty] is set (first-run import) it refuses to run over a
+  /// canteen that already has members, instead of silently merging two.
+  Future<int> restore(BackupContents contents,
+      {bool requireEmpty = false}) async {
+    if (!_store.online) {
+      throw const ValidationException(ErrorCode.needsInternet);
+    }
+    if (requireEmpty &&
+        (await _store.fresh(_store.col(Col.members).limit(1))).isNotEmpty) {
+      throw const ConflictException(ErrorCode.backupTargetNotEmpty);
     }
 
-    if (!_looksLikeSqlite(data)) {
-      throw const ValidationException(
-          'That file does not contain a readable database.');
+    final writes = <void Function(WriteBatch b)>[];
+    for (final c in Col.data) {
+      for (final existing in await _store.fresh(_store.col(c))) {
+        final ref = _store.doc(c, existing['id'] as String);
+        writes.add((b) => b.delete(ref));
+      }
+    }
+    var restored = 0;
+    for (final MapEntry(key: c, value: docs) in contents.collections.entries) {
+      for (final d in docs) {
+        final id = d['id'] as String;
+        final body = Map<String, dynamic>.from(d)..remove('id');
+        final ref = _store.doc(c, id);
+        writes.add((b) => b.set(ref, body));
+        restored++;
+      }
+    }
+    if (contents.settings != null) {
+      final body = Map<String, dynamic>.from(contents.settings!)..remove('id');
+      final ref = _store.doc(Col.meta, 'settings');
+      writes.add((b) => b.set(ref, body));
     }
 
-    await destination.writeAsBytes(data, flush: true);
-    _log.info('backup_staged rows=${manifest.totalRows}');
-    return manifest;
+    // Deletes run before sets (they were queued first), so a document present
+    // in both ends up with the backup's copy.
+    for (var i = 0; i < writes.length; i += _batchSize) {
+      final b = _store.batch();
+      for (final w in writes.skip(i).take(_batchSize)) {
+        w(b);
+      }
+      await _store.commit(b, 'backup.restore ${i ~/ _batchSize}');
+    }
+    _log.warning('backup_restored docs=$restored');
+    return restored;
   }
 
   // ---- internals --------------------------------------------------------
 
-  (BackupManifest, Uint8List) _open(List<int> bytes) {
+  ({BackupManifest manifest, Uint8List payload, bool legacy}) _open(
+      List<int> bytes) {
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(bytes);
     } catch (_) {
-      throw const ValidationException('That is not a Tiffin backup file.');
+      throw const ValidationException(ErrorCode.backupNotTiffin);
     }
-
-    ArchiveFile? entry(String name) {
-      for (final f in archive.files) {
-        if (f.name == name) return f;
-      }
-      return null;
-    }
+    ArchiveFile? entry(String name) =>
+        archive.files.where((f) => f.name == name).firstOrNull;
 
     final manifestFile = entry(manifestEntry);
-    final dbFile = entry(databaseEntry);
-    if (manifestFile == null || dbFile == null) {
-      throw const ValidationException(
-          'That backup is missing part of its contents.');
+    if (manifestFile == null) {
+      throw const ValidationException(ErrorCode.backupNotTiffin);
     }
-
     final Map<String, dynamic> json;
     try {
       json = jsonDecode(utf8.decode(manifestFile.content as List<int>))
           as Map<String, dynamic>;
     } catch (_) {
-      throw const ValidationException('That backup\'s manifest is unreadable.');
+      throw const ValidationException(ErrorCode.backupUnreadable);
     }
-
     final format = (json['format'] as num?)?.toInt() ?? 1;
     if (format > formatVersion) {
-      throw const ValidationException(
-          'That backup uses a newer format. Update the app first.');
+      throw const ValidationException(ErrorCode.backupNewerVersion);
     }
-
+    final legacy = format < 2;
+    final payloadFile = entry(legacy ? legacyDatabaseEntry : dataEntry);
+    if (payloadFile == null) {
+      throw const ValidationException(ErrorCode.backupUnreadable);
+    }
     return (
-      BackupManifest.fromJson(json),
-      Uint8List.fromList(dbFile.content as List<int>)
+      manifest: BackupManifest.fromJson(json),
+      payload: Uint8List.fromList(payloadFile.content as List<int>),
+      legacy: legacy,
     );
-  }
-
-  /// A consistent copy without stopping the server: SQLite writes the whole
-  /// database out itself, so there is no half-written page or stray WAL.
-  Future<File> _snapshot() async {
-    if (!workingDirectory.existsSync()) {
-      workingDirectory.createSync(recursive: true);
-    }
-    final target = File(p.join(workingDirectory.path,
-        'backup-${DateTime.now().microsecondsSinceEpoch}.sqlite'));
-    if (target.existsSync()) target.deleteSync();
-    // Path is app-generated; quotes are escaped anyway because VACUUM INTO
-    // takes a literal, not a bound parameter.
-    final escaped = target.path.replaceAll("'", "''");
-    await _db.customStatement("VACUUM INTO '$escaped'");
-    return target;
-  }
-
-  Future<Map<String, int>> _rowCounts() async {
-    final counts = <String, int>{};
-    for (final table in _db.allTables) {
-      final row = await _db
-          .customSelect('SELECT COUNT(*) AS n FROM "${table.actualTableName}"')
-          .getSingle();
-      counts[table.actualTableName] = row.read<int>('n');
-    }
-    return counts;
   }
 
   static bool _looksLikeSqlite(Uint8List bytes) {
@@ -310,8 +337,7 @@ class BackupService {
     } catch (_) {
       // GCM authentication failing is overwhelmingly a wrong password, and
       // saying so beats surfacing a MAC error to a canteen admin.
-      throw const ValidationException(
-          'That password does not open this backup.');
+      throw const ValidationException(ErrorCode.backupWrongPassphrase);
     }
   }
 }

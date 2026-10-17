@@ -1,0 +1,160 @@
+rules_version = '2';
+
+// Tiffin's access model (ADR 0005):
+//  * A phone gets a Firebase identity (anonymous auth) and asks to join by
+//    writing devices/{its uid} as "pending". An admin phone approves it with a
+//    role. That role is what these rules trust: offline accounts sign in on the
+//    phone itself, so the rules can't see which person is holding it — they
+//    cap what the phone may do.
+//  * An online account (email/password) carries its own role in
+//    onlineUsers/{uid}.
+//  * meta/owner is claimed once, by the first phone of a fresh project.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function path(c, id) { return /databases/$(database)/documents/$(c)/$(id); }
+
+    // The caller's role, or 'none'. get()/exists() on the same document are
+    // billed once per request.
+    function role() {
+      let d = path('devices', request.auth.uid);
+      let o = path('onlineUsers', request.auth.uid);
+      return !signedIn() ? 'none'
+        : exists(d) && get(d).data.status == 'approved' ? get(d).data.role
+        : exists(o) && get(o).data.status == 'active' ? get(o).data.role
+        : 'none';
+    }
+    function isAdmin() { return role() == 'admin'; }
+    function isBilling() { return role() in ['admin', 'counter']; }
+    function isStaff() { return role() in ['admin', 'counter', 'scanner']; }
+
+    // Only these fields change.
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // ---- access control -------------------------------------------------
+
+    match /meta/owner {
+      allow read: if signedIn();
+      // First phone of a fresh project only; never re-assigned.
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    match /meta/settings {
+      // Branding and appearance apply before sign-in, so any phone with an
+      // identity may read them. Nothing in here is secret.
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /devices/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      // Asking to join: only as yourself, only as pending scanner.
+      allow create: if signedIn() && request.auth.uid == uid && (
+          (request.resource.data.status == 'pending' && request.resource.data.role == 'scanner')
+          // ...or the owner's own first phone, in the same transaction that
+          // claims meta/owner.
+          || (request.resource.data.status == 'approved'
+              && request.resource.data.role == 'admin'
+              && getAfter(path('meta', 'owner')).data.uid == request.auth.uid
+              && !exists(path('meta', 'owner'))));
+      allow update: if isAdmin()
+          // A removed phone may ask again, as a pending scanner.
+          || (signedIn() && request.auth.uid == uid
+              && resource.data.status == 'removed'
+              && request.resource.data.status == 'pending'
+              && request.resource.data.role == 'scanner');
+      allow delete: if isAdmin();
+    }
+
+    match /onlineUsers/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ---- the canteen's records ------------------------------------------
+
+    match /users/{id} {
+      // Offline accounts are checked on the phone, so every approved phone
+      // syncs them (password hashes included — PBKDF2, 260k rounds).
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /members/{id} {
+      allow read: if isStaff();
+      // Counter phones add walk-up members from the top-up screen.
+      allow create: if isBilling();
+      // Any staff phone moves balances (a scan); only billing phones credit
+      // them (top-ups); everything else is the admin's.
+      allow update: if isAdmin()
+          || (isBilling() && onlyChanges(['balances', 'updatedAt']))
+          || (isStaff() && onlyChanges(['balances', 'updatedAt'])
+              && request.resource.data.balances.lunch <= resource.data.balances.lunch
+              && request.resource.data.balances.breakfast <= resource.data.balances.breakfast
+              && request.resource.data.balances.brunch <= resource.data.balances.brunch);
+      allow delete: if isAdmin();
+    }
+
+    match /scans/{id} {
+      allow read: if isStaff();
+      // The id is member_day_meal: create-only is the one-scan-per-meal lock.
+      // A set() over an existing scan is an update, which nobody but an admin
+      // may do — so a duplicate scan synced from an offline phone is refused,
+      // and its balance decrement with it (same batch).
+      allow create: if isStaff()
+          && (request.resource.data.reversed == false || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /topups/{id} {
+      allow read, create: if isBilling();
+      allow update: if isAdmin()
+          || (isBilling() && onlyChanges(['paymentStatus']));
+    }
+
+    match /refunds/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /menuCategories/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /menu/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /ingredients/{id} {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      // Scans consume stock and purchases add it, from any staff phone.
+      allow update: if isAdmin() || (isStaff() && onlyChanges(['stockQty', 'updatedAt']));
+    }
+
+    match /recipes/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /purchaseSchedule/{id} {
+      allow read, write: if isBilling();
+    }
+
+    match /expenses/{id} {
+      allow read, update: if isAdmin();
+      // Ticking a purchase as bought on a counter phone records its cost, and
+      // un-ticking removes it again.
+      allow create, delete: if isBilling();
+    }
+
+    match /notifications/{id} {
+      // Every open phone computes reminders, so every staff phone writes them.
+      allow read, write: if isStaff();
+    }
+  }
+}

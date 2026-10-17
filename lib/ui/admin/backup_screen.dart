@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 
 import '../../app/providers.dart';
 import '../../core/errors.dart';
+import '../../l10n/messages.dart';
 import '../../services/backup_service.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
@@ -16,10 +17,10 @@ import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Settings ▸ Backup & restore. Host-only. The `.tiffin` file is a complete,
-/// optionally-encrypted copy of the canteen — the supported way to move to a
-/// new phone or recover a lost one. Restore replaces everything and keeps the
-/// current data beside it.
+/// Settings ▸ Backup & restore. Admin only. The `.tiffin` file is a complete,
+/// optionally-encrypted copy of the canteen — a copy the admin owns outside
+/// Firebase, and the way to move to a new Firebase project. Restore replaces
+/// everything, and reads the whole file before deleting anything.
 class BackupScreen extends ConsumerStatefulWidget {
   const BackupScreen({super.key});
 
@@ -48,17 +49,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
   Future<void> _exportBackup() async {
     if (_protect && _passphrase.text.length < 4) {
-      showNbSnack(
-          context, AppText.of(context).backupScreenPasswordRequired,
+      showNbSnack(context, AppText.of(context).backupScreenPasswordRequired,
           ok: false);
       return;
     }
     setState(() => _busy = true);
     await runGuarded(context, () async {
-      final container = await ref.read(hostContainerProvider.future);
-      final bytes = await container.backups
-          .export(passphrase: _protect ? _passphrase.text : null);
-      await _share(bytes, container.backups.fileName());
+      final backups = ref.read(backendProvider).backups;
+      final bytes =
+          await backups.export(passphrase: _protect ? _passphrase.text : null);
+      await _share(bytes, backups.fileName());
     }, successMessage: AppText.of(context).backupScreenExportSuccess);
     if (mounted) setState(() => _busy = false);
   }
@@ -69,16 +69,17 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final bytes = await picked.readAsBytes();
     if (!mounted) return;
 
-    final container = await ref.read(hostContainerProvider.future);
-    if (!mounted) return;
+    final backups = ref.read(backendProvider).backups;
 
     // Read the manifest before asking for anything: it tells the admin what
     // they are about to overwrite their canteen with.
     final BackupManifest manifest;
     try {
-      manifest = container.backups.inspect(bytes);
+      manifest = backups.inspect(bytes);
     } on AppException catch (e) {
-      if (mounted) showNbSnack(context, e.message, ok: false);
+      if (mounted) {
+        showNbSnack(context, AppText.of(context).errorText(e), ok: false);
+      }
       return;
     }
 
@@ -90,10 +91,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
     setState(() => _busy = true);
     await runGuarded(context, () async {
-      await ref.read(hostServingProvider.notifier).restoreFromBackup(
-            bytes,
-            passphrase: passphrase.isEmpty ? null : passphrase,
-          );
+      final contents = await backups.read(bytes,
+          passphrase: passphrase.isEmpty ? null : passphrase);
+      await backups.restore(contents);
+      ref.invalidate(setupRequiredProvider);
     }, successMessage: AppText.of(context).backupScreenRestoreSuccess);
     if (mounted) setState(() => _busy = false);
   }
@@ -202,8 +203,10 @@ class _RestoreConfirmDialogState extends State<_RestoreConfirmDialog> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final m = widget.manifest;
-    final armed = _confirm.text.trim().toUpperCase() == 'REPLACE' &&
-        (!m.encrypted || _passphrase.text.isNotEmpty);
+    final text = AppText.of(context);
+    final armed =
+        confirmWordMatches(_confirm.text, text.confirmWordReplace, 'REPLACE') &&
+            (!m.encrypted || _passphrase.text.isNotEmpty);
 
     return AlertDialog(
       title: Text(AppText.of(context).backupScreenRestoreDialogTitle,
@@ -215,7 +218,7 @@ class _RestoreConfirmDialogState extends State<_RestoreConfirmDialog> {
           children: [
             Text(
               AppText.of(context).backupScreenRestoreManifestSummary(
-                DateFormat('d MMM y, HH:mm').format(m.createdAt.toLocal()),
+                DateFormat.yMMMd().add_Hm().format(m.createdAt.toLocal()),
                 m.appVersion,
                 m.totalRows,
                 m.rowCounts['members'] ?? 0,
@@ -259,4 +262,57 @@ class _RestoreConfirmDialogState extends State<_RestoreConfirmDialog> {
       ],
     );
   }
+}
+
+/// First-run "bring over existing records": pick a `.tiffin` file (either
+/// format), ask for its password if it has one, and write it into this empty
+/// canteen. True when something was imported.
+Future<bool> showImportDialog(BuildContext context) async {
+  final text = AppText.of(context);
+  final backups =
+      ProviderScope.containerOf(context).read(backendProvider).backups;
+  final picked = await FilePicker.pickFile();
+  if (picked == null || !context.mounted) return false;
+  final bytes = await picked.readAsBytes();
+  if (!context.mounted) return false;
+
+  final BackupManifest manifest;
+  try {
+    manifest = backups.inspect(bytes);
+  } on AppException catch (e) {
+    if (context.mounted) showNbSnack(context, text.errorText(e), ok: false);
+    return false;
+  }
+  String? passphrase;
+  if (manifest.encrypted) {
+    final field = TextEditingController();
+    passphrase = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(text.importTitle),
+        content: NbTextField(
+            label: text.importPassphraseLabel,
+            controller: field,
+            obscure: true),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(text.backupScreenCancelButton)),
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, field.text),
+              child: Text(text.importPickButton)),
+        ],
+      ),
+    );
+    field.dispose();
+    if (passphrase == null || !context.mounted) return false;
+  }
+
+  var count = 0;
+  final ok = await runGuarded(context, () async {
+    final contents = await backups.read(bytes, passphrase: passphrase);
+    count = await backups.restore(contents, requireEmpty: true);
+  });
+  if (ok && context.mounted) showNbSnack(context, text.importDone(count));
+  return ok;
 }
