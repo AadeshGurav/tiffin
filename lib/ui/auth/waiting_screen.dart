@@ -27,11 +27,10 @@ class WaitingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = AppText.of(context);
-    final access = ref.read(accessServiceProvider);
     final startOver = NbButton.secondary(
       label: email != null ? text.onlineSignOutButton : text.waitingStartOver,
       icon: Icons.restart_alt,
-      onPressed: access.startOver,
+      onPressed: () => ref.read(accessServiceProvider).startOver(),
     );
 
     if (email != null) {
@@ -52,8 +51,8 @@ class WaitingScreen extends ConsumerWidget {
           NbButton(
             label: text.waitingRequestAgain,
             icon: Icons.send,
-            onPressed: () =>
-                runGuarded(context, () => access.requestApproval(d.name)),
+            onPressed: () => runGuarded(context,
+                () => ref.read(accessServiceProvider).requestApproval(d.name)),
           ),
           startOver,
         ],

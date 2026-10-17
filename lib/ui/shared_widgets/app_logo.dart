@@ -167,8 +167,15 @@ class AppWordmark extends StatelessWidget {
       children: [
         AppLogo(size: logoSize),
         const SizedBox(width: NbSpace.sm),
-        Text(AppText.of(context).appTitle.toUpperCase(),
-            style: (style ?? t.text.display).copyWith(letterSpacing: 2)),
+        // Shrinks rather than overflows on a 320px phone or under a large
+        // system font size (CLAUDE.md §11.6.9).
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(AppText.of(context).appTitle.toUpperCase(),
+                style: (style ?? t.text.display).copyWith(letterSpacing: 2)),
+          ),
+        ),
       ],
     );
   }

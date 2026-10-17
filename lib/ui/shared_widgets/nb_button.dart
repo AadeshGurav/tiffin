@@ -85,8 +85,13 @@ class NbButton extends StatelessWidget {
                 else if (icon != null)
                   Icon(icon, size: 20, color: fg),
                 if (busy || icon != null) const SizedBox(width: NbSpace.sm),
-                Text(label,
-                    style: t.text.label.copyWith(color: fg, fontSize: 15)),
+                // Wraps instead of overflowing: Hindi and Marathi labels run
+                // long, and a 320px phone leaves little room (§11.6.9, §13).
+                Flexible(
+                  child: Text(label,
+                      textAlign: TextAlign.center,
+                      style: t.text.label.copyWith(color: fg, fontSize: 15)),
+                ),
               ],
             ),
           ),
