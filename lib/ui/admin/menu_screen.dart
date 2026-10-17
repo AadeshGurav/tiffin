@@ -12,6 +12,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'menu_categories_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 final _monthProvider = StateProvider.autoDispose<DateTime>(
     (_) => DateTime(DateTime.now().year, DateTime.now().month));
@@ -48,11 +49,11 @@ class MenuScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menu calendar'),
+        title: Text(AppText.of(context).menuScreenTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.category),
-            tooltip: 'Manage categories',
+            tooltip: AppText.of(context).menuScreenManageCategoriesTooltip,
             onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => const MenuCategoriesScreen())),
           ),
@@ -81,13 +82,14 @@ class MenuScreen extends ConsumerWidget {
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: Text('Add · ${DateFormat('MMM d').format(selected)}'),
+        label: Text(AppText.of(context)
+            .menuScreenAddFab(DateFormat('MMM d').format(selected))),
         onPressed: () => _addEntry(context, ref, selected),
       ),
       body: AsyncView<List<MenuEntry>>(
         value: entries,
         onRetry: () => ref.invalidate(_menuProvider),
-        loadingLabel: 'Loading the month…',
+        loadingLabel: AppText.of(context).menuScreenLoading,
         builder: (list) {
           final byDay = <int, List<MenuEntry>>{};
           for (final e in list) {
@@ -128,7 +130,7 @@ class MenuScreen extends ConsumerWidget {
                     final ok = await runGuarded(
                       context,
                       () => ref.read(backendProvider).deleteMenuEntry(id),
-                      successMessage: 'Removed.',
+                      successMessage: AppText.of(context).menuScreenRemoved,
                     );
                     if (ok) ref.invalidate(_menuProvider);
                   },
@@ -164,7 +166,9 @@ class MenuScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text('Add · ${DateFormat('EEE, MMM d').format(date)}',
+          title: Text(
+              AppText.of(context)
+                  .menuScreenAddFab(DateFormat('EEE, MMM d').format(date)),
               style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
@@ -181,14 +185,15 @@ class MenuScreen extends ConsumerWidget {
                   onChanged: (m) => setLocal(() => meal = m ?? meal),
                 ),
                 const SizedBox(height: NbSpace.sm),
-                Text('Category', style: t.text.label),
+                Text(AppText.of(context).menuScreenCategoryLabel,
+                    style: t.text.label),
                 Row(
                   children: [
                     Expanded(
                       child: DropdownButton<String>(
                         value: category,
                         isExpanded: true,
-                        hint: const Text('Pick or add one'),
+                        hint: Text(AppText.of(context).menuScreenPickOrAddHint),
                         items: [
                           for (final c in categories)
                             DropdownMenuItem(
@@ -199,7 +204,7 @@ class MenuScreen extends ConsumerWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.add),
-                      tooltip: 'New category',
+                      tooltip: AppText.of(context).menuScreenNewCategoryTooltip,
                       onPressed: () async {
                         final name = await _promptCategoryName(dialogContext);
                         if (name == null || !dialogContext.mounted) return;
@@ -213,7 +218,8 @@ class MenuScreen extends ConsumerWidget {
                               ..add(c)
                               ..sort((a, b) => a.name.compareTo(b.name));
                           },
-                          successMessage: 'Category added.',
+                          successMessage:
+                              AppText.of(context).menuScreenCategoryAdded,
                         );
                         if (created) {
                           ref.invalidate(_categoriesProvider);
@@ -225,13 +231,13 @@ class MenuScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                  label: 'Approx plates',
+                  label: AppText.of(context).menuScreenApproxPlatesLabel,
                   controller: headcount,
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                  label: 'Items (comma-separated)',
+                  label: AppText.of(context).menuScreenItemsLabel,
                   controller: items,
                   onChanged: (_) {
                     if (error != null) setLocal(() => error = null);
@@ -248,16 +254,18 @@ class MenuScreen extends ConsumerWidget {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).menuScreenCancel)),
             NbButton(
-              label: 'Add',
+              label: AppText.of(context).menuScreenAddButton,
               onPressed: () {
                 if (category == null) {
-                  setLocal(() => error = 'Pick a category.');
+                  setLocal(() => error =
+                      AppText.of(context).menuScreenErrorPickCategory);
                   return;
                 }
                 if (parseItems().isEmpty) {
-                  setLocal(() => error = 'Add at least one item.');
+                  setLocal(() => error =
+                      AppText.of(context).menuScreenErrorAddItem);
                   return;
                 }
                 Navigator.pop(context, true);
@@ -278,7 +286,7 @@ class MenuScreen extends ConsumerWidget {
             items: parseItems(),
             createdBy: '',
           )),
-      successMessage: 'Entry added.',
+      successMessage: AppText.of(context).menuScreenEntryAdded,
     );
     if (saved) ref.invalidate(_menuProvider);
   }
@@ -299,21 +307,24 @@ class MenuScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               NbTextField(
-                label: 'Approx plates',
+                label: AppText.of(context).menuScreenApproxPlatesLabel,
                 controller: headcount,
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: NbSpace.sm),
-              NbTextField(label: 'Items (comma-separated)', controller: items),
+              NbTextField(
+                  label: AppText.of(context).menuScreenItemsLabel,
+                  controller: items),
             ],
           ),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).menuScreenCancel)),
           NbButton(
-              label: 'Save', onPressed: () => Navigator.pop(context, true)),
+              label: AppText.of(context).menuScreenSave,
+              onPressed: () => Navigator.pop(context, true)),
         ],
       ),
     );
@@ -329,7 +340,7 @@ class MenuScreen extends ConsumerWidget {
                 .where((s) => s.isNotEmpty)
                 .toList(),
           ),
-      successMessage: 'Entry updated.',
+      successMessage: AppText.of(context).menuScreenEntryUpdated,
     );
     if (saved) ref.invalidate(_menuProvider);
   }
@@ -339,18 +350,22 @@ class MenuScreen extends ConsumerWidget {
     final name = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text('New category', style: t.text.heading),
-        content: NbTextField(label: 'Name', controller: name, autofocus: true),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppText.of(dialogContext).menuScreenNewCategoryTitle,
+            style: t.text.heading),
+        content: NbTextField(
+            label: AppText.of(dialogContext).menuScreenNameLabel,
+            controller: name,
+            autofocus: true),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(AppText.of(dialogContext).menuScreenCancel)),
           NbButton(
-            label: 'Create',
+            label: AppText.of(dialogContext).menuScreenCreateButton,
             onPressed: () {
               final v = name.text.trim();
-              if (v.isNotEmpty) Navigator.pop(context, v);
+              if (v.isNotEmpty) Navigator.pop(dialogContext, v);
             },
           ),
         ],
@@ -517,8 +532,8 @@ class _DayPanel extends StatelessWidget {
                 Icon(Icons.restaurant_menu, color: t.color.ink),
                 const SizedBox(width: NbSpace.sm),
                 Expanded(
-                  child:
-                      Text('Nothing planned for this day.', style: t.text.body),
+                  child: Text(AppText.of(context).menuScreenNothingPlanned,
+                      style: t.text.body),
                 ),
               ],
             ),
@@ -542,8 +557,10 @@ class _DayPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                              '${e.mealType.wire.toUpperCase()} · '
-                              '${e.category}  ·  ~${e.headcount} plates',
+                              AppText.of(context).menuScreenDayEntrySummary(
+                                  e.mealType.wire.toUpperCase(),
+                                  e.category,
+                                  e.headcount),
                               style: t.text.label),
                           Text(e.items.join(', '), style: t.text.body),
                         ],
@@ -559,7 +576,8 @@ class _DayPanel extends StatelessWidget {
             ),
         const SizedBox(height: NbSpace.sm),
         NbButton.secondary(
-            label: 'Add an entry for this day', onPressed: onAdd),
+            label: AppText.of(context).menuScreenAddEntryForDay,
+            onPressed: onAdd),
       ],
     );
   }

@@ -9,6 +9,7 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 typedef _History = ({List<Topup> topups, Map<int, Member> membersById});
 
@@ -38,11 +39,11 @@ class TopupHistoryTab extends ConsumerWidget {
     return AsyncView<_History>(
       value: history,
       onRetry: () => ref.invalidate(_historyProvider),
-      loadingLabel: 'Loading top-ups…',
-      empty: const NbEmpty(
+      loadingLabel: AppText.of(context).topupHistoryLoading,
+      empty: NbEmpty(
         icon: Icons.payments_outlined,
-        title: 'No top-ups yet',
-        quips: ['Charge a member on the Top-up & bill screen first.'],
+        title: AppText.of(context).topupHistoryEmptyTitle,
+        quips: [AppText.of(context).topupHistoryEmptyQuip],
       ),
       builder: (data) => ListView.separated(
         padding: const EdgeInsets.all(NbSpace.md),
@@ -50,8 +51,8 @@ class TopupHistoryTab extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
         itemBuilder: (_, i) {
           final tp = data.topups[i];
-          final name =
-              data.membersById[tp.memberId]?.name ?? 'Member #${tp.memberId}';
+          final name = data.membersById[tp.memberId]?.name ??
+              AppText.of(context).topupHistoryUnknownMember(tp.memberId);
           return NbSurface(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,28 +61,34 @@ class TopupHistoryTab extends ConsumerWidget {
                   children: [
                     Expanded(child: Text(name, style: t.text.body)),
                     if (tp.reversed)
-                      Text('REVERSED',
+                      Text(AppText.of(context).topupHistoryReversedBadge,
                           style: t.text.label.copyWith(color: t.color.reject)),
                   ],
                 ),
                 Text(
-                    'L${tp.lunchUnits} B${tp.breakfastUnits} '
-                    'Br${tp.brunchUnits}  ·  Rs. ${tp.amount.toStringAsFixed(2)}'
-                    '  ·  ${tp.paymentMethod.wire.toUpperCase()} '
-                    '(${tp.paymentStatus})',
+                    AppText.of(context).topupHistoryLineSummary(
+                        tp.lunchUnits,
+                        tp.breakfastUnits,
+                        tp.brunchUnits,
+                        tp.amount.toStringAsFixed(2),
+                        tp.paymentMethod.wire.toUpperCase(),
+                        tp.paymentStatus),
                     style: t.text.label),
                 Text(
-                    '${fmt.format(tp.createdAt.toLocal())} · by ${tp.createdBy}',
+                    AppText.of(context).topupHistoryCreatedInfo(
+                        fmt.format(tp.createdAt.toLocal()), tp.createdBy),
                     style: t.text.label),
                 if (tp.reversed && tp.reversedAt != null)
                   Text(
-                      'Reversed ${fmt.format(tp.reversedAt!.toLocal())}'
-                      '${tp.reversedBy == null ? '' : ' · by ${tp.reversedBy}'}',
+                      AppText.of(context).topupHistoryReversedInfo(
+                          fmt.format(tp.reversedAt!.toLocal()),
+                          (tp.reversedBy != null).toString(),
+                          tp.reversedBy ?? ''),
                       style: t.text.label.copyWith(color: t.color.reject)),
                 if (!tp.reversed) ...[
                   const SizedBox(height: NbSpace.sm),
                   NbButton.secondary(
-                    label: 'Reverse',
+                    label: AppText.of(context).topupHistoryReverseButton,
                     onPressed: () => _confirmReverse(context, ref, tp, name),
                   ),
                 ],
@@ -99,20 +106,19 @@ class TopupHistoryTab extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Reverse this top-up?', style: t.text.heading),
+        title: Text(AppText.of(context).topupHistoryReverseDialogTitle,
+            style: t.text.heading),
         content: Text(
-          'This subtracts L${tp.lunchUnits} B${tp.breakfastUnits} '
-          'Br${tp.brunchUnits} back off $name and records the reversal. '
-          'It cannot be undone. If those units have already been used, '
-          'process a refund instead.',
+          AppText.of(context).topupHistoryReverseDialogBody(
+              tp.lunchUnits, tp.breakfastUnits, tp.brunchUnits, name),
           style: t.text.body,
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).topupHistoryCancelButton)),
           NbButton(
-            label: 'Reverse',
+            label: AppText.of(context).topupHistoryReverseButton,
             background: t.color.reject,
             foreground: t.color.onReject,
             onPressed: () => Navigator.pop(context, true),
@@ -127,7 +133,7 @@ class TopupHistoryTab extends ConsumerWidget {
         final r = await ref.read(backendProvider).reverseTopup(tp.id);
         if (!r.success) throw _Msg(r.message);
       },
-      successMessage: 'Top-up reversed.',
+      successMessage: AppText.of(context).topupHistorySuccessMessage,
     );
     if (done) ref.invalidate(_historyProvider);
   }

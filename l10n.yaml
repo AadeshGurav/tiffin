@@ -1,5 +1,5 @@
-# i18n-ready from day one (CLAUDE.md §13). Only English ships now; strings live
-# in resource files, not in code, so a second locale is additive.
+# English, Hindi and Marathi ship (CLAUDE.md §13). Strings live in resource
+# files, not in code; app_en.arb is the template and gaps fall back to English.
 arb-dir: lib/l10n
 template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart

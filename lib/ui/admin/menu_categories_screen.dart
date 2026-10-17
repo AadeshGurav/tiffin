@@ -8,6 +8,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 final _categoriesProvider = FutureProvider.autoDispose<List<MenuCategory>>(
     (ref) => ref.watch(backendProvider).listMenuCategories());
@@ -21,23 +22,23 @@ class MenuCategoriesScreen extends ConsumerWidget {
     final t = context.tokens;
     final categories = ref.watch(_categoriesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Menu categories')),
+      appBar: AppBar(title: Text(AppText.of(context).menuCategoriesScreenTitle)),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: const Text('New'),
+        label: Text(AppText.of(context).menuCategoriesScreenNew),
         onPressed: () => _form(context, ref, null),
       ),
       body: AsyncView<List<MenuCategory>>(
         value: categories,
         onRetry: () => ref.invalidate(_categoriesProvider),
-        loadingLabel: 'Loading categories…',
+        loadingLabel: AppText.of(context).menuCategoriesScreenLoading,
         empty: NbEmpty(
           icon: Icons.category_outlined,
-          title: 'No categories yet',
-          quips: EmptyQuips.categories,
-          actionLabel: 'Add a category',
+          title: AppText.of(context).menuCategoriesScreenEmptyTitle,
+          quips: EmptyQuips.categories(context),
+          actionLabel: AppText.of(context).menuCategoriesScreenEmptyAction,
           onAction: () => _form(context, ref, null),
         ),
         builder: (list) => ListView.separated(
@@ -67,7 +68,8 @@ class MenuCategoriesScreen extends ConsumerWidget {
                         context,
                         () =>
                             ref.read(backendProvider).deleteMenuCategory(c.id),
-                        successMessage: 'Deleted.',
+                        successMessage:
+                            AppText.of(context).menuCategoriesScreenDeleteSuccess,
                       );
                       if (ok) ref.invalidate(_categoriesProvider);
                     },
@@ -89,22 +91,31 @@ class MenuCategoriesScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(existing == null ? 'New category' : existing.name,
+        title: Text(
+            existing == null
+                ? AppText.of(context).menuCategoriesScreenNewCategoryTitle
+                : existing.name,
             style: t.text.heading),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NbTextField(label: 'Name', controller: name),
+            NbTextField(
+                label: AppText.of(context).menuCategoriesScreenNameLabel,
+                controller: name),
             const SizedBox(height: NbSpace.sm),
-            NbTextField(label: 'Description (optional)', controller: desc),
+            NbTextField(
+                label:
+                    AppText.of(context).menuCategoriesScreenDescriptionLabel,
+                controller: desc),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).menuCategoriesScreenCancel)),
           NbButton(
-              label: 'Save', onPressed: () => Navigator.pop(context, true)),
+              label: AppText.of(context).menuCategoriesScreenSave,
+              onPressed: () => Navigator.pop(context, true)),
         ],
       ),
     );
@@ -118,7 +129,7 @@ class MenuCategoriesScreen extends ConsumerWidget {
         await backend.updateMenuCategory(existing.id,
             name: name.text.trim(), description: d);
       }
-    }, successMessage: 'Saved.');
+    }, successMessage: AppText.of(context).menuCategoriesScreenSaveSuccess);
     if (saved) ref.invalidate(_categoriesProvider);
   }
 }

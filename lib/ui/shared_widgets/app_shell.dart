@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../domain/ops.dart';
+import '../../l10n/app_localizations.dart';
 import '../settings/settings_screen.dart';
 import '../theme/tokens.dart';
 import 'frosted_panel.dart';
@@ -42,7 +43,7 @@ class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
         if (showSettingsButton)
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
+            tooltip: AppText.of(context).appShellSettingsTooltip,
             onPressed: () => Navigator.of(context).push(
               tiffinRoute<void>(context, () => const SettingsScreen()),
             ),
@@ -103,10 +104,12 @@ class _NotificationBell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('NOTIFICATIONS', style: t.text.heading),
+              Text(AppText.of(context).appShellNotificationsTitle,
+                  style: t.text.heading),
               const SizedBox(height: NbSpace.md),
               if (notes.isEmpty)
-                Text('Nothing right now.', style: t.text.body)
+                Text(AppText.of(context).appShellNotificationsEmpty,
+                    style: t.text.body)
               else
                 ...notes.map(
                   (n) => Padding(

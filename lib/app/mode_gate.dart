@@ -15,6 +15,7 @@ import '../ui/shared_widgets/nb_button.dart';
 import '../ui/shared_widgets/nb_feedback.dart';
 import '../ui/shared_widgets/nb_surface.dart';
 import '../ui/theme/tokens.dart';
+import '../l10n/app_localizations.dart';
 import 'providers.dart';
 
 /// The single routing decision (kept flat, CLAUDE.md §3):
@@ -82,6 +83,7 @@ class _ModePicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final text = AppText.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -95,28 +97,22 @@ class _ModePicker extends ConsumerWidget {
                 children: [
                   const AppWordmark(),
                   const SizedBox(height: NbSpace.lg),
-                  Text('Set up this device', style: t.text.heading),
+                  Text(text.modeSetupTitle, style: t.text.heading),
                   const SizedBox(height: NbSpace.sm),
-                  Text(
-                      'One app, two roles. You can change this later '
-                      'from Settings — your data stays put.',
-                      style: t.text.body),
+                  Text(text.modeSetupSubtitle, style: t.text.body),
                   const SizedBox(height: NbSpace.xl),
                   _ModeCard(
-                    name: 'HOST',
-                    blurb: 'This device runs the database and server for the '
-                        'canteen. Other devices connect to it. Pick this for '
-                        'the phone that stays at the canteen.',
-                    action: 'Run as host',
+                    name: text.modeHostName,
+                    blurb: text.modeHostBlurb,
+                    action: text.modeHostAction,
                     onTap: () => _choose(ref, AppMode.host),
                     primary: true,
                   ),
                   const SizedBox(height: NbSpace.md),
                   _ModeCard(
-                    name: 'CLIENT',
-                    blurb: 'This device connects to a host on the same Wi-Fi. '
-                        'Pick this for a counter or scan-point phone.',
-                    action: 'Run as client',
+                    name: text.modeClientName,
+                    blurb: text.modeClientBlurb,
+                    action: text.modeClientAction,
                     onTap: () => _choose(ref, AppMode.client),
                     primary: false,
                   ),

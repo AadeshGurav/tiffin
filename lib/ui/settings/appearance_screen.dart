@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/appearance_providers.dart';
+import '../../app/locale_providers.dart';
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
+import '../../l10n/app_localizations.dart';
+import '../../l10n/locale_store.dart';
 import '../../services/settings_service.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
@@ -25,14 +28,17 @@ class AppearanceScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final l = AppText.of(context);
     final device = ref.watch(deviceAppearanceProvider);
     final effective = ref.watch(effectiveAppearanceProvider);
     final enforced = ref.watch(appearanceIsEnforcedProvider);
     final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
     final controller = ref.read(deviceAppearanceProvider.notifier);
+    final locale = ref.watch(deviceLocaleProvider);
+    final localeController = ref.read(deviceLocaleProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Appearance')),
+      appBar: AppBar(title: Text(l.apprScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
@@ -45,8 +51,7 @@ class AppearanceScreen extends ConsumerWidget {
                   const SizedBox(width: NbSpace.sm),
                   Expanded(
                     child: Text(
-                      'The host sets the look for every device here. Your own '
-                      'choices are saved and will apply if that is turned off.',
+                      l.apprScreenEnforcedBanner,
                       style: t.text.body.copyWith(color: t.color.onWarn),
                     ),
                   ),
@@ -55,7 +60,7 @@ class AppearanceScreen extends ConsumerWidget {
             ),
             const SizedBox(height: NbSpace.lg),
           ],
-          Text('THEME', style: t.text.label),
+          Text(l.apprScreenThemeLabel, style: t.text.label),
           const SizedBox(height: NbSpace.sm),
           for (final id in TiffinThemeId.values) ...[
             ThemePreviewCard(
@@ -69,7 +74,7 @@ class AppearanceScreen extends ConsumerWidget {
             const SizedBox(height: NbSpace.sm),
           ],
           const SizedBox(height: NbSpace.md),
-          Text('LIGHT OR DARK', style: t.text.label),
+          Text(l.apprScreenModeLabel, style: t.text.label),
           const SizedBox(height: NbSpace.sm),
           _ModeSelector(
             value: effective.mode,
@@ -77,16 +82,16 @@ class AppearanceScreen extends ConsumerWidget {
             onChanged: controller.setMode,
           ),
           const SizedBox(height: NbSpace.lg),
-          Text('MOTION', style: t.text.label),
+          Text(l.apprScreenMotionLabel, style: t.text.label),
           const SizedBox(height: NbSpace.sm),
           NbSurface(
             child: SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text('Animations', style: t.text.body),
+              title: Text(l.apprScreenMotionTitle, style: t.text.body),
               subtitle: Text(
                 effective.motion
-                    ? 'Screens slide, tiles fade in, buttons press.'
-                    : 'Everything switches instantly.',
+                    ? l.apprScreenMotionOnSubtitle
+                    : l.apprScreenMotionOffSubtitle,
                 style: t.text.body.copyWith(color: t.color.inkMuted),
               ),
               value: effective.motion,
@@ -96,10 +101,13 @@ class AppearanceScreen extends ConsumerWidget {
           ),
           const SizedBox(height: NbSpace.xs),
           Text(
-            'Your phone\'s own "reduce motion" accessibility setting always '
-            'wins, whatever is chosen here.',
+            l.apprScreenReduceMotionNote,
             style: t.text.body.copyWith(color: t.color.inkMuted),
           ),
+          const SizedBox(height: NbSpace.xl),
+          Text(l.apprScreenLanguageLabel, style: t.text.label),
+          const SizedBox(height: NbSpace.sm),
+          _LanguageSelector(value: locale, onChanged: localeController.set),
           const SizedBox(height: NbSpace.xl),
           const _SavedLoginsCard(),
           if (isAdmin) ...[
@@ -126,12 +134,13 @@ class _ModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final l = AppText.of(context);
     return Row(
       children: [
-        for (final (mode, label, icon) in const [
-          (ThemeMode.system, 'System', Icons.brightness_auto),
-          (ThemeMode.light, 'Light', Icons.light_mode),
-          (ThemeMode.dark, 'Dark', Icons.dark_mode),
+        for (final (mode, label, icon) in [
+          (ThemeMode.system, l.apprScreenModeSystem, Icons.brightness_auto),
+          (ThemeMode.light, l.apprScreenModeLight, Icons.light_mode),
+          (ThemeMode.dark, l.apprScreenModeDark, Icons.dark_mode),
         ]) ...[
           Expanded(
             child: Opacity(
@@ -168,6 +177,46 @@ class _ModeSelector extends StatelessWidget {
   }
 }
 
+/// Which language this device shows its own UI in. Purely device-local (see
+/// [LocaleStore]) — no host-enforcement concept, unlike appearance: a
+/// canteen's staff and members don't need to share a language the way they
+/// share a visual brand.
+class _LanguageSelector extends StatelessWidget {
+  const _LanguageSelector({required this.value, required this.onChanged});
+
+  final AppLocaleId value;
+  final ValueChanged<AppLocaleId> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Row(
+      children: [
+        for (final id in AppLocaleId.values) ...[
+          Expanded(
+            child: NbSurface(
+              intensity:
+                  value == id ? NbIntensity.full : NbIntensity.restrained,
+              background: value == id ? t.color.accent : t.color.surface,
+              padding: const EdgeInsets.symmetric(vertical: NbSpace.md),
+              onTap: () => onChanged(id),
+              child: Text(
+                id.nativeName,
+                textAlign: TextAlign.center,
+                style: t.text.label.copyWith(
+                    color: value == id
+                        ? t.color.on(t.color.accent)
+                        : t.color.ink),
+              ),
+            ),
+          ),
+          if (id != AppLocaleId.values.last) const SizedBox(width: NbSpace.sm),
+        ],
+      ],
+    );
+  }
+}
+
 /// Host-admin control: push this device's appearance to every device.
 class _EnforceCard extends ConsumerStatefulWidget {
   const _EnforceCard({required this.enforced, required this.appearance});
@@ -183,6 +232,7 @@ class _EnforceCardState extends ConsumerState<_EnforceCard> {
   bool _busy = false;
 
   Future<void> _apply({required bool enforce}) async {
+    final l = AppText.of(context);
     setState(() => _busy = true);
     final ok = await runGuarded(
       context,
@@ -193,8 +243,8 @@ class _EnforceCardState extends ConsumerState<_EnforceCard> {
             appearanceMotion: widget.appearance.motion,
           )),
       successMessage: enforce
-          ? 'Every device will use this look.'
-          : 'Devices can choose their own look again.',
+          ? l.apprScreenEnforceOnToast
+          : l.apprScreenEnforceOffToast,
     );
     if (ok) ref.invalidate(appearancePolicyProvider);
     if (mounted) setState(() => _busy = false);
@@ -203,32 +253,31 @@ class _EnforceCardState extends ConsumerState<_EnforceCard> {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final l = AppText.of(context);
     return NbSurface(
       tone: NbTone.system,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('FOR EVERY DEVICE', style: t.text.label),
+          Text(l.apprScreenEnforceSectionLabel, style: t.text.label),
           const SizedBox(height: NbSpace.xs),
           Text(
             widget.enforced
-                ? 'Every device on this host is using the look set here. Turn '
-                    'this off to let each phone choose its own again.'
-                : 'Each phone currently picks its own look. Turn this on to '
-                    'make them all match the settings above.',
+                ? l.apprScreenEnforceEnabledBody
+                : l.apprScreenEnforceDisabledBody,
             style: t.text.body,
           ),
           const SizedBox(height: NbSpace.md),
           if (widget.enforced)
             NbButton.secondary(
-              label: 'Let devices choose',
+              label: l.apprScreenLetDevicesChoose,
               icon: Icons.lock_open,
               busy: _busy,
               onPressed: _busy ? null : () => _apply(enforce: false),
             )
           else
             NbButton(
-              label: 'Use this look everywhere',
+              label: l.apprScreenUseEverywhere,
               icon: Icons.lock_outline,
               busy: _busy,
               onPressed: _busy ? null : () => _apply(enforce: true),
@@ -250,24 +299,20 @@ class _SavedLoginsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final l = AppText.of(context);
     final hosts = ref.watch(savedHostsProvider).asData?.value ?? const [];
 
     return NbSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SAVED LOGINS', style: t.text.label),
+          Text(l.apprScreenSavedLoginsLabel, style: t.text.label),
           const SizedBox(height: NbSpace.xs),
           if (hosts.isEmpty)
-            Text('Nothing saved on this device.',
+            Text(l.apprScreenSavedLoginsEmpty,
                 style: t.text.body.copyWith(color: t.color.inkMuted))
           else ...[
-            Text(
-              'This phone remembers who signs in on each canteen host, so it '
-              'can offer them next time. Passwords are kept only where you '
-              'asked for them.',
-              style: t.text.body,
-            ),
+            Text(l.apprScreenSavedLoginsBlurb, style: t.text.body),
             const SizedBox(height: NbSpace.sm),
             for (final host in hosts)
               Padding(
@@ -278,8 +323,8 @@ class _SavedLoginsCard extends ConsumerWidget {
                     const SizedBox(width: NbSpace.sm),
                     Expanded(
                       child: Text(
-                        '${host.name} — '
-                        '${host.logins.map((l) => l.username).join(', ')}',
+                        l.apprScreenSavedLoginsRow(host.name,
+                            host.logins.map((login) => login.username).join(', ')),
                         style: t.text.body,
                       ),
                     ),
@@ -288,12 +333,12 @@ class _SavedLoginsCard extends ConsumerWidget {
               ),
             const SizedBox(height: NbSpace.sm),
             NbButton.secondary(
-              label: 'Forget all saved logins',
+              label: l.apprScreenForgetAllLogins,
               icon: Icons.delete_outline,
               onPressed: () => runGuarded(
                 context,
                 ref.read(sessionMemoryProvider).forgetEverything,
-                successMessage: 'Saved logins cleared.',
+                successMessage: l.apprScreenLoginsCleared,
               ),
             ),
           ],

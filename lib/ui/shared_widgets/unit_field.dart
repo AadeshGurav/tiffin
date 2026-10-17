@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'nb_text_field.dart';
 
@@ -66,7 +67,7 @@ class _NbUnitFieldState extends State<NbUnitField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('UNIT', style: t.text.label),
+        Text(AppText.of(context).unitFieldLabel, style: t.text.label),
         const SizedBox(height: NbSpace.xs),
         DropdownButton<String>(
           value: _selection,
@@ -74,8 +75,9 @@ class _NbUnitFieldState extends State<NbUnitField> {
           items: [
             for (final u in kCommonUnits)
               DropdownMenuItem(value: u, child: Text(u)),
-            const DropdownMenuItem(
-                value: _customSentinel, child: Text('Custom…')),
+            DropdownMenuItem(
+                value: _customSentinel,
+                child: Text(AppText.of(context).unitFieldCustomOption)),
           ],
           onChanged: (v) => setState(() {
             _selection = v ?? _selection;
@@ -85,7 +87,7 @@ class _NbUnitFieldState extends State<NbUnitField> {
         if (_selection == _customSentinel) ...[
           const SizedBox(height: NbSpace.xs),
           NbTextField(
-            label: 'Custom unit',
+            label: AppText.of(context).unitFieldCustomLabel,
             controller: _custom,
             onChanged: (_) => _emit(),
           ),

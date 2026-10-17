@@ -9,6 +9,7 @@ import '../shared_widgets/app_shell.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../shared_widgets/motion.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Counter-role home (PRD §4): scan, top-ups & billing, and the shared
 /// purchase schedule — nothing else.
@@ -18,19 +19,24 @@ class CounterHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final username = ref.watch(sessionProvider)?.username ?? '';
     final items = <(String, IconData, Widget Function())>[
-      ('Scan', Icons.qr_code_scanner, () => const ScannerScreen()),
-      ('Top-up & bill', Icons.payments, () => const TopUpScreen()),
       (
-        'Purchase schedule',
+        text.counterHomeScanItem,
+        Icons.qr_code_scanner,
+        () => const ScannerScreen()
+      ),
+      (text.counterHomeTopUpItem, Icons.payments, () => const TopUpScreen()),
+      (
+        text.counterHomePurchaseScheduleItem,
         Icons.shopping_cart,
         () => const PurchaseScheduleScreen()
       ),
     ];
 
     return Scaffold(
-      appBar: NbAppBar(title: 'Counter · $username'),
+      appBar: NbAppBar(title: text.counterHomeAppBarTitle(username)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.md),
         children: [

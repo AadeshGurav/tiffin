@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 
 /// Builds the painter for [tokens] at [size] — shared by the in-app logo and
@@ -166,7 +167,7 @@ class AppWordmark extends StatelessWidget {
       children: [
         AppLogo(size: logoSize),
         const SizedBox(width: NbSpace.sm),
-        Text('TIFFIN',
+        Text(AppText.of(context).appTitle.toUpperCase(),
             style: (style ?? t.text.display).copyWith(letterSpacing: 2)),
       ],
     );

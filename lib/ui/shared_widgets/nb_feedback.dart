@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'motion.dart';
 import 'nb_button.dart';
@@ -87,7 +88,8 @@ class NbLoading extends StatelessWidget {
                 CircularProgressIndicator(color: t.color.ink, strokeWidth: 4),
           ),
           const SizedBox(height: NbSpace.md),
-          Text(label ?? 'Loading…', style: t.text.label),
+          Text(label ?? AppText.of(context).nbFeedbackLoading,
+              style: t.text.label),
         ],
       ),
     );
@@ -144,52 +146,57 @@ class NbEmpty extends StatelessWidget {
 }
 
 /// Funny empty-state quips per domain — kept in one place so the tone stays
-/// consistent. Pair with a [NbEmpty].
+/// consistent. Pair with a [NbEmpty]. Each method needs a [BuildContext]
+/// because the quips are translated (CLAUDE.md §13) — there is no
+/// context-free "the" English string anymore, only `AppText.of(context)`.
 class EmptyQuips {
   const EmptyQuips._();
 
-  static const members = [
-    'Not a soul on the list yet. Add your first hungry human.',
-    'Emptier than the canteen at 3pm. Tap + to add someone.',
-    'Zero members. Big "new school" energy.',
-  ];
-  static const topups = [
-    'No top-ups yet. The ledger is squeaky clean.',
-    'Nobody has paid up. Suspicious. Or just new.',
-  ];
-  static const scans = [
-    'No scans yet. The scanner is well-rested.',
-    'Nothing scanned. Peaceful, isn\'t it?',
-  ];
-  static const menu = [
-    'No menu planned. Chef\'s surprise, then?',
-    'Blank calendar. The kitchen awaits your genius.',
-  ];
-  static const categories = [
-    'No categories. "Jain", "Normal", "Staff" — your call.',
-  ];
-  static const ingredients = [
-    'Pantry\'s empty on paper. Add what you actually buy.',
-  ];
-  static const recipes = [
-    'No recipes. The dishes are keeping their secrets.',
-  ];
-  static const purchase = [
-    'Shopping list is empty. Either you\'re stocked, or menus need planning.',
-    'Nothing to buy. Rare. Enjoy it.',
-  ];
-  static const expenses = [
-    'No expenses logged. Profit looks amazing from here.',
-  ];
-  static const refunds = [
-    'No refunds. Everyone\'s eating what they paid for.',
-  ];
-  static const users = [
-    'Just you so far. Add a counter or scanner account when you need one.',
-  ];
-  static const notifications = [
-    'All quiet. Nothing needs you right now.',
-  ];
+  static List<String> members(BuildContext context) {
+    final l = AppText.of(context);
+    return [l.emptyQuipsMembers1, l.emptyQuipsMembers2, l.emptyQuipsMembers3];
+  }
+
+  static List<String> topups(BuildContext context) {
+    final l = AppText.of(context);
+    return [l.emptyQuipsTopups1, l.emptyQuipsTopups2];
+  }
+
+  static List<String> scans(BuildContext context) {
+    final l = AppText.of(context);
+    return [l.emptyQuipsScans1, l.emptyQuipsScans2];
+  }
+
+  static List<String> menu(BuildContext context) {
+    final l = AppText.of(context);
+    return [l.emptyQuipsMenu1, l.emptyQuipsMenu2];
+  }
+
+  static List<String> categories(BuildContext context) =>
+      [AppText.of(context).emptyQuipsCategories1];
+
+  static List<String> ingredients(BuildContext context) =>
+      [AppText.of(context).emptyQuipsIngredients1];
+
+  static List<String> recipes(BuildContext context) =>
+      [AppText.of(context).emptyQuipsRecipes1];
+
+  static List<String> purchase(BuildContext context) {
+    final l = AppText.of(context);
+    return [l.emptyQuipsPurchase1, l.emptyQuipsPurchase2];
+  }
+
+  static List<String> expenses(BuildContext context) =>
+      [AppText.of(context).emptyQuipsExpenses1];
+
+  static List<String> refunds(BuildContext context) =>
+      [AppText.of(context).emptyQuipsRefunds1];
+
+  static List<String> users(BuildContext context) =>
+      [AppText.of(context).emptyQuipsUsers1];
+
+  static List<String> notifications(BuildContext context) =>
+      [AppText.of(context).emptyQuipsNotifications1];
 }
 
 class ErrorPanel extends StatelessWidget {
@@ -202,10 +209,19 @@ class ErrorPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final (title, message) = switch (error) {
-      HostUnreachableException e => ('HOST UNREACHABLE', e.message),
-      AuthException e => ('SESSION PROBLEM', e.message),
-      AppException e => ('ERROR · ${e.code}', e.message),
-      _ => ('SOMETHING BROKE', '$error'),
+      HostUnreachableException e => (
+          AppText.of(context).nbFeedbackHostUnreachable,
+          e.message
+        ),
+      AuthException e => (
+          AppText.of(context).nbFeedbackSessionProblem,
+          e.message
+        ),
+      AppException e => (
+          AppText.of(context).nbFeedbackErrorCode(e.code),
+          e.message
+        ),
+      _ => (AppText.of(context).nbFeedbackSomethingBroke, '$error'),
     };
     final isHostDown = error is HostUnreachableException;
     return NbSurface(
@@ -230,7 +246,9 @@ class ErrorPanel extends StatelessWidget {
           if (onRetry != null) ...[
             const SizedBox(height: NbSpace.md),
             NbButton(
-              label: isHostDown ? 'Retry' : 'Try again',
+              label: isHostDown
+                  ? AppText.of(context).retry
+                  : AppText.of(context).nbFeedbackTryAgain,
               icon: Icons.refresh,
               background: t.color.ink,
               foreground: t.color.surface,
@@ -289,9 +307,11 @@ Future<bool> runGuarded(
   BuildContext context,
   Future<void> Function() action, {
   String? successMessage,
-  String workingMessage = 'Working…',
+  String? workingMessage,
 }) async {
   final t = context.tokens;
+  final resolvedWorkingMessage =
+      workingMessage ?? AppText.of(context).nbFeedbackWorking;
   final messenger = ScaffoldMessenger.maybeOf(context);
   messenger
     ?..clearSnackBars()
@@ -311,7 +331,7 @@ Future<bool> runGuarded(
                 strokeWidth: 2.5, color: t.color.surface),
           ),
           const SizedBox(width: NbSpace.sm),
-          Text(workingMessage,
+          Text(resolvedWorkingMessage,
               style: t.text.body.copyWith(color: t.color.surface)),
         ],
       ),
@@ -320,7 +340,8 @@ Future<bool> runGuarded(
   try {
     await action();
     if (context.mounted) {
-      showNbSnack(context, successMessage ?? 'Done.');
+      showNbSnack(
+          context, successMessage ?? AppText.of(context).nbFeedbackDone);
     } else {
       messenger?.clearSnackBars();
     }
@@ -335,7 +356,7 @@ Future<bool> runGuarded(
     return false;
   } catch (e) {
     if (context.mounted) {
-      showNbSnack(context, 'Unexpected: $e',
+      showNbSnack(context, AppText.of(context).nbFeedbackUnexpected('$e'),
           ok: false, duration: const Duration(seconds: 5));
     } else {
       messenger?.clearSnackBars();

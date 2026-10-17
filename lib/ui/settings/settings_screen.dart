@@ -15,6 +15,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/settings_row.dart';
 import '../theme/tokens.dart';
 import 'appearance_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 /// The one Settings screen for every role. A short menu of grouped rows; the
 /// forms and tools each live behind their own screen. Admins see the full set;
@@ -27,6 +28,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
     final isHost = ref.watch(currentModeProvider) == AppMode.host;
     final serving = isHost && ref.watch(hostRunningProvider);
@@ -35,81 +37,78 @@ class SettingsScreen extends ConsumerWidget {
         Navigator.of(context).push(tiffinRoute<void>(context, () => screen));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(text.settingsScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
           if (isAdmin) ...[
-            _group(t, 'Canteen'),
+            _group(t, text.settingsScreenGroupCanteen),
             SettingsRow(
               icon: Icons.tune,
-              title: 'Canteen configuration',
-              subtitle:
-                  'Prices, meal windows, timezone, grace, reminders, UPI.',
+              title: text.settingsScreenCanteenConfigTitle,
+              subtitle: text.settingsScreenCanteenConfigSubtitle,
               onTap: () => go(const SettingsConfigScreen()),
             ),
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.admin_panel_settings,
-              title: 'Users & access',
-              subtitle: 'Login accounts and roles.',
+              title: text.settingsScreenUsersTitle,
+              subtitle: text.settingsScreenUsersSubtitle,
               onTap: () => go(const UsersScreen()),
             ),
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.category,
-              title: 'Menu categories',
-              subtitle:
-                  'The Jain / Normal / Staff… list menu entries are tagged '
-                  'with. Also editable from the menu planner.',
+              title: text.settingsScreenMenuCategoriesTitle,
+              subtitle: text.settingsScreenMenuCategoriesSubtitle,
               onTap: () => go(const MenuCategoriesScreen()),
             ),
           ],
-          _group(t, 'Display'),
+          _group(t, text.settingsScreenGroupDisplay),
           SettingsRow(
             icon: Icons.palette_outlined,
-            title: 'Appearance',
-            subtitle: 'Theme, light/dark, motion.',
+            title: text.settingsScreenAppearanceTitle,
+            subtitle: text.settingsScreenAppearanceSubtitle,
             onTap: () => go(const AppearanceScreen()),
           ),
           if (isAdmin && isHost) ...[
-            _group(t, 'This host'),
+            _group(t, text.settingsScreenGroupThisHost),
             SettingsRow(
               icon: serving ? Icons.wifi_tethering : Icons.wifi_off,
-              title: 'Hosting & LAN',
+              title: text.settingsScreenHostingTitle,
               subtitle: serving
-                  ? 'Serving. URLs, restart, certificate.'
-                  : 'Not serving. Tap to start.',
+                  ? text.settingsScreenHostingSubtitleServing
+                  : text.settingsScreenHostingSubtitleNotServing,
               onTap: () => go(const HostingScreen()),
             ),
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.table_view,
-              title: 'Reports',
-              subtitle: 'Export an .xlsx for reading and printing.',
+              title: text.settingsScreenReportsTitle,
+              subtitle: text.settingsScreenReportsSubtitle,
               onTap: () => go(const ReportsScreen()),
             ),
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.save_alt,
-              title: 'Backup & restore',
-              subtitle: 'A full encrypted copy — move phones, recover data.',
+              title: text.settingsScreenBackupTitle,
+              subtitle: text.settingsScreenBackupSubtitle,
               onTap: () => go(const BackupScreen()),
             ),
           ],
-          _group(t, 'Device'),
+          _group(t, text.settingsScreenGroupDevice),
           SettingsRow(
             icon: Icons.logout,
-            title: 'Sign out',
-            subtitle: 'End this session on this device.',
+            title: text.settingsScreenSignOutTitle,
+            subtitle: text.settingsScreenSignOutSubtitle,
             onTap: () => _confirmSignOut(context, ref),
           ),
           if (isAdmin) ...[
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.swap_horiz,
-              title: 'Switch device role',
-              subtitle: 'Host or client. Signs you out; data is untouched.',
+              title: text.settingsScreenSwitchRoleTitle,
+              subtitle: text.settingsScreenSwitchRoleSubtitle,
               onTap: () => _confirmSwitchRole(context, ref),
             ),
           ],
@@ -117,8 +116,8 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
               icon: Icons.delete_forever,
-              title: 'Reset all data',
-              subtitle: 'Permanently wipe this host. No undo.',
+              title: text.settingsScreenResetDataTitle,
+              subtitle: text.settingsScreenResetDataSubtitle,
               danger: true,
               onTap: () => _confirmReset(context, ref),
             ),
@@ -135,18 +134,19 @@ class SettingsScreen extends ConsumerWidget {
       );
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final text = AppText.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Sign out?'),
-        content: const Text('You will need to sign in again on this device.'),
+        title: Text(text.settingsScreenSignOutDialogTitle),
+        content: Text(text.settingsScreenSignOutDialogBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(text.settingsScreenCancelButton)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Sign out')),
+              child: Text(text.settingsScreenSignOutTitle)),
         ],
       ),
     );
@@ -160,20 +160,19 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmSwitchRole(BuildContext context, WidgetRef ref) async {
+    final text = AppText.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Switch device role?'),
-        content: const Text(
-            'You will be signed out and taken back to Host / Client setup. '
-            'Your data is not touched.'),
+        title: Text(text.settingsScreenSwitchRoleDialogTitle),
+        content: Text(text.settingsScreenSwitchRoleDialogBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(text.settingsScreenCancelButton)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Switch')),
+              child: Text(text.settingsScreenSwitchButton)),
         ],
       ),
     );
@@ -193,7 +192,7 @@ class SettingsScreen extends ConsumerWidget {
       await runGuarded(
         context,
         () => ref.read(hostServingProvider.notifier).resetAllData(),
-        successMessage: 'All data cleared. Set the device up again.',
+        successMessage: AppText.of(context).settingsScreenResetSuccessSnack,
       );
     }
   }
@@ -218,18 +217,21 @@ class _ResetConfirmDialogState extends State<_ResetConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final text = AppText.of(context);
     final armed = _field.text.trim() == 'RESET';
     return AlertDialog(
-      title: const Text('Reset all data?'),
+      title: Text(text.settingsScreenResetDialogTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('This cannot be undone. Type RESET to confirm.'),
+          Text(text.settingsScreenResetDialogBody),
           const SizedBox(height: NbSpace.sm),
           TextField(
             controller: _field,
             autofocus: true,
+            // The confirmation word itself is a fixed literal token the
+            // operator must type verbatim, not translatable prose.
             decoration: const InputDecoration(hintText: 'RESET'),
             onChanged: (_) => setState(() {}),
           ),
@@ -238,10 +240,10 @@ class _ResetConfirmDialogState extends State<_ResetConfirmDialog> {
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel')),
+            child: Text(text.settingsScreenCancelButton)),
         TextButton(
           onPressed: armed ? () => Navigator.pop(context, true) : null,
-          child: const Text('Delete everything'),
+          child: Text(text.settingsScreenDeleteEverythingButton),
         ),
       ],
     );

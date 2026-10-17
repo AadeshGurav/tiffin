@@ -11,6 +11,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 final _refundsProvider = FutureProvider.autoDispose<List<Refund>>(
     (ref) => ref.watch(backendProvider).listRefunds());
@@ -29,23 +30,23 @@ class RefundsScreen extends ConsumerWidget {
     final refunds = ref.watch(_refundsProvider);
     final fmt = DateFormat('MMM d, y');
     return Scaffold(
-      appBar: AppBar(title: const Text('Refunds')),
+      appBar: AppBar(title: Text(AppText.of(context).refundsScreenTitle)),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.undo),
-        label: const Text('New refund'),
+        label: Text(AppText.of(context).refundsScreenNewButton),
         onPressed: () => _form(context, ref),
       ),
       body: AsyncView<List<Refund>>(
         value: refunds,
         onRetry: () => ref.invalidate(_refundsProvider),
-        loadingLabel: 'Loading refunds…',
+        loadingLabel: AppText.of(context).refundsScreenLoading,
         empty: NbEmpty(
           icon: Icons.undo,
-          title: 'No refunds yet',
-          quips: EmptyQuips.refunds,
-          actionLabel: 'Process a refund',
+          title: AppText.of(context).refundsScreenEmptyTitle,
+          quips: EmptyQuips.refunds(context),
+          actionLabel: AppText.of(context).refundsScreenProcessButton,
           onAction: () => _form(context, ref),
         ),
         builder: (list) => ListView.separated(
@@ -59,12 +60,18 @@ class RefundsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                      'L${r.lunchUnits} B${r.breakfastUnits} Br${r.brunchUnits}'
-                      '  ·  Rs. ${r.refundAmount.toStringAsFixed(2)}',
+                      AppText.of(context).refundsScreenLineSummary(
+                          r.lunchUnits,
+                          r.breakfastUnits,
+                          r.brunchUnits,
+                          r.refundAmount.toStringAsFixed(2)),
                       style: t.text.body),
                   Text(
-                      '${fmt.format(r.createdAt.toLocal())} · by ${r.processedBy}'
-                      '${r.reason == null ? '' : ' · ${r.reason}'}',
+                      AppText.of(context).refundsScreenLineInfo(
+                          fmt.format(r.createdAt.toLocal()),
+                          r.processedBy,
+                          (r.reason != null).toString(),
+                          r.reason ?? ''),
                       style: t.text.label),
                 ],
               ),
@@ -100,13 +107,14 @@ class RefundsScreen extends ConsumerWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text('New refund', style: t.text.heading),
+          title: Text(AppText.of(context).refundsScreenDialogTitle,
+              style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 NbMemberField(
-                  label: 'Member',
+                  label: AppText.of(context).refundsScreenMemberLabel,
                   value: selected,
                   members: members,
                   onSelected: (m) => setLocal(() {
@@ -122,30 +130,33 @@ class RefundsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label: 'Lunch units',
+                    label: AppText.of(context).refundsScreenLunchUnitsLabel,
                     controller: lunch,
                     keyboardType: TextInputType.number),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label: 'Breakfast units',
+                    label:
+                        AppText.of(context).refundsScreenBreakfastUnitsLabel,
                     controller: breakfast,
                     keyboardType: TextInputType.number),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label: 'Brunch units',
+                    label: AppText.of(context).refundsScreenBrunchUnitsLabel,
                     controller: brunch,
                     keyboardType: TextInputType.number),
                 const SizedBox(height: NbSpace.sm),
-                NbTextField(label: 'Reason (optional)', controller: reason),
+                NbTextField(
+                    label: AppText.of(context).refundsScreenReasonLabel,
+                    controller: reason),
               ],
             ),
           ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).refundsScreenCancelButton)),
             NbButton(
-                label: 'Process',
+                label: AppText.of(context).refundsScreenProcessConfirmButton,
                 onPressed: () => Navigator.pop(context, true)),
           ],
         ),
@@ -162,7 +173,7 @@ class RefundsScreen extends ConsumerWidget {
             reason: reason.text.trim().isEmpty ? null : reason.text.trim(),
             processedBy: '',
           )),
-      successMessage: 'Refund recorded.',
+      successMessage: AppText.of(context).refundsScreenSuccessMessage,
     );
     if (saved) ref.invalidate(_refundsProvider);
   }

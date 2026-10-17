@@ -9,6 +9,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 final _usersProvider = FutureProvider.autoDispose<List<AppUser>>(
     (ref) => ref.watch(backendProvider).listUsers());
@@ -22,23 +23,23 @@ class UsersScreen extends ConsumerWidget {
     final t = context.tokens;
     final users = ref.watch(_usersProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Users')),
+      appBar: AppBar(title: Text(AppText.of(context).usersScreenTitle)),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: const Text('New user'),
+        label: Text(AppText.of(context).usersScreenNewUser),
         onPressed: () => _form(context, ref, null),
       ),
       body: AsyncView<List<AppUser>>(
         value: users,
         onRetry: () => ref.invalidate(_usersProvider),
-        loadingLabel: 'Loading users…',
+        loadingLabel: AppText.of(context).usersScreenLoading,
         empty: NbEmpty(
           icon: Icons.admin_panel_settings,
-          title: 'Only you so far',
-          quips: EmptyQuips.users,
-          actionLabel: 'Add a user',
+          title: AppText.of(context).usersScreenEmptyTitle,
+          quips: EmptyQuips.users(context),
+          actionLabel: AppText.of(context).usersScreenEmptyAction,
           onAction: () => _form(context, ref, null),
         ),
         builder: (list) => ListView.separated(
@@ -67,7 +68,8 @@ class UsersScreen extends ConsumerWidget {
                       final ok = await runGuarded(
                         context,
                         () => ref.read(backendProvider).deleteUser(u.id),
-                        successMessage: 'User deleted.',
+                        successMessage:
+                            AppText.of(context).usersScreenDeleteSuccess,
                       );
                       if (ok) ref.invalidate(_usersProvider);
                     },
@@ -93,7 +95,10 @@ class UsersScreen extends ConsumerWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text(existing == null ? 'New user' : existing.username,
+          title: Text(
+              existing == null
+                  ? AppText.of(context).usersScreenNewUserTitle
+                  : existing.username,
               style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
@@ -101,12 +106,14 @@ class UsersScreen extends ConsumerWidget {
               children: [
                 // Editable for an existing account too: the admin username
                 // used to be write-once, which left first-run naming permanent.
-                NbTextField(label: 'Username', controller: username),
+                NbTextField(
+                    label: AppText.of(context).usersScreenUsernameLabel,
+                    controller: username),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
                   label: existing == null
-                      ? 'Password'
-                      : 'New password (blank = keep)',
+                      ? AppText.of(context).usersScreenPasswordLabel
+                      : AppText.of(context).usersScreenNewPasswordLabel,
                   controller: password,
                   obscure: true,
                 ),
@@ -124,10 +131,15 @@ class UsersScreen extends ConsumerWidget {
                   DropdownButton<String>(
                     value: status,
                     isExpanded: true,
-                    items: const [
-                      DropdownMenuItem(value: 'active', child: Text('active')),
+                    items: [
                       DropdownMenuItem(
-                          value: 'inactive', child: Text('inactive')),
+                          value: 'active',
+                          child: Text(
+                              AppText.of(context).usersScreenStatusActive)),
+                      DropdownMenuItem(
+                          value: 'inactive',
+                          child: Text(
+                              AppText.of(context).usersScreenStatusInactive)),
                     ],
                     onChanged: (s) => setLocal(() => status = s ?? status),
                   ),
@@ -137,9 +149,10 @@ class UsersScreen extends ConsumerWidget {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).usersScreenCancel)),
             NbButton(
-                label: 'Save', onPressed: () => Navigator.pop(context, true)),
+                label: AppText.of(context).usersScreenSave,
+                onPressed: () => Navigator.pop(context, true)),
           ],
         ),
       ),
@@ -167,7 +180,7 @@ class UsersScreen extends ConsumerWidget {
           ),
         );
       }
-    }, successMessage: 'User saved.');
+    }, successMessage: AppText.of(context).usersScreenSaveSuccess);
     if (saved) ref.invalidate(_usersProvider);
   }
 }

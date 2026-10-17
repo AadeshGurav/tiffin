@@ -12,6 +12,7 @@ import '../shared_widgets/motion.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 /// The counter scan point (PRD §6.4). Native camera, full-intensity
 /// neobrutalism result state (PRD §14.2): the accept/reject verdict fills the
@@ -83,15 +84,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final cameraActions = [
       IconButton(
         icon: const Icon(Icons.flash_on),
-        tooltip: 'Torch',
+        tooltip: text.scannerTorchTooltip,
         onPressed: () => _controller.toggleTorch(),
       ),
       IconButton(
         icon: const Icon(Icons.cameraswitch),
-        tooltip: 'Switch camera',
+        tooltip: text.scannerSwitchCameraTooltip,
         onPressed: () => _controller.switchCamera(),
       ),
     ];
@@ -101,8 +103,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // As a role home there is no back button, so use the shared bar that
       // carries sign-out; pushed from admin/counter the parent already has it.
       appBar: widget.isRoleHome
-          ? NbAppBar(title: 'Scan · $username', actions: cameraActions)
-          : AppBar(title: const Text('SCAN'), actions: cameraActions),
+          ? NbAppBar(
+              title: text.scannerAppBarTitle(username), actions: cameraActions)
+          : AppBar(
+              title: Text(text.scannerAppBarTitlePlain),
+              actions: cameraActions),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -126,7 +131,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             ),
           if (_errorMessage != null)
             _MessageOverlay(
-              title: 'SCAN ERROR',
+              title: text.scannerErrorTitle,
               message: _errorMessage!,
               color: t.color.warn,
               onColor: t.color.onWarn,
@@ -165,6 +170,7 @@ class _ResultOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final accepted = result.outcome.isAccepted;
     final bg = accepted ? t.color.accept : t.color.reject;
     final fg = accepted ? t.color.onAccept : t.color.onReject;
@@ -183,7 +189,7 @@ class _ResultOverlay extends StatelessWidget {
                   size: 120, color: fg),
               const SizedBox(height: NbSpace.md),
               Text(
-                accepted ? 'ACCEPTED' : 'REJECTED',
+                accepted ? text.scannerAccepted : text.scannerRejected,
                 textAlign: TextAlign.center,
                 style: t.text.display.copyWith(color: fg, fontSize: 48),
               ),
@@ -207,7 +213,7 @@ class _ResultOverlay extends StatelessWidget {
                     intensity: NbIntensity.full,
                     padding: const EdgeInsets.symmetric(
                         horizontal: NbSpace.md, vertical: NbSpace.sm),
-                    child: Text('ON GRACE ALLOWANCE',
+                    child: Text(text.scannerGraceAllowanceBadge,
                         style: t.text.label.copyWith(color: t.color.onWarn)),
                   ),
                 ),
@@ -222,9 +228,11 @@ class _ResultOverlay extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: NbSpace.md, vertical: NbSpace.sm),
                     child: Text(
-                        'PLANNED ~${result.plannedCount} '
-                        '${result.memberCategory?.toUpperCase() ?? ''} — '
-                        'THIS IS #${result.servedCount}',
+                        text.scannerHeadcountBadge(
+                          result.plannedCount ?? 0,
+                          result.memberCategory?.toUpperCase() ?? '',
+                          result.servedCount ?? 0,
+                        ),
                         textAlign: TextAlign.center,
                         style: t.text.label.copyWith(color: t.color.onWarn)),
                   ),
@@ -232,7 +240,7 @@ class _ResultOverlay extends StatelessWidget {
               ],
               const SizedBox(height: NbSpace.xl),
               NbButton(
-                label: 'Next',
+                label: text.scannerNextButton,
                 icon: Icons.qr_code_scanner,
                 background: fg,
                 foreground: bg,
@@ -264,6 +272,7 @@ class _MessageOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final text = AppText.of(context);
     return GestureDetector(
       onTap: onNext,
       child: Container(
@@ -285,7 +294,7 @@ class _MessageOverlay extends StatelessWidget {
                   style: t.text.body.copyWith(color: onColor, fontSize: 18)),
               const SizedBox(height: NbSpace.xl),
               NbButton(
-                label: 'Try again',
+                label: text.scannerTryAgainButton,
                 background: onColor,
                 foreground: color,
                 onPressed: onNext,

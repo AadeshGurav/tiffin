@@ -11,6 +11,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 final _recipesProvider = FutureProvider.autoDispose<List<Recipe>>(
     (ref) => ref.watch(backendProvider).listRecipes());
@@ -28,12 +29,12 @@ class RecipesTab extends ConsumerWidget {
     return AsyncView<List<Recipe>>(
       value: recipes,
       onRetry: () => ref.invalidate(_recipesProvider),
-      loadingLabel: 'Loading recipes…',
+      loadingLabel: AppText.of(context).recipesScreenLoading,
       empty: NbEmpty(
         icon: Icons.menu_book_outlined,
-        title: 'No recipes yet',
-        quips: EmptyQuips.recipes,
-        actionLabel: 'Add a recipe',
+        title: AppText.of(context).recipesScreenEmptyTitle,
+        quips: EmptyQuips.recipes(context),
+        actionLabel: AppText.of(context).recipesScreenAddRecipe,
         onAction: () => openRecipeForm(context, ref, null),
       ),
       builder: (list) => ListView.separated(
@@ -48,7 +49,9 @@ class RecipesTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(r.dishName, style: t.text.body),
-                Text('${r.ingredients.length} ingredient(s)',
+                Text(
+                    AppText.of(context)
+                        .recipesScreenIngredientCount(r.ingredients.length),
                     style: t.text.label),
               ],
             ),
@@ -106,16 +109,21 @@ Future<void> openRecipeForm(
         }
 
         return AlertDialog(
-          title: Text(existing == null ? 'New recipe' : existing.dishName,
+          title: Text(
+              existing == null
+                  ? AppText.of(context).recipesScreenNewRecipeTitle
+                  : existing.dishName,
               style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                NbTextField(label: 'Dish name', controller: dish),
+                NbTextField(
+                    label: AppText.of(context).recipesScreenDishNameLabel,
+                    controller: dish),
                 const SizedBox(height: NbSpace.xs),
-                Text('Quantities are for ONE plate / one serving.',
+                Text(AppText.of(context).recipesScreenQuantitiesHint,
                     style: t.text.label),
                 const SizedBox(height: NbSpace.md),
                 for (var i = 0; i < lines.length; i++)
@@ -143,7 +151,8 @@ Future<void> openRecipeForm(
                         Expanded(
                           flex: 2,
                           child: NbTextField(
-                            label: 'per plate',
+                            label:
+                                AppText.of(context).recipesScreenPerPlateLabel,
                             controller: lines[i].qty,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
@@ -158,7 +167,7 @@ Future<void> openRecipeForm(
                             style: t.text.label),
                         IconButton(
                           icon: const Icon(Icons.close, size: 18),
-                          tooltip: 'Remove',
+                          tooltip: AppText.of(context).recipesScreenRemoveTooltip,
                           onPressed: lines.length == 1
                               ? null
                               : () => setLocal(() => lines.removeAt(i)),
@@ -170,7 +179,7 @@ Future<void> openRecipeForm(
                   children: [
                     TextButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Add row'),
+                      label: Text(AppText.of(context).recipesScreenAddRow),
                       onPressed: allIngredients.isEmpty
                           ? addNewIngredient
                           : () => setLocal(() => lines.add((
@@ -180,7 +189,7 @@ Future<void> openRecipeForm(
                     ),
                     TextButton.icon(
                       icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('New ingredient'),
+                      label: Text(AppText.of(context).recipesScreenNewIngredient),
                       onPressed: addNewIngredient,
                     ),
                   ],
@@ -191,9 +200,10 @@ Future<void> openRecipeForm(
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).recipesScreenCancel)),
             NbButton(
-                label: 'Save', onPressed: () => Navigator.pop(context, true)),
+                label: AppText.of(context).recipesScreenSave,
+                onPressed: () => Navigator.pop(context, true)),
           ],
         );
       },
@@ -217,6 +227,6 @@ Future<void> openRecipeForm(
       await backend.updateRecipe(existing.id,
           dishName: dish.text.trim(), ingredients: ingredients);
     }
-  }, successMessage: 'Saved.');
+  }, successMessage: AppText.of(context).recipesScreenSaveSuccess);
   if (saved) ref.invalidate(_recipesProvider);
 }
