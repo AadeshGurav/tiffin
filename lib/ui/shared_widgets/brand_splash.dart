@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'app_logo.dart';
 import 'motion.dart';
@@ -25,7 +26,7 @@ class BrandSplash extends StatelessWidget {
             const SizedBox(height: NbSpace.md),
             Entrance(
               index: 1,
-              child: Text('TIFFIN',
+              child: Text(AppText.of(context).appTitle.toUpperCase(),
                   style: t.text.display.copyWith(letterSpacing: 2)),
             ),
             if (message != null) ...[

@@ -13,6 +13,7 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Admin ▸ Hosting — the LAN server controls that used to live on a pre-login
 /// console. Start/stop serving, see the URLs other devices use, and generate
@@ -29,7 +30,7 @@ class HostingScreen extends ConsumerWidget {
     final server = running ? ref.watch(hostServerProvider) : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Hosting & LAN')),
+      appBar: AppBar(title: Text(AppText.of(context).hostingScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
@@ -48,24 +49,28 @@ class HostingScreen extends ConsumerWidget {
                     Icon(running ? Icons.check_circle : Icons.circle_outlined,
                         color: running ? t.color.accept : t.color.ink),
                     const SizedBox(width: NbSpace.sm),
-                    Text(running ? 'SERVING ON LAN' : 'NOT SERVING',
+                    Text(
+                        running
+                            ? AppText.of(context).hostingScreenServingOn
+                            : AppText.of(context).hostingScreenNotServing,
                         style: t.text.heading),
                   ],
                 ),
                 if (running && server != null) ...[
                   const SizedBox(height: NbSpace.sm),
                   Text(
-                    'Client phones connect on port ${server.httpPort}'
-                    '${server.httpsPort != null ? ' · desktop HTTPS on ${server.httpsPort}' : ''}',
+                    server.httpsPort != null
+                        ? AppText.of(context).hostingScreenPortWithHttps(
+                            server.httpPort!, server.httpsPort!)
+                        : AppText.of(context)
+                            .hostingScreenPortHttpOnly(server.httpPort!),
                     style: t.text.body,
                   ),
                 ],
                 if (!serving.discoveryOk) ...[
                   const SizedBox(height: NbSpace.sm),
                   Text(
-                    'Auto-discovery is off (no Wi-Fi router reachable). Clients '
-                    'can still connect with "Connect by IP address" using the '
-                    'address below.',
+                    AppText.of(context).hostingScreenAutoDiscoveryOff,
                     style: t.text.body.copyWith(color: t.color.reject),
                   ),
                 ],
@@ -77,7 +82,7 @@ class HostingScreen extends ConsumerWidget {
                 const SizedBox(height: NbSpace.md),
                 if (!running)
                   NbButton(
-                    label: 'Start serving',
+                    label: AppText.of(context).hostingScreenStartServing,
                     icon: Icons.play_arrow,
                     busy: serving.busy,
                     onPressed: serving.busy ? null : ctrl.start,
@@ -87,7 +92,7 @@ class HostingScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: NbButton(
-                          label: 'Stop',
+                          label: AppText.of(context).hostingScreenStop,
                           icon: Icons.stop,
                           background: t.color.reject,
                           foreground: t.color.onReject,
@@ -98,7 +103,7 @@ class HostingScreen extends ConsumerWidget {
                       const SizedBox(width: NbSpace.sm),
                       Expanded(
                         child: NbButton.secondary(
-                          label: 'Restart',
+                          label: AppText.of(context).hostingScreenRestart,
                           icon: Icons.refresh,
                           busy: serving.busy,
                           onPressed: serving.busy ? null : ctrl.restart,
@@ -118,22 +123,22 @@ class HostingScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('DESKTOP ADMIN', style: t.text.label),
+                        Text(AppText.of(context).hostingScreenDesktopAdminLabel,
+                            style: t.text.label),
                         const SizedBox(height: NbSpace.xs),
                         if (urls.http.isEmpty)
-                          Text('No LAN address — check Wi-Fi.',
+                          Text(AppText.of(context).hostingScreenNoLanAddress,
                               style: t.text.body)
                         else ...[
                           Text(
-                              'Open in a browser on the same Wi-Fi '
-                              '(tap to copy):',
+                              AppText.of(context).hostingScreenOpenInBrowser,
                               style: t.text.body),
                           for (final u in urls.http) CopyableUrl(url: u),
                           if (urls.https.isNotEmpty) ...[
                             const SizedBox(height: NbSpace.xs),
                             Text(
-                                'Encrypted (one "not trusted" warning per '
-                                'computer):',
+                                AppText.of(context)
+                                    .hostingScreenEncryptedWarning,
                                 style: t.text.label),
                             for (final u in urls.https) CopyableUrl(url: u),
                           ],
@@ -156,16 +161,13 @@ class HostingScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('KEEP THIS DEVICE AWAKE', style: t.text.label),
+                Text(AppText.of(context).hostingScreenKeepAwakeLabel,
+                    style: t.text.label),
                 const SizedBox(height: NbSpace.xs),
                 Text(
                   Platform.isIOS
-                      ? 'While serving, the screen is held awake. Leave the app '
-                          'in the foreground — backgrounding it on iOS stops the '
-                          'server.'
-                      : 'While serving, the screen is held awake and a '
-                          'foreground service keeps the server running. Keep the '
-                          'phone on power and on Wi-Fi; don\'t force-stop the app.',
+                      ? AppText.of(context).hostingScreenKeepAwakeIos
+                      : AppText.of(context).hostingScreenKeepAwakeAndroid,
                   style: t.text.body,
                 ),
               ],
@@ -178,23 +180,23 @@ class HostingScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('DESKTOP-ADMIN TLS (OPTIONAL)', style: t.text.label),
+                Text(AppText.of(context).hostingScreenTlsLabel,
+                    style: t.text.label),
                 const SizedBox(height: NbSpace.xs),
                 Text(
-                  'Encrypts admin login over the LAN. A self-signed certificate '
-                  'still shows a browser "not trusted" warning the first time '
-                  'each computer connects. It never affects phone-to-phone use. '
-                  'Restart serving after generating.',
+                  AppText.of(context).hostingScreenTlsDescription,
                   style: t.text.body,
                 ),
                 if (serving.certExpiry != null) ...[
                   const SizedBox(height: NbSpace.xs),
-                  Text('Current certificate valid until ${serving.certExpiry}',
+                  Text(
+                      AppText.of(context).hostingScreenCertExpiry(
+                          serving.certExpiry.toString()),
                       style: t.text.body),
                 ],
                 const SizedBox(height: NbSpace.md),
                 NbButton.secondary(
-                  label: 'Generate certificate',
+                  label: AppText.of(context).hostingScreenGenerateCertificate,
                   busy: serving.busy,
                   onPressed: serving.busy ? null : ctrl.generateCert,
                 ),
@@ -224,13 +226,12 @@ class _HotspotCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SERVE WITHOUT WI-FI (HOTSPOT)', style: t.text.label),
+          Text(AppText.of(context).hostingScreenHotspotLabel,
+              style: t.text.label),
           const SizedBox(height: NbSpace.xs),
           if (info == null) ...[
             Text(
-              'No Wi-Fi at the canteen? This phone makes its own private '
-              'network. It turns Wi-Fi off on this device while active, and '
-              'has no internet — just the canteen app.',
+              AppText.of(context).hostingScreenHotspotDescription,
               style: t.text.body,
             ),
             if (hs.error != null) ...[
@@ -240,7 +241,7 @@ class _HotspotCard extends ConsumerWidget {
             ],
             const SizedBox(height: NbSpace.md),
             NbButton.secondary(
-              label: 'Start hotspot',
+              label: AppText.of(context).hostingScreenStartHotspot,
               icon: Icons.wifi_tethering,
               busy: hs.busy,
               onPressed: hs.busy
@@ -251,13 +252,16 @@ class _HotspotCard extends ConsumerWidget {
                     },
             ),
           ] else ...[
-            _kv(context, 'Network', info.ssid),
-            _kv(context, 'Password', info.passphrase),
-            _kv(context, 'Host address', '${info.host}:8710'),
+            _kv(context, AppText.of(context).hostingScreenNetworkLabel,
+                info.ssid),
+            _kv(context, AppText.of(context).hostingScreenPasswordLabel,
+                info.passphrase),
+            _kv(context, AppText.of(context).hostingScreenHostAddressLabel,
+                '${info.host}:8710'),
             const SizedBox(height: NbSpace.sm),
             Text(
-                'Other phones: scan to join, then open the app and '
-                'pick this host (or Connect by IP → ${'192.168.49.1'}).',
+                AppText.of(context)
+                    .hostingScreenOtherPhonesJoin('192.168.49.1'),
                 style: t.text.body),
             const SizedBox(height: NbSpace.sm),
             Center(
@@ -273,7 +277,7 @@ class _HotspotCard extends ConsumerWidget {
             ),
             const SizedBox(height: NbSpace.md),
             NbButton(
-              label: 'Stop hotspot',
+              label: AppText.of(context).hostingScreenStopHotspot,
               icon: Icons.stop,
               background: t.color.reject,
               foreground: t.color.onReject,
@@ -297,7 +301,10 @@ class _HotspotCard extends ConsumerWidget {
               child: InkWell(
                 onTap: () async {
                   await Clipboard.setData(ClipboardData(text: v));
-                  if (context.mounted) showNbSnack(context, 'Copied "$v".');
+                  if (context.mounted) {
+                    showNbSnack(
+                        context, AppText.of(context).hostingScreenCopiedSnack(v));
+                  }
                 },
                 child: Text(v,
                     style: t.text.body.copyWith(fontWeight: FontWeight.w700)),

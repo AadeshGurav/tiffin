@@ -18,6 +18,7 @@ import 'refunds_screen.dart';
 import 'scan_log_screen.dart';
 import 'topup_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Admin home — a flat grid of destinations (Hick's Law: staged, not one long
 /// menu). Restrained neobrutalism intensity, this is a navigation surface not
@@ -36,32 +37,37 @@ class AdminDashboard extends ConsumerWidget {
     // never carries state, so nothing is lost if it isn't seen (§12.2).
     // Settings owns the rare stuff — users, hosting, reports, backup.
     final destinations = <_Dest>[
-      _Dest('Scan', Icons.qr_code_scanner, NbTone.members,
-          () => const ScannerScreen()),
-      _Dest(
-          'Members', Icons.people, NbTone.members, () => const MembersScreen()),
-      _Dest('Scan log', Icons.history, NbTone.members,
-          () => const ScanLogScreen()),
-      _Dest('Top-up & bill', Icons.payments, NbTone.money,
-          () => const TopUpScreen()),
-      _Dest('Expenses & revenue', Icons.receipt_long, NbTone.money,
-          () => const ExpensesScreen()),
-      _Dest('Refunds', Icons.undo, NbTone.money, () => const RefundsScreen()),
-      _Dest('Menu calendar', Icons.calendar_month, NbTone.kitchen,
-          () => const MenuScreen()),
-      _Dest('Kitchen setup', Icons.soup_kitchen, NbTone.kitchen,
+      _Dest(AppText.of(context).adminDashboardDestScan, Icons.qr_code_scanner,
+          NbTone.members, () => const ScannerScreen()),
+      _Dest(AppText.of(context).adminDashboardDestMembers, Icons.people,
+          NbTone.members, () => const MembersScreen()),
+      _Dest(AppText.of(context).adminDashboardDestScanLog, Icons.history,
+          NbTone.members, () => const ScanLogScreen()),
+      _Dest(AppText.of(context).adminDashboardDestTopup, Icons.payments,
+          NbTone.money, () => const TopUpScreen()),
+      _Dest(AppText.of(context).adminDashboardDestExpenses,
+          Icons.receipt_long, NbTone.money, () => const ExpensesScreen()),
+      _Dest(AppText.of(context).adminDashboardDestRefunds, Icons.undo,
+          NbTone.money, () => const RefundsScreen()),
+      _Dest(AppText.of(context).adminDashboardDestMenuCalendar,
+          Icons.calendar_month, NbTone.kitchen, () => const MenuScreen()),
+      _Dest(AppText.of(context).adminDashboardDestKitchenSetup,
+          Icons.soup_kitchen, NbTone.kitchen,
           () => const KitchenSetupScreen()),
-      _Dest('Purchase schedule', Icons.shopping_cart, NbTone.kitchen,
+      _Dest(AppText.of(context).adminDashboardDestPurchaseSchedule,
+          Icons.shopping_cart, NbTone.kitchen,
           () => const PurchaseScheduleScreen()),
-      _Dest('Settings', Icons.settings, NbTone.system,
-          () => const SettingsScreen()),
+      _Dest(AppText.of(context).adminDashboardDestSettings, Icons.settings,
+          NbTone.system, () => const SettingsScreen()),
     ];
 
     void openHosting() => Navigator.of(context)
         .push(tiffinRoute<void>(context, () => const HostingScreen()));
 
     return Scaffold(
-      appBar: NbAppBar(title: 'Admin · $username', showSettingsButton: false),
+      appBar: NbAppBar(
+          title: AppText.of(context).adminDashboardAppBarTitle(username),
+          showSettingsButton: false),
       body: Column(
         children: [
           if (isHost && !serving)
@@ -78,8 +84,7 @@ class AdminDashboard extends ConsumerWidget {
                     const SizedBox(width: NbSpace.sm),
                     Expanded(
                       child: Text(
-                        'Not serving on the LAN — other devices can\'t '
-                        'connect. Tap to open Hosting.',
+                        AppText.of(context).adminDashboardNotServingWarning,
                         style: t.text.body.copyWith(color: t.color.onWarn),
                       ),
                     ),

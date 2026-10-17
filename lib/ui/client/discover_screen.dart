@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../core/config.dart';
 import '../../discovery/discovery.dart';
+import '../../l10n/app_localizations.dart';
 import '../auth/login_screen.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
@@ -43,11 +44,11 @@ class DiscoverScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FIND HOST'),
+        title: Text(AppText.of(context).discoverScreenTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.swap_horiz),
-            tooltip: 'Change mode',
+            tooltip: AppText.of(context).discoverScreenChangeMode,
             onPressed: () async {
               await ref.read(currentModeProvider.notifier).clear();
             },
@@ -59,11 +60,13 @@ class DiscoverScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Canteen devices on this Wi-Fi', style: t.text.heading),
+            Text(AppText.of(context).discoverScreenSubtitle,
+                style: t.text.heading),
             const SizedBox(height: NbSpace.md),
             if (lastHost != null) ...[
               NbButton(
-                label: 'Reconnect to ${lastHost.name}',
+                label:
+                    AppText.of(context).discoverScreenReconnect(lastHost.name),
                 icon: Icons.history,
                 onPressed: () => _connect(context, ref, lastHost),
               ),
@@ -110,7 +113,7 @@ class DiscoverScreen extends ConsumerWidget {
             ),
             const SizedBox(height: NbSpace.md),
             NbButton.secondary(
-              label: 'Search again',
+              label: AppText.of(context).discoverScreenSearchAgain,
               onPressed: () {
                 ref.read(hostBrowserProvider).restart();
                 ref.invalidate(discoveredHostsProvider);
@@ -118,13 +121,13 @@ class DiscoverScreen extends ConsumerWidget {
             ),
             const SizedBox(height: NbSpace.sm),
             NbButton.secondary(
-              label: 'Connect by IP address',
+              label: AppText.of(context).discoverScreenConnectByIp,
               icon: Icons.keyboard,
               onPressed: () => _enterManually(context, ref),
             ),
             const SizedBox(height: NbSpace.sm),
             NbButton.secondary(
-              label: "On the host's hotspot",
+              label: AppText.of(context).discoverScreenHostHotspot,
               icon: Icons.wifi_tethering,
               onPressed: () =>
                   _enterManually(context, ref, initialIp: '192.168.49.1'),
@@ -163,11 +166,15 @@ class _ManualHostDialogState extends State<_ManualHostDialog> {
     final ip = _ip.text.trim();
     final port = int.tryParse(_port.text.trim());
     if (ip.isEmpty || port == null || port < 1 || port > 65535) {
-      setState(() => _error = 'Enter a valid IP and port.');
+      setState(() => _error = AppText.of(context).discoverScreenInvalidIpPort);
       return;
     }
     Navigator.of(context).pop(
-      DiscoveredHost(name: 'Host at $ip', host: ip, port: port),
+      DiscoveredHost(
+        name: AppText.of(context).discoverScreenHostAtIp(ip),
+        host: ip,
+        port: port,
+      ),
     );
   }
 
@@ -175,7 +182,7 @@ class _ManualHostDialogState extends State<_ManualHostDialog> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     return AlertDialog(
-      title: const Text('Connect by IP'),
+      title: Text(AppText.of(context).discoverScreenConnectByIpTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -186,9 +193,9 @@ class _ManualHostDialogState extends State<_ManualHostDialog> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
             ],
-            decoration: const InputDecoration(
-              labelText: 'Host IP',
-              hintText: '192.168.1.42',
+            decoration: InputDecoration(
+              labelText: AppText.of(context).discoverScreenHostIpLabel,
+              hintText: AppText.of(context).discoverScreenHostIpHint,
             ),
             onSubmitted: (_) => _submit(),
           ),
@@ -197,7 +204,8 @@ class _ManualHostDialogState extends State<_ManualHostDialog> {
             controller: _port,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(labelText: 'Port'),
+            decoration: InputDecoration(
+                labelText: AppText.of(context).discoverScreenPortLabel),
             onSubmitted: (_) => _submit(),
           ),
           if (_error != null) ...[
@@ -209,9 +217,12 @@ class _ManualHostDialogState extends State<_ManualHostDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppText.of(context).discoverScreenCancel),
         ),
-        TextButton(onPressed: _submit, child: const Text('Connect')),
+        TextButton(
+          onPressed: _submit,
+          child: Text(AppText.of(context).discoverScreenConnect),
+        ),
       ],
     );
   }
@@ -229,13 +240,10 @@ class _Searching extends StatelessWidget {
         children: [
           CircularProgressIndicator(color: t.color.ink),
           const SizedBox(height: NbSpace.md),
-          Text('Looking for a host…', style: t.text.body),
+          Text(AppText.of(context).discoverScreenSearching, style: t.text.body),
           const SizedBox(height: NbSpace.xs),
-          Text(
-              'Make sure a device here is running in host mode\n'
-              'and both are on the same Wi-Fi.',
-              textAlign: TextAlign.center,
-              style: t.text.label),
+          Text(AppText.of(context).discoverScreenSearchingHint,
+              textAlign: TextAlign.center, style: t.text.label),
         ],
       ),
     );

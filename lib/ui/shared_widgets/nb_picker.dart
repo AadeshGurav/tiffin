@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'frosted_panel.dart';
 import 'nb_text_field.dart';
@@ -16,14 +17,14 @@ class NbPickerField extends StatelessWidget {
     required this.value,
     required this.options,
     required this.onSelected,
-    this.emptyHint = 'Not set',
+    this.emptyHint,
   });
 
   final String label;
   final String? value;
   final List<String> options;
   final ValueChanged<String> onSelected;
-  final String emptyHint;
+  final String? emptyHint;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,9 @@ class NbPickerField extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              value?.isNotEmpty == true ? value! : emptyHint,
+              value?.isNotEmpty == true
+                  ? value!
+                  : (emptyHint ?? AppText.of(context).nbPickerNotSet),
               style: t.text.body,
               overflow: TextOverflow.ellipsis,
             ),
@@ -186,14 +189,14 @@ class _SearchPickerSheetState extends State<_SearchPickerSheet> {
                     Expanded(child: Text(widget.title, style: t.text.heading)),
                     IconButton(
                       icon: const Icon(Icons.close),
-                      tooltip: 'Cancel',
+                      tooltip: AppText.of(context).nbPickerCancel,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                  label: 'Search',
+                  label: AppText.of(context).nbPickerSearchLabel,
                   controller: _query,
                   autofocus: true,
                 ),
@@ -201,7 +204,8 @@ class _SearchPickerSheetState extends State<_SearchPickerSheet> {
                 if (_matches.isEmpty)
                   Expanded(
                     child: Center(
-                      child: Text('Nothing matches "${_query.text}".',
+                      child: Text(
+                          AppText.of(context).nbPickerNoMatches(_query.text),
                           style: t.text.body),
                     ),
                   )

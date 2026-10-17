@@ -11,6 +11,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../shared_widgets/motion.dart';
+import '../../l10n/app_localizations.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>((ref) async {
   return ref.watch(backendProvider).listMembers();
@@ -25,23 +26,23 @@ class MembersScreen extends ConsumerWidget {
     final t = context.tokens;
     final members = ref.watch(_membersProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Members')),
+      appBar: AppBar(title: Text(AppText.of(context).membersScreenTitle)),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: const Text('New'),
+        label: Text(AppText.of(context).membersScreenNewButton),
         onPressed: () => _openForm(context, ref, null),
       ),
       body: AsyncView<List<Member>>(
         value: members,
         onRetry: () => ref.invalidate(_membersProvider),
-        loadingLabel: 'Loading members…',
+        loadingLabel: AppText.of(context).membersScreenLoading,
         empty: NbEmpty(
           icon: Icons.people_outline,
-          title: 'No members yet',
-          quips: EmptyQuips.members,
-          actionLabel: 'Add the first member',
+          title: AppText.of(context).membersScreenEmptyTitle,
+          quips: EmptyQuips.members(context),
+          actionLabel: AppText.of(context).membersScreenAddFirstButton,
           onAction: () => _openForm(context, ref, null),
         ),
         builder: (list) => ListView.separated(
@@ -91,30 +92,35 @@ class _MemberTile extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: NbSpace.sm, vertical: 2),
                   color: t.color.surfaceMuted,
-                  child: Text('INACTIVE', style: t.text.label),
+                  child: Text(AppText.of(context).membersScreenInactiveBadge,
+                      style: t.text.label),
                 ),
             ],
           ),
           Text(
-            member.type == 'student'
-                ? 'Student · ${member.className ?? '—'} · roll ${member.rollNumber ?? '—'}'
-                : 'Staff · ${member.staffId ?? '—'}',
+            AppText.of(context).membersScreenTypeSummary(
+              member.type,
+              member.className ?? '—',
+              member.rollNumber ?? '—',
+              member.staffId ?? '—',
+            ),
             style: t.text.label,
           ),
           const SizedBox(height: NbSpace.sm),
           Text(
-              'Lunch ${b.lunch}   Breakfast ${b.breakfast}   Brunch ${b.brunch}',
+              AppText.of(context)
+                  .membersScreenBalancesSummary(b.lunch, b.breakfast, b.brunch),
               style: t.text.body),
           const SizedBox(height: NbSpace.sm),
           Wrap(
             spacing: NbSpace.sm,
             children: [
               NbButton.secondary(
-                label: 'Credit',
+                label: AppText.of(context).membersScreenCreditButton,
                 onPressed: () => _credit(context, ref),
               ),
               NbButton.secondary(
-                label: 'QR',
+                label: AppText.of(context).membersScreenQrButton,
                 onPressed: () => _showQr(context, ref),
               ),
             ],
@@ -132,23 +138,31 @@ class _MemberTile extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Credit ${member.name}', style: t.text.heading),
+        title: Text(
+            AppText.of(context).membersScreenCreditDialogTitle(member.name),
+            style: t.text.heading),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NbNumberField(label: 'Lunch units', controller: lunch),
+            NbNumberField(
+                label: AppText.of(context).membersScreenLunchUnitsLabel,
+                controller: lunch),
             const SizedBox(height: NbSpace.sm),
-            NbNumberField(label: 'Breakfast units', controller: breakfast),
+            NbNumberField(
+                label: AppText.of(context).membersScreenBreakfastUnitsLabel,
+                controller: breakfast),
             const SizedBox(height: NbSpace.sm),
-            NbNumberField(label: 'Brunch units', controller: brunch),
+            NbNumberField(
+                label: AppText.of(context).membersScreenBrunchUnitsLabel,
+                controller: brunch),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).membersScreenCancelButton)),
           NbButton(
-            label: 'Add units',
+            label: AppText.of(context).membersScreenAddUnitsButton,
             onPressed: () => Navigator.pop(context, true),
           ),
         ],
@@ -165,7 +179,7 @@ class _MemberTile extends ConsumerWidget {
               brunch: int.tryParse(brunch.text) ?? 0,
             ),
           ),
-      successMessage: 'Units added.',
+      successMessage: AppText.of(context).membersScreenUnitsAddedMessage,
     );
     onChanged();
   }
@@ -189,7 +203,7 @@ class _MemberTile extends ConsumerWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close')),
+              child: Text(AppText.of(context).membersScreenCloseButton)),
         ],
       ),
     );
@@ -254,7 +268,9 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
               _grace.text.isEmpty ? null : int.parse(_grace.text),
         ));
       }
-    }, successMessage: _isEdit ? 'Member updated.' : 'Member created.');
+    },
+        successMessage: AppText.of(context)
+            .membersScreenSaveSuccess(_isEdit.toString()));
     if (mounted) setState(() => _busy = false);
     if (ok && mounted) Navigator.pop(context, true);
   }
@@ -263,7 +279,7 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
     final ok = await runGuarded(
       context,
       () => ref.read(backendProvider).deleteMember(widget.existing!.id),
-      successMessage: 'Member deleted.',
+      successMessage: AppText.of(context).membersScreenDeletedMessage,
     );
     if (ok && mounted) Navigator.pop(context, true);
   }
@@ -272,29 +288,45 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Edit member' : 'New member')),
+      appBar: AppBar(
+          title: Text(_isEdit
+              ? AppText.of(context).membersScreenEditTitle
+              : AppText.of(context).membersScreenNewTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(NbSpace.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'student', label: Text('Student')),
-                ButtonSegment(value: 'staff', label: Text('Staff')),
+              segments: [
+                ButtonSegment(
+                    value: 'student',
+                    label: Text(AppText.of(context).membersScreenTypeStudent)),
+                ButtonSegment(
+                    value: 'staff',
+                    label: Text(AppText.of(context).membersScreenTypeStaff)),
               ],
               selected: {_type},
               onSelectionChanged: (s) => setState(() => _type = s.first),
             ),
             const SizedBox(height: NbSpace.md),
-            NbTextField(label: 'Name', controller: _name, autofocus: true),
+            NbTextField(
+                label: AppText.of(context).membersScreenNameLabel,
+                controller: _name,
+                autofocus: true),
             const SizedBox(height: NbSpace.md),
             if (_type == 'student') ...[
-              NbTextField(label: 'Class', controller: _className),
+              NbTextField(
+                  label: AppText.of(context).membersScreenClassLabel,
+                  controller: _className),
               const SizedBox(height: NbSpace.md),
-              NbTextField(label: 'Roll number', controller: _rollNumber),
+              NbTextField(
+                  label: AppText.of(context).membersScreenRollNumberLabel,
+                  controller: _rollNumber),
             ] else
-              NbTextField(label: 'Staff ID', controller: _staffId),
+              NbTextField(
+                  label: AppText.of(context).membersScreenStaffIdLabel,
+                  controller: _staffId),
             const SizedBox(height: NbSpace.md),
             _CategoryField(
               value: _category,
@@ -302,16 +334,22 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
             ),
             const SizedBox(height: NbSpace.md),
             NbTextField(
-              label: 'Grace override (blank = global default)',
+              label: AppText.of(context).membersScreenGraceOverrideLabel,
               controller: _grace,
               keyboardType: TextInputType.number,
             ),
             if (_isEdit) ...[
               const SizedBox(height: NbSpace.md),
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'active', label: Text('Active')),
-                  ButtonSegment(value: 'inactive', label: Text('Inactive')),
+                segments: [
+                  ButtonSegment(
+                      value: 'active',
+                      label:
+                          Text(AppText.of(context).membersScreenStatusActive)),
+                  ButtonSegment(
+                      value: 'inactive',
+                      label: Text(
+                          AppText.of(context).membersScreenStatusInactive)),
                 ],
                 selected: {_status},
                 onSelectionChanged: (s) => setState(() => _status = s.first),
@@ -319,11 +357,13 @@ class _MemberFormState extends ConsumerState<_MemberForm> {
             ],
             const SizedBox(height: NbSpace.lg),
             NbButton(
-                label: 'Save', busy: _busy, onPressed: _busy ? null : _save),
+                label: AppText.of(context).membersScreenSaveButton,
+                busy: _busy,
+                onPressed: _busy ? null : _save),
             if (_isEdit) ...[
               const SizedBox(height: NbSpace.sm),
               NbButton(
-                label: 'Delete',
+                label: AppText.of(context).membersScreenDeleteButton,
                 background: t.color.reject,
                 foreground: t.color.onReject,
                 onPressed: _delete,
@@ -367,7 +407,8 @@ class _CategoryField extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('CATEGORY', style: t.text.label),
+        Text(AppText.of(context).membersScreenCategoryLabel,
+            style: t.text.label),
         DropdownButton<String>(
           value: effective,
           isExpanded: true,

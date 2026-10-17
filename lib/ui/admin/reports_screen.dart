@@ -11,6 +11,7 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Settings ▸ Reports. Host-only: reads the whole database into an `.xlsx` for
 /// people to read, print and pivot. Export-only on purpose — a round trip
@@ -37,7 +38,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     await Printing.sharePdf(
       bytes: Uint8List.fromList(bytes),
       filename: name,
-      subject: 'Tiffin report',
+      subject: AppText.of(context).reportsScreenShareSubject,
     );
   }
 
@@ -51,7 +52,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         sections: _sections,
       );
       await _share(bytes, container.reports.fileName());
-    }, successMessage: 'Report ready.');
+    }, successMessage: AppText.of(context).reportsScreenReadyMessage);
     if (mounted) setState(() => _busy = false);
   }
 
@@ -70,12 +71,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final rangeLabel = _range == null
-        ? 'Everything'
+        ? AppText.of(context).reportsScreenAllDatesLabel
         : '${DateFormat('d MMM y').format(_range!.start)} – '
             '${DateFormat('d MMM y').format(_range!.end)}';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reports')),
+      appBar: AppBar(title: Text(AppText.of(context).reportsScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
@@ -84,11 +85,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('SPREADSHEET REPORT', style: t.text.label),
+                Text(AppText.of(context).reportsScreenSectionTitle,
+                    style: t.text.label),
                 const SizedBox(height: NbSpace.xs),
                 Text(
-                  'An .xlsx you can open in Excel or Google Sheets. For '
-                  'reading and printing — it is not a way to put data back.',
+                  AppText.of(context).reportsScreenDescription,
                   style: t.text.body,
                 ),
                 const SizedBox(height: NbSpace.md),
@@ -97,13 +98,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     Expanded(child: Text(rangeLabel, style: t.text.body)),
                     TextButton.icon(
                       icon: const Icon(Icons.date_range, size: 18),
-                      label: const Text('Dates'),
+                      label: Text(AppText.of(context).reportsScreenDatesButton),
                       onPressed: _busy ? null : _pickRange,
                     ),
                     if (_range != null)
                       IconButton(
                         icon: const Icon(Icons.clear),
-                        tooltip: 'All dates',
+                        tooltip: AppText.of(context).reportsScreenAllDatesTooltip,
                         onPressed: () => setState(() => _range = null),
                       ),
                   ],
@@ -126,7 +127,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 ),
                 const SizedBox(height: NbSpace.md),
                 NbButton(
-                  label: 'Export spreadsheet',
+                  label: AppText.of(context).reportsScreenExportButton,
                   icon: Icons.table_view,
                   busy: _busy,
                   onPressed: _busy ? null : _exportReport,

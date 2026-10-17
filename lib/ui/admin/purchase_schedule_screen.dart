@@ -12,6 +12,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 final _scheduleProvider =
     FutureProvider.autoDispose<List<PurchaseScheduleItem>>(
@@ -31,12 +32,13 @@ class PurchaseScheduleScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Purchase schedule'),
+        title: Text(AppText.of(context).purchaseScheduleScreenTitle),
         actions: [
           if (isAdmin)
             IconButton(
               icon: const Icon(Icons.auto_awesome),
-              tooltip: 'Generate from menu',
+              tooltip:
+                  AppText.of(context).purchaseScheduleScreenGenerateFromMenu,
               onPressed: () => _generate(context, ref),
             ),
         ],
@@ -45,18 +47,19 @@ class PurchaseScheduleScreen extends ConsumerWidget {
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: const Text('Add item'),
+        label: Text(AppText.of(context).purchaseScheduleScreenAddItem),
         onPressed: () => _addManual(context, ref),
       ),
       body: AsyncView<List<PurchaseScheduleItem>>(
         value: schedule,
         onRetry: () => ref.invalidate(_scheduleProvider),
-        loadingLabel: 'Loading the shopping list…',
+        loadingLabel: AppText.of(context).purchaseScheduleScreenLoading,
         empty: NbEmpty(
           icon: Icons.shopping_cart_outlined,
-          title: 'Nothing to buy',
-          quips: EmptyQuips.purchase,
-          actionLabel: 'Generate from menu',
+          title: AppText.of(context).purchaseScheduleScreenEmptyTitle,
+          quips: EmptyQuips.purchase(context),
+          actionLabel:
+              AppText.of(context).purchaseScheduleScreenGenerateFromMenu,
           onAction: () => _generate(context, ref),
         ),
         builder: (list) {
@@ -92,9 +95,14 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                                   style: t.text.body),
                               Text(
                                   it.source == 'manual'
-                                      ? 'manual'
-                                      : 'from menu'
-                                          '${it.purchased ? ' · by ${it.purchasedBy}' : ''}',
+                                      ? AppText.of(context)
+                                          .purchaseScheduleScreenSourceManual
+                                      : (it.purchased
+                                          ? AppText.of(context)
+                                              .purchaseScheduleScreenSourceFromMenuBy(
+                                                  it.purchasedBy ?? '')
+                                          : AppText.of(context)
+                                              .purchaseScheduleScreenSourceFromMenu),
                                   style: t.text.label),
                             ],
                           ),
@@ -108,7 +116,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                                 () => ref
                                     .read(backendProvider)
                                     .deletePurchaseItem(it.id),
-                                successMessage: 'Removed.',
+                                successMessage:
+                                    AppText.of(context).purchaseScheduleScreenRemoved,
                               );
                               if (ok) ref.invalidate(_scheduleProvider);
                             },
@@ -132,28 +141,35 @@ class PurchaseScheduleScreen extends ConsumerWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text('Generate schedule', style: t.text.heading),
+          title: Text(AppText.of(context).purchaseScheduleScreenGenerateTitle,
+              style: t.text.heading),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Builds the shopping list from menu entries in this date '
-                'range. One-off items go in with the + button on the list.',
+                AppText.of(context).purchaseScheduleScreenGenerateDescription,
                 style: t.text.label,
               ),
               const SizedBox(height: NbSpace.md),
               _dateRow(
-                  context, 'From', start, (d) => setLocal(() => start = d)),
-              _dateRow(context, 'To', end, (d) => setLocal(() => end = d)),
+                  context,
+                  AppText.of(context).purchaseScheduleScreenFromLabel,
+                  start,
+                  (d) => setLocal(() => start = d)),
+              _dateRow(
+                  context,
+                  AppText.of(context).purchaseScheduleScreenToLabel,
+                  end,
+                  (d) => setLocal(() => end = d)),
             ],
           ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).purchaseScheduleScreenCancel)),
             NbButton(
-                label: 'Generate',
+                label: AppText.of(context).purchaseScheduleScreenGenerateButton,
                 onPressed: () => Navigator.pop(context, true)),
           ],
         ),
@@ -173,7 +189,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
     ref.invalidate(_scheduleProvider);
 
     if (created > 0) {
-      showNbSnack(context, 'Added $created item(s) to the list.');
+      showNbSnack(context,
+          AppText.of(context).purchaseScheduleScreenAddedItems(created));
       return;
     }
     // A zero result is the confusing case — say *why* nothing was added and
@@ -194,27 +211,23 @@ class PurchaseScheduleScreen extends ConsumerWidget {
 
     final String reason;
     if (menu.isEmpty) {
-      reason = 'There are no menu entries between those dates. Add meals on '
-          'the Menu calendar first, then generate.';
+      reason = AppText.of(context).purchaseScheduleScreenReasonNoMenuEntries;
     } else if (recipes.isEmpty) {
-      reason = 'The menu has entries, but there are no recipes yet. A recipe '
-          'links a dish name to its ingredients — add recipes on the Recipes '
-          'screen, matching the item names you typed on the menu.';
+      reason = AppText.of(context).purchaseScheduleScreenReasonNoRecipes;
     } else {
-      reason = 'The menu entries in that range don\'t match any recipe by '
-          'dish name, or those recipes have no ingredients. Check that a '
-          'recipe\'s dish name matches the menu item text, then try again. '
-          'You can also add items directly with the + button.';
+      reason = AppText.of(context).purchaseScheduleScreenReasonNoMatch;
     }
 
     await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Nothing to add', style: t.text.heading),
+        title: Text(AppText.of(context).purchaseScheduleScreenNothingToAddTitle,
+            style: t.text.heading),
         content: Text(reason, style: t.text.body),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('OK')),
+              onPressed: () => Navigator.pop(context),
+              child: Text(AppText.of(context).purchaseScheduleScreenOk)),
         ],
       ),
     );
@@ -243,16 +256,22 @@ class PurchaseScheduleScreen extends ConsumerWidget {
     final go = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Bought ${it.ingredientName}', style: t.text.heading),
+        title: Text(
+            AppText.of(context)
+                .purchaseScheduleScreenBoughtTitle(it.ingredientName),
+            style: t.text.heading),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Planned: ${it.quantityNote}. Enter what you actually got.',
+            Text(
+                AppText.of(context)
+                    .purchaseScheduleScreenPlannedLabel(it.quantityNote),
                 style: t.text.label),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: 'Quantity (${it.ingredientUnit})',
+              label: AppText.of(context)
+                  .purchaseScheduleScreenQuantityLabel(it.ingredientUnit),
               controller: qty,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
@@ -260,7 +279,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
             ),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: 'Cost (Rs., optional)',
+              label: AppText.of(context).purchaseScheduleScreenCostLabel,
               controller: cost,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
@@ -270,9 +289,10 @@ class PurchaseScheduleScreen extends ConsumerWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).purchaseScheduleScreenCancel)),
           NbButton(
-              label: 'Confirm', onPressed: () => Navigator.pop(context, true)),
+              label: AppText.of(context).purchaseScheduleScreenConfirm,
+              onPressed: () => Navigator.pop(context, true)),
         ],
       ),
     );
@@ -285,7 +305,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
             purchasedQty: double.tryParse(qty.text.trim()),
             purchasedCost: double.tryParse(cost.text.trim()),
           ),
-      successMessage: 'Marked purchased.',
+      successMessage: AppText.of(context).purchaseScheduleScreenMarkedPurchased,
     );
     if (ok) ref.invalidate(_scheduleProvider);
   }
@@ -311,13 +331,15 @@ class PurchaseScheduleScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text('Add one-off item', style: t.text.heading),
+          title: Text(AppText.of(context).purchaseScheduleScreenAddOneOffTitle,
+              style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Ingredient', style: t.text.label),
+                Text(AppText.of(context).purchaseScheduleScreenIngredientLabel,
+                    style: t.text.label),
                 Row(
                   children: [
                     Expanded(
@@ -334,7 +356,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.add),
-                      tooltip: 'New ingredient',
+                      tooltip: AppText.of(context)
+                          .purchaseScheduleScreenNewIngredientTooltip,
                       onPressed: () async {
                         final made =
                             await showQuickAddIngredient(dialogContext, ref);
@@ -349,13 +372,17 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                   ],
                 ),
                 _dateRow(
-                    context, 'Date', date, (d) => setLocal(() => date = d)),
+                    context,
+                    AppText.of(context).purchaseScheduleScreenDateLabel,
+                    date,
+                    (d) => setLocal(() => date = d)),
                 const SizedBox(height: NbSpace.sm),
                 Row(
                   children: [
                     Expanded(
                       child: NbTextField(
-                        label: 'Quantity',
+                        label: AppText.of(context)
+                            .purchaseScheduleScreenQuantityOnlyLabel,
                         controller: qty,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
@@ -374,9 +401,10 @@ class PurchaseScheduleScreen extends ConsumerWidget {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).purchaseScheduleScreenCancel)),
             NbButton(
-                label: 'Add', onPressed: () => Navigator.pop(context, true)),
+                label: AppText.of(context).purchaseScheduleScreenAddButton,
+                onPressed: () => Navigator.pop(context, true)),
           ],
         ),
       ),
@@ -391,7 +419,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
       () => ref
           .read(backendProvider)
           .addManualPurchaseItem(date, selected.id, label),
-      successMessage: 'Item added.',
+      successMessage: AppText.of(context).purchaseScheduleScreenItemAdded,
     );
     if (saved) ref.invalidate(_scheduleProvider);
   }
@@ -415,7 +443,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
             );
             if (picked != null) onChanged(picked);
           },
-          child: const Text('Pick'),
+          child: Text(AppText.of(context).purchaseScheduleScreenPickButton),
         ),
       ],
     );

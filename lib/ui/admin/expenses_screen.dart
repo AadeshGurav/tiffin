@@ -9,6 +9,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 final _expensesProvider = FutureProvider.autoDispose<List<Expense>>(
     (ref) => ref.watch(backendProvider).listExpenses());
@@ -27,12 +28,12 @@ class ExpensesScreen extends ConsumerWidget {
     final fmt = DateFormat('MMM d');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Expenses & revenue')),
+      appBar: AppBar(title: Text(AppText.of(context).expensesScreenTitle)),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: const Text('Log expense'),
+        label: Text(AppText.of(context).expensesScreenLogExpense),
         onPressed: () => _form(context, ref),
       ),
       body: Column(
@@ -44,9 +45,12 @@ class ExpensesScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _stat(t, 'Revenue', s.revenue),
-                  _stat(t, 'Expenses', s.expenses),
-                  _stat(t, 'Profit', s.profit),
+                  _stat(t, AppText.of(context).expensesScreenRevenue,
+                      s.revenue),
+                  _stat(t, AppText.of(context).expensesScreenExpenses,
+                      s.expenses),
+                  _stat(t, AppText.of(context).expensesScreenProfit,
+                      s.profit),
                 ],
               ),
             ),
@@ -56,12 +60,12 @@ class ExpensesScreen extends ConsumerWidget {
             child: AsyncView<List<Expense>>(
               value: expenses,
               onRetry: () => ref.invalidate(_expensesProvider),
-              loadingLabel: 'Loading expenses…',
+              loadingLabel: AppText.of(context).expensesScreenLoading,
               empty: NbEmpty(
                 icon: Icons.receipt_long_outlined,
-                title: 'No expenses logged',
-                quips: EmptyQuips.expenses,
-                actionLabel: 'Log an expense',
+                title: AppText.of(context).expensesScreenEmptyTitle,
+                quips: EmptyQuips.expenses(context),
+                actionLabel: AppText.of(context).expensesScreenEmptyAction,
                 onAction: () => _form(context, ref),
               ),
               builder: (list) => ListView.separated(
@@ -83,7 +87,9 @@ class ExpensesScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Text('Rs. ${e.amount.toStringAsFixed(2)}',
+                        Text(
+                            AppText.of(context).expensesScreenAmount(
+                                e.amount.toStringAsFixed(2)),
                             style: t.text.body),
                       ],
                     ),
@@ -114,19 +120,22 @@ class ExpensesScreen extends ConsumerWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text('Log expense', style: t.text.heading),
+          title: Text(AppText.of(context).expensesScreenLogExpense,
+              style: t.text.heading),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 NbTextField(
-                    label: 'Category (groceries, tables…)',
+                    label: AppText.of(context).expensesScreenCategoryLabel,
                     controller: category),
                 const SizedBox(height: NbSpace.sm),
-                NbTextField(label: 'Description', controller: description),
+                NbTextField(
+                    label: AppText.of(context).expensesScreenDescriptionLabel,
+                    controller: description),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label: 'Amount (Rs.)',
+                    label: AppText.of(context).expensesScreenAmountLabel,
                     controller: amount,
                     keyboardType: TextInputType.number),
                 const SizedBox(height: NbSpace.sm),
@@ -145,7 +154,7 @@ class ExpensesScreen extends ConsumerWidget {
                         );
                         if (picked != null) setLocal(() => date = picked);
                       },
-                      child: const Text('Change date'),
+                      child: Text(AppText.of(context).expensesScreenChangeDate),
                     ),
                   ],
                 ),
@@ -155,9 +164,10 @@ class ExpensesScreen extends ConsumerWidget {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+                child: Text(AppText.of(context).expensesScreenCancel)),
             NbButton(
-                label: 'Save', onPressed: () => Navigator.pop(context, true)),
+                label: AppText.of(context).expensesScreenSave,
+                onPressed: () => Navigator.pop(context, true)),
           ],
         ),
       ),
@@ -172,7 +182,7 @@ class ExpensesScreen extends ConsumerWidget {
             date: date,
             createdBy: '',
           )),
-      successMessage: 'Expense logged.',
+      successMessage: AppText.of(context).expensesScreenSaveSuccess,
     );
     if (saved) {
       ref.invalidate(_expensesProvider);

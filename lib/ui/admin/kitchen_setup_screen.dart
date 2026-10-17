@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
 import 'recipes_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Kitchen setup (PRD §6.5.1) — ingredients and recipes were two dashboard
 /// tiles for what is really one setup job you do once. Folded into a single
@@ -39,17 +40,21 @@ class _KitchenSetupScreenState extends ConsumerState<KitchenSetupScreen>
     final onIngredients = _tabs.index == 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kitchen setup'),
+        title: Text(AppText.of(context).kitchenSetupScreenTitle),
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [Tab(text: 'Ingredients'), Tab(text: 'Recipes')],
+          tabs: [
+            Tab(text: AppText.of(context).kitchenSetupScreenIngredientsTab),
+            Tab(text: AppText.of(context).kitchenSetupScreenRecipesTab),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
         icon: const Icon(Icons.add),
-        label: Text(onIngredients ? 'New ingredient' : 'New recipe'),
+        label: Text(AppText.of(context)
+            .kitchenSetupScreenNewButton(onIngredients.toString())),
         onPressed: () => onIngredients
             ? openIngredientForm(context, ref, null)
             : openRecipeForm(context, ref, null),

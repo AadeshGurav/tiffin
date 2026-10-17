@@ -9,6 +9,7 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../shared_widgets/unit_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 final ingredientsProvider = FutureProvider.autoDispose<List<Ingredient>>(
     (ref) => ref.watch(backendProvider).listIngredients());
@@ -29,12 +30,12 @@ class IngredientsTab extends ConsumerWidget {
     return AsyncView<List<Ingredient>>(
       value: ingredients,
       onRetry: () => ref.invalidate(ingredientsProvider),
-      loadingLabel: 'Loading ingredients…',
+      loadingLabel: AppText.of(context).ingredientsScreenLoading,
       empty: NbEmpty(
         icon: Icons.egg_alt_outlined,
-        title: 'No ingredients yet',
-        quips: EmptyQuips.ingredients,
-        actionLabel: 'Add an ingredient',
+        title: AppText.of(context).ingredientsScreenEmptyTitle,
+        quips: EmptyQuips.ingredients(context),
+        actionLabel: AppText.of(context).ingredientsScreenAddIngredient,
         onAction: () => openIngredientForm(context, ref, null),
       ),
       builder: (list) => ListView.separated(
@@ -52,7 +53,9 @@ class IngredientsTab extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(ing.name, style: t.text.body),
-                      Text('${_num(ing.stockQty)} ${ing.unit} in stock',
+                      Text(
+                          AppText.of(context).ingredientsScreenInStock(
+                              _num(ing.stockQty), ing.unit),
                           style: t.text.label),
                     ],
                   ),
@@ -60,12 +63,12 @@ class IngredientsTab extends ConsumerWidget {
                 if (ing.isLow)
                   Padding(
                     padding: const EdgeInsets.only(right: NbSpace.sm),
-                    child: Text('LOW',
+                    child: Text(AppText.of(context).ingredientsScreenLowLabel,
                         style: t.text.label.copyWith(color: t.color.reject)),
                   ),
                 IconButton(
                   icon: const Icon(Icons.tune),
-                  tooltip: 'Adjust stock',
+                  tooltip: AppText.of(context).ingredientsScreenAdjustStockTooltip,
                   onPressed: () => _adjustStock(context, ref, ing),
                 ),
                 IconButton(
@@ -74,7 +77,8 @@ class IngredientsTab extends ConsumerWidget {
                     final ok = await runGuarded(
                       context,
                       () => ref.read(backendProvider).deleteIngredient(ing.id),
-                      successMessage: 'Deleted.',
+                      successMessage:
+                          AppText.of(context).ingredientsScreenDeleteSuccess,
                     );
                     if (ok) ref.invalidate(ingredientsProvider);
                   },
@@ -95,33 +99,38 @@ class IngredientsTab extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Adjust ${ing.name} stock', style: t.text.heading),
+        title: Text(
+            AppText.of(context).ingredientsScreenAdjustTitle(ing.name),
+            style: t.text.heading),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Now: ${_num(ing.stockQty)} ${ing.unit}. Enter a change '
-                '(e.g. 5 for a delivery, -2 for spoilage).',
+                AppText.of(context).ingredientsScreenAdjustNowText(
+                    _num(ing.stockQty), ing.unit),
                 style: t.text.label),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: 'Change (${ing.unit})',
+              label: AppText.of(context).ingredientsScreenChangeLabel(ing.unit),
               controller: delta,
               keyboardType: const TextInputType.numberWithOptions(
                   signed: true, decimal: true),
               autofocus: true,
             ),
             const SizedBox(height: NbSpace.sm),
-            NbTextField(label: 'Reason', controller: reason),
+            NbTextField(
+                label: AppText.of(context).ingredientsScreenReasonLabel,
+                controller: reason),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).ingredientsScreenCancel)),
           NbButton(
-              label: 'Apply', onPressed: () => Navigator.pop(context, true)),
+              label: AppText.of(context).ingredientsScreenApply,
+              onPressed: () => Navigator.pop(context, true)),
         ],
       ),
     );
@@ -133,7 +142,7 @@ class IngredientsTab extends ConsumerWidget {
       () => ref
           .read(backendProvider)
           .adjustIngredientStock(ing.id, d, reason.text.trim()),
-      successMessage: 'Stock updated.',
+      successMessage: AppText.of(context).ingredientsScreenStockUpdated,
     );
     if (done) ref.invalidate(ingredientsProvider);
   }
@@ -153,26 +162,32 @@ Future<void> openIngredientForm(
   final ok = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      title: Text(existing == null ? 'New ingredient' : existing.name,
+      title: Text(
+          existing == null
+              ? AppText.of(context).ingredientsScreenNewIngredientTitle
+              : existing.name,
           style: t.text.heading),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NbTextField(label: 'Name', controller: name, autofocus: true),
+            NbTextField(
+                label: AppText.of(context).ingredientsScreenNameLabel,
+                controller: name,
+                autofocus: true),
             const SizedBox(height: NbSpace.md),
             NbUnitField(
                 initial: existing?.unit ?? '', onChanged: (u) => unit = u),
             const SizedBox(height: NbSpace.md),
             NbTextField(
-              label: 'Stock on hand',
+              label: AppText.of(context).ingredientsScreenStockOnHandLabel,
               controller: stock,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: 'Low-stock alert at (blank = no alert)',
+              label: AppText.of(context).ingredientsScreenLowStockAlertLabel,
               controller: threshold,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
@@ -183,8 +198,10 @@ Future<void> openIngredientForm(
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel')),
-        NbButton(label: 'Save', onPressed: () => Navigator.pop(context, true)),
+            child: Text(AppText.of(context).ingredientsScreenCancel)),
+        NbButton(
+            label: AppText.of(context).ingredientsScreenSave,
+            onPressed: () => Navigator.pop(context, true)),
       ],
     ),
   );
@@ -203,6 +220,6 @@ Future<void> openIngredientForm(
           stockQty: stockQty,
           lowStockAt: lowAt);
     }
-  }, successMessage: 'Saved.');
+  }, successMessage: AppText.of(context).ingredientsScreenSaveSuccess);
   if (saved) ref.invalidate(ingredientsProvider);
 }

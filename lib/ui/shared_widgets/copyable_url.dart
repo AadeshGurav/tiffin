@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'nb_feedback.dart';
 
@@ -14,14 +15,14 @@ class CopyableUrl extends StatelessWidget {
 
   final String url;
 
-  static const _quips = [
-    'Yoinked! It is on your clipboard now. 📋',
-    'Copied. Paste it like it is hot. 🔥',
-    'URL beamed to your clipboard. 🛸',
-    'Snatched. Ctrl+V is your friend now. ✌️',
-    'Got it. Go forth and paste. 📎',
-    'Clipboard: fed. You: welcome. 🍽️',
-  ];
+  static List<String> _quips(BuildContext context) => [
+        AppText.of(context).copyableUrlQuip1,
+        AppText.of(context).copyableUrlQuip2,
+        AppText.of(context).copyableUrlQuip3,
+        AppText.of(context).copyableUrlQuip4,
+        AppText.of(context).copyableUrlQuip5,
+        AppText.of(context).copyableUrlQuip6,
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,8 @@ class CopyableUrl extends StatelessWidget {
       onTap: () async {
         await Clipboard.setData(ClipboardData(text: url));
         if (context.mounted) {
-          showNbSnack(context, _quips[Random().nextInt(_quips.length)]);
+          final quips = _quips(context);
+          showNbSnack(context, quips[Random().nextInt(quips.length)]);
         }
       },
       child: Padding(

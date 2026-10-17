@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'nb_surface.dart';
 
@@ -10,16 +11,11 @@ import 'nb_surface.dart';
 class IosHostAdvisory extends StatelessWidget {
   const IosHostAdvisory({super.key});
 
-  static const _points = [
-    'Keep Tiffin open and on screen while you host. iOS stops the server the '
-        'moment you lock the phone or switch apps, and every connected device '
-        'drops.',
-    "iOS can't make its own Wi-Fi. Every device must be on the same Wi-Fi "
-        'router — or turn on Personal Hotspot (Settings ▸ Personal Hotspot) and '
-        'have the others join it.',
-    'For a full meal service, host on an Android phone instead — it keeps '
-        'serving with the screen off.',
-  ];
+  static List<String> _points(BuildContext context) => [
+        AppText.of(context).iosHostAdvisoryPointForeground,
+        AppText.of(context).iosHostAdvisoryPointWifi,
+        AppText.of(context).iosHostAdvisoryPointAndroid,
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +26,9 @@ class IosHostAdvisory extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('HOSTING ON IPHONE — READ THIS',
+          Text(AppText.of(context).iosHostAdvisoryTitle,
               style: t.text.label.copyWith(color: t.color.onWarn)),
-          for (final p in _points)
+          for (final p in _points(context))
             Padding(
               padding: const EdgeInsets.only(top: NbSpace.xs),
               child: Text('•  $p',

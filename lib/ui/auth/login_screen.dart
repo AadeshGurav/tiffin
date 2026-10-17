@@ -16,6 +16,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Sign-in for scanner / counter / admin roles (PRD §4, §6.4). The session is
 /// remembered on this device until sign-out or expiry, so a shared kiosk logs
@@ -79,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AppException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = 'Could not sign in: $e');
+      setState(() => _error = AppText.of(context).loginFailed(e.toString()));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -106,7 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _password.text = result.password;
       setState(() => _error = null);
       if (mounted) {
-        showNbSnack(context, 'Password reset. Sign in to continue.');
+        showNbSnack(context, AppText.of(context).loginPasswordResetSnack);
       }
     } on AppException catch (e) {
       setState(() => _error = e.message);
@@ -118,12 +119,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final greeting = ref.watch(hostGreetingProvider);
     final isHost = ref.watch(currentModeProvider) == AppMode.host;
 
     // While a saved token is being offered to the host, show the splash
     // rather than a login form that may be about to disappear.
-    if (_resuming) return const BrandSplash(message: 'Signing you in…');
+    if (_resuming) return BrandSplash(message: text.loginResumingMessage);
 
     return Scaffold(
       body: SafeArea(
@@ -146,21 +148,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          greeting.asData?.value.appName ?? 'Tiffin',
+                          greeting.asData?.value.appName ?? text.appTitle,
                           style: t.text.heading,
                         ),
-                        if (isHost) Text('Host device', style: t.text.label),
+                        if (isHost)
+                          Text(text.loginHostDeviceLabel, style: t.text.label),
                         const SizedBox(height: NbSpace.xs),
-                        Text('Sign in', style: t.text.body),
+                        Text(text.loginSignInLabel, style: t.text.body),
                         const SizedBox(height: NbSpace.lg),
                         NbTextField(
-                          label: 'Username',
+                          label: text.loginUsernameLabel,
                           controller: _username,
                           autofocus: true,
                         ),
                         const SizedBox(height: NbSpace.md),
                         NbTextField(
-                          label: 'Password',
+                          label: text.loginPasswordLabel,
                           controller: _password,
                           obscure: true,
                         ),
@@ -174,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           value: _rememberPassword,
                           onChanged: (v) =>
                               setState(() => _rememberPassword = v ?? false),
-                          title: Text('Remember password on this device',
+                          title: Text(text.loginRememberPasswordLabel,
                               style: t.text.body),
                         ),
                         if (_error != null) ...[
@@ -185,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                         const SizedBox(height: NbSpace.lg),
                         NbButton(
-                          label: 'Sign in',
+                          label: text.loginSignInButton,
                           busy: _busy,
                           onPressed: _busy ? null : _submit,
                         ),
@@ -210,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (isHost)
                     TextButton.icon(
                       icon: const Icon(Icons.lock_reset, size: 18),
-                      label: const Text('Forgot the password?'),
+                      label: Text(text.loginForgotPasswordButton),
                       onPressed: _busy ? null : _recoverPassword,
                     ),
                   if (isHost && Platform.isIOS) ...[
@@ -220,7 +223,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: NbSpace.md),
                   TextButton.icon(
                     icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: const Text('Switch device role'),
+                    label: Text(text.loginSwitchRoleButton),
                     onPressed: () =>
                         ref.read(currentModeProvider.notifier).clear(),
                   ),
@@ -244,6 +247,7 @@ class _SavedLogins extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final saved = ref.watch(savedLoginsForHostProvider).asData?.value;
     if (saved == null || saved.logins.isEmpty) return const SizedBox.shrink();
 
@@ -253,7 +257,7 @@ class _SavedLogins extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('SAVED ON THIS DEVICE', style: t.text.label),
+            Text(text.loginSavedLoginsHeader, style: t.text.label),
             const SizedBox(height: NbSpace.xs),
             for (final login in saved.logins)
               ListTile(
@@ -264,13 +268,13 @@ class _SavedLogins extends ConsumerWidget {
                 title: Text(login.username, style: t.text.body),
                 subtitle: Text(
                   login.password != null
-                      ? 'Tap to sign in'
-                      : 'Tap to fill the username',
+                      ? text.loginSavedLoginTapToSignIn
+                      : text.loginSavedLoginTapToFillUsername,
                   style: t.text.body.copyWith(color: t.color.inkMuted),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.close),
-                  tooltip: 'Forget this account',
+                  tooltip: text.loginForgetAccountTooltip,
                   onPressed: () => ref
                       .read(sessionMemoryProvider)
                       .forgetLogin(saved.hostId, login.username),
@@ -316,27 +320,29 @@ class _RecoverPasswordDialogState extends State<_RecoverPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final armed = _confirm.text.trim().toUpperCase() == 'RESET';
     return AlertDialog(
-      title: Text('Reset a password', style: t.text.heading),
+      title: Text(text.loginRecoverDialogTitle, style: t.text.heading),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Only possible on this host device. The new password is shown '
-              'below — write it down, it cannot be read back afterwards. Any '
-              'open session for this account is signed out.',
+              text.loginRecoverDialogBody,
               style: t.text.body,
             ),
             const SizedBox(height: NbSpace.md),
-            NbTextField(label: 'Account', controller: _username),
-            const SizedBox(height: NbSpace.sm),
-            NbTextField(label: 'New password', controller: _password),
+            NbTextField(
+                label: text.loginRecoverAccountLabel, controller: _username),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: 'Type RESET to confirm',
+                label: text.loginRecoverNewPasswordLabel,
+                controller: _password),
+            const SizedBox(height: NbSpace.sm),
+            NbTextField(
+              label: text.loginRecoverConfirmLabel,
               controller: _confirm,
               onChanged: (_) => setState(() {}),
             ),
@@ -346,10 +352,10 @@ class _RecoverPasswordDialogState extends State<_RecoverPasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(text.loginRecoverCancelButton),
         ),
         NbButton(
-          label: 'Reset password',
+          label: text.loginRecoverSubmitButton,
           background: t.color.reject,
           onPressed: armed
               ? () => Navigator.pop(

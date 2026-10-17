@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../domain/inventory.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'nb_button.dart';
 import 'nb_feedback.dart';
@@ -21,21 +22,28 @@ Future<Ingredient?> showQuickAddIngredient(
   final ok = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      title: Text('New ingredient', style: t.text.heading),
+      title: Text(AppText.of(context).ingredientQuickAddTitle,
+          style: t.text.heading),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          NbTextField(label: 'Name', controller: name, autofocus: true),
+          NbTextField(
+              label: AppText.of(context).ingredientQuickAddNameLabel,
+              controller: name,
+              autofocus: true),
           const SizedBox(height: NbSpace.sm),
-          NbTextField(label: 'Unit (kg, litre, pcs…)', controller: unit),
+          NbTextField(
+              label: AppText.of(context).ingredientQuickAddUnitLabel,
+              controller: unit),
         ],
       ),
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel')),
+            child: Text(AppText.of(context).ingredientQuickAddCancel)),
         NbButton(
-            label: 'Create', onPressed: () => Navigator.pop(context, true)),
+            label: AppText.of(context).ingredientQuickAddCreate,
+            onPressed: () => Navigator.pop(context, true)),
       ],
     ),
   );
@@ -48,7 +56,7 @@ Future<Ingredient?> showQuickAddIngredient(
           .read(backendProvider)
           .createIngredient(name.text.trim(), unit.text.trim());
     },
-    successMessage: 'Ingredient added.',
+    successMessage: AppText.of(context).ingredientQuickAddSuccess,
   );
   return done ? made : null;
 }

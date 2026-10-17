@@ -13,6 +13,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import 'topup_history_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>(
     (ref) => ref.watch(backendProvider).listMembers(status: 'active'));
@@ -31,9 +32,12 @@ class TopUpScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Top-up & bill'),
-          bottom: const TabBar(
-            tabs: [Tab(text: 'Charge'), Tab(text: 'History')],
+          title: Text(AppText.of(context).topupScreenTitle),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: AppText.of(context).topupScreenChargeTab),
+              Tab(text: AppText.of(context).topupScreenHistoryTab),
+            ],
           ),
         ),
         body: const TabBarView(
@@ -79,7 +83,7 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             paymentMethod: _method,
             createdBy: '', // host/client backend fills this in
           ));
-    }, successMessage: 'Balances credited.');
+    }, successMessage: AppText.of(context).topupScreenBalancesCreditedMessage);
     if (mounted) setState(() => _busy = false);
     if (!ok || created == null || !mounted) return;
     await _showBillDialog(created!, s);
@@ -105,17 +109,19 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
     await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Bill #${topup.id}', style: t.text.heading),
+        title: Text(AppText.of(context).topupScreenBillDialogTitle(topup.id),
+            style: t.text.heading),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Amount: Rs. ${topup.amount.toStringAsFixed(2)} '
-                '(${topup.paymentMethod.wire.toUpperCase()})'),
-            Text('Status: ${topup.paymentStatus}'),
+            Text(AppText.of(context).topupScreenBillAmount(
+                topup.amount.toStringAsFixed(2),
+                topup.paymentMethod.wire.toUpperCase())),
+            Text(AppText.of(context).topupScreenBillStatus(topup.paymentStatus)),
             if (upiQr != null) ...[
               const SizedBox(height: NbSpace.md),
-              const Text('Ask the payer to scan:'),
+              Text(AppText.of(context).topupScreenScanQrPrompt),
               const SizedBox(height: NbSpace.sm),
               Image.memory(upiQr, width: 220, height: 220),
             ],
@@ -124,20 +130,21 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
         actions: [
           if (topup.paymentMethod == PaymentMethod.upi)
             NbButton.secondary(
-              label: 'Mark received',
+              label: AppText.of(context).topupScreenMarkReceivedButton,
               onPressed: () async {
                 final navigator = Navigator.of(context);
                 final ok = await runGuarded(
                   context,
                   () => ref.read(backendProvider).confirmTopupPayment(topup.id),
-                  successMessage: 'Payment confirmed.',
+                  successMessage:
+                      AppText.of(context).topupScreenPaymentConfirmedMessage,
                 );
                 if (ok) navigator.pop();
               },
             ),
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Done')),
+              child: Text(AppText.of(context).topupScreenDoneButton)),
         ],
       ),
     );
@@ -152,23 +159,23 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
     return AsyncView<SettingsSnapshot>(
       value: settings,
       onRetry: () => ref.invalidate(_settingsProvider),
-      loadingLabel: 'Loading prices…',
+      loadingLabel: AppText.of(context).topupScreenLoadingPrices,
       builder: (s) => AsyncView<List<Member>>(
         value: members,
         onRetry: () => ref.invalidate(_membersProvider),
-        loadingLabel: 'Loading members…',
-        empty: const NbEmpty(
+        loadingLabel: AppText.of(context).topupScreenLoadingMembers,
+        empty: NbEmpty(
           icon: Icons.person_off_outlined,
-          title: 'No active members',
+          title: AppText.of(context).topupScreenEmptyTitle,
           quips: [
-            'Add someone on the Members page first, then come back to top up.',
+            AppText.of(context).topupScreenEmptyQuip,
           ],
         ),
         builder: (list) => ListView(
           padding: const EdgeInsets.all(NbSpace.lg),
           children: [
             NbMemberField(
-              label: 'MEMBER',
+              label: AppText.of(context).topupScreenMemberLabel,
               value: _member,
               members: list,
               onSelected: (m) {
@@ -188,26 +195,32 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             ),
             const SizedBox(height: NbSpace.md),
             _UnitRow(
-              label: 'Lunch  (Rs. ${s.unitPrices.lunch.toStringAsFixed(0)})',
+              label: AppText.of(context)
+                  .topupScreenLunchLabel(s.unitPrices.lunch.toStringAsFixed(0)),
               value: _lunch,
               onChanged: (v) => setState(() => _lunch = v),
             ),
             _UnitRow(
-              label:
-                  'Breakfast  (Rs. ${s.unitPrices.breakfast.toStringAsFixed(0)})',
+              label: AppText.of(context).topupScreenBreakfastLabel(
+                  s.unitPrices.breakfast.toStringAsFixed(0)),
               value: _breakfast,
               onChanged: (v) => setState(() => _breakfast = v),
             ),
             _UnitRow(
-              label: 'Brunch  (Rs. ${s.unitPrices.brunch.toStringAsFixed(0)})',
+              label: AppText.of(context).topupScreenBrunchLabel(
+                  s.unitPrices.brunch.toStringAsFixed(0)),
               value: _brunch,
               onChanged: (v) => setState(() => _brunch = v),
             ),
             const SizedBox(height: NbSpace.md),
             SegmentedButton<PaymentMethod>(
-              segments: const [
-                ButtonSegment(value: PaymentMethod.cash, label: Text('Cash')),
-                ButtonSegment(value: PaymentMethod.upi, label: Text('UPI')),
+              segments: [
+                ButtonSegment(
+                    value: PaymentMethod.cash,
+                    label: Text(AppText.of(context).topupScreenPaymentCash)),
+                ButtonSegment(
+                    value: PaymentMethod.upi,
+                    label: Text(AppText.of(context).topupScreenPaymentUpi)),
               ],
               selected: {_method},
               onSelectionChanged: (v) => setState(() => _method = v.first),
@@ -219,7 +232,8 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('TOTAL', style: t.text.label),
+                  Text(AppText.of(context).topupScreenTotalLabel,
+                      style: t.text.label),
                   Text('Rs. ${_amount(s).toStringAsFixed(2)}',
                       style: t.text.heading),
                 ],
@@ -227,7 +241,7 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             ),
             const SizedBox(height: NbSpace.md),
             NbButton(
-              label: 'Charge & generate bill',
+              label: AppText.of(context).topupScreenChargeButton,
               busy: _busy,
               onPressed: _canSubmit ? () => _submit(s) : null,
             ),

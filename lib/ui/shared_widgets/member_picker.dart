@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/member.dart';
+import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'frosted_panel.dart';
 import 'nb_button.dart';
@@ -57,7 +58,9 @@ class NbMemberField extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              value == null ? 'Tap to choose a member' : _describe(value!),
+              value == null
+                  ? AppText.of(context).memberPickerTapToChoose
+                  : _describe(value!),
               style: t.text.body,
               overflow: TextOverflow.ellipsis,
             ),
@@ -163,7 +166,7 @@ class _MemberPickerSheetState extends State<_MemberPickerSheet> {
     final ok = await runGuarded(
       context,
       () async => made = await widget.onCreate!(draft),
-      successMessage: 'Member added.',
+      successMessage: AppText.of(context).memberPickerCreateSuccess,
     );
     if (ok && made != null && mounted) {
       Navigator.of(context).pop(made);
@@ -186,21 +189,25 @@ class _MemberPickerSheetState extends State<_MemberPickerSheet> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Member', style: t.text.heading)),
+                    Expanded(
+                        child: Text(AppText.of(context).memberPickerTitle,
+                            style: t.text.heading)),
                     IconButton(
                       icon: const Icon(Icons.close),
-                      tooltip: 'Cancel',
+                      tooltip: AppText.of(context).memberPickerCancel,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
-                    label: 'Search', controller: _query, autofocus: true),
+                    label: AppText.of(context).memberPickerSearchLabel,
+                    controller: _query,
+                    autofocus: true),
                 if (widget.onCreate != null) ...[
                   const SizedBox(height: NbSpace.sm),
                   NbButton.secondary(
-                    label: '+ New member',
+                    label: AppText.of(context).memberPickerNewMember,
                     onPressed: _createNew,
                   ),
                 ],
@@ -210,8 +217,9 @@ class _MemberPickerSheetState extends State<_MemberPickerSheet> {
                     child: Center(
                       child: Text(
                         _all.isEmpty
-                            ? 'No members yet.'
-                            : 'Nothing matches "${_query.text}".',
+                            ? AppText.of(context).memberPickerNoMembers
+                            : AppText.of(context)
+                                .memberPickerNoMatches(_query.text),
                         style: t.text.body,
                       ),
                     ),
@@ -264,33 +272,48 @@ Future<MemberDraft?> _showQuickAddForm(
     context: context,
     builder: (_) => StatefulBuilder(
       builder: (context, setLocal) => AlertDialog(
-        title: Text('New member', style: t.text.heading),
+        title: Text(AppText.of(context).memberPickerNewMemberTitle,
+            style: t.text.heading),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'student', label: Text('Student')),
-                  ButtonSegment(value: 'staff', label: Text('Staff')),
+                segments: [
+                  ButtonSegment(
+                      value: 'student',
+                      label: Text(AppText.of(context).memberPickerStudent)),
+                  ButtonSegment(
+                      value: 'staff',
+                      label: Text(AppText.of(context).memberPickerStaff)),
                 ],
                 selected: {type},
                 onSelectionChanged: (s) => setLocal(() => type = s.first),
               ),
               const SizedBox(height: NbSpace.md),
-              NbTextField(label: 'Name', controller: name, autofocus: true),
+              NbTextField(
+                  label: AppText.of(context).memberPickerNameLabel,
+                  controller: name,
+                  autofocus: true),
               const SizedBox(height: NbSpace.md),
               if (type == 'student') ...[
-                NbTextField(label: 'Class', controller: className),
+                NbTextField(
+                    label: AppText.of(context).memberPickerClassLabel,
+                    controller: className),
                 const SizedBox(height: NbSpace.md),
-                NbTextField(label: 'Roll number', controller: roll),
+                NbTextField(
+                    label: AppText.of(context).memberPickerRollNumberLabel,
+                    controller: roll),
               ] else
-                NbTextField(label: 'Staff ID', controller: staffId),
+                NbTextField(
+                    label: AppText.of(context).memberPickerStaffIdLabel,
+                    controller: staffId),
               if (categories.isNotEmpty) ...[
                 const SizedBox(height: NbSpace.md),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('CATEGORY', style: t.text.label),
+                  child: Text(AppText.of(context).memberPickerCategoryLabel,
+                      style: t.text.label),
                 ),
                 DropdownButton<String>(
                   value: category,
@@ -308,9 +331,9 @@ Future<MemberDraft?> _showQuickAddForm(
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text(AppText.of(context).memberPickerCancel)),
           NbButton(
-            label: 'Create',
+            label: AppText.of(context).memberPickerCreate,
             onPressed: () {
               if (name.text.trim().isEmpty) return;
               Navigator.pop(

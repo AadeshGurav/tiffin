@@ -8,6 +8,7 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 /// First run on a host device: the operator creates the admin account.
 ///
@@ -57,7 +58,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
 
   Future<void> _submit() async {
     if (_password.text != _confirm.text) {
-      setState(() => _error = 'The two passwords do not match.');
+      setState(() => _error = AppText.of(context).hostSetupPasswordMismatch);
       return;
     }
     setState(() {
@@ -78,7 +79,8 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
     } on AppException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = 'Could not finish setup: $e');
+      setState(
+          () => _error = AppText.of(context).hostSetupFailed(e.toString()));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -87,6 +89,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final text = AppText.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -106,29 +109,27 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Set up this host', style: t.text.heading),
+                        Text(text.hostSetupTitle, style: t.text.heading),
                         const SizedBox(height: NbSpace.xs),
                         Text(
-                          'Create the admin account for this canteen. You will '
-                          'use it to sign in here and on the desktop admin '
-                          'page. You can change both later in Users.',
+                          text.hostSetupSubtitle,
                           style: t.text.body,
                         ),
                         const SizedBox(height: NbSpace.lg),
                         NbTextField(
-                          label: 'Admin username',
+                          label: text.hostSetupUsernameLabel,
                           controller: _username,
                           autofocus: true,
                         ),
                         const SizedBox(height: NbSpace.md),
                         NbTextField(
-                          label: 'Password',
+                          label: text.hostSetupPasswordLabel,
                           controller: _password,
                           obscure: !_revealed,
                         ),
                         const SizedBox(height: NbSpace.md),
                         NbTextField(
-                          label: 'Confirm password',
+                          label: text.hostSetupConfirmPasswordLabel,
                           controller: _confirm,
                           obscure: !_revealed,
                         ),
@@ -139,7 +140,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                               child: TextButton.icon(
                                 icon:
                                     const Icon(Icons.casino_outlined, size: 18),
-                                label: const Text('Suggest a strong one'),
+                                label: Text(text.hostSetupSuggestButton),
                                 onPressed: _busy ? null : _suggest,
                               ),
                             ),
@@ -147,8 +148,9 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                               icon: Icon(_revealed
                                   ? Icons.visibility_off
                                   : Icons.visibility),
-                              tooltip:
-                                  _revealed ? 'Hide password' : 'Show password',
+                              tooltip: _revealed
+                                  ? text.hostSetupHidePassword
+                                  : text.hostSetupShowPassword,
                               onPressed: () =>
                                   setState(() => _revealed = !_revealed),
                             ),
@@ -162,7 +164,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                         ],
                         const SizedBox(height: NbSpace.md),
                         NbButton(
-                          label: 'Create admin & continue',
+                          label: text.hostSetupSubmitButton,
                           icon: Icons.check,
                           busy: _busy,
                           onPressed: _busy ? null : _submit,
@@ -179,9 +181,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                         const SizedBox(width: NbSpace.sm),
                         Expanded(
                           child: Text(
-                            'Write this password down. It is stored only as a '
-                            'one-way hash — nobody, including this app, can '
-                            'read it back.',
+                            text.hostSetupPasswordWarning,
                             style: t.text.body.copyWith(color: t.color.onWarn),
                           ),
                         ),
@@ -191,7 +191,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
                   const SizedBox(height: NbSpace.md),
                   TextButton.icon(
                     icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: const Text('Run as a client instead'),
+                    label: Text(text.hostSetupSwitchToClient),
                     onPressed: () =>
                         ref.read(currentModeProvider.notifier).clear(),
                   ),

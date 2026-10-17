@@ -8,6 +8,7 @@ import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 final _scansProvider = FutureProvider.autoDispose<List<ScanRecord>>(
     (ref) => ref.watch(backendProvider).recentScans(limit: 300));
@@ -24,15 +25,15 @@ class ScanLogScreen extends ConsumerWidget {
     final fmt = DateFormat('MMM d, HH:mm');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan log')),
+      appBar: AppBar(title: Text(AppText.of(context).scanLogScreenTitle)),
       body: AsyncView<List<ScanRecord>>(
         value: scans,
         onRetry: () => ref.invalidate(_scansProvider),
-        loadingLabel: 'Loading the scan log…',
-        empty: const NbEmpty(
+        loadingLabel: AppText.of(context).scanLogScreenLoading,
+        empty: NbEmpty(
           icon: Icons.qr_code_scanner,
-          title: 'No scans yet',
-          quips: EmptyQuips.scans,
+          title: AppText.of(context).scanLogScreenEmptyTitle,
+          quips: EmptyQuips.scans(context),
         ),
         builder: (list) => ListView.separated(
           padding: const EdgeInsets.all(NbSpace.md),
@@ -52,10 +53,10 @@ class ScanLogScreen extends ConsumerWidget {
                             style: t.text.body),
                       ),
                       if (s.reversed)
-                        Text('REVERSED',
+                        Text(AppText.of(context).scanLogScreenReversedLabel,
                             style: t.text.label.copyWith(color: t.color.reject))
                       else if (s.viaGrace)
-                        Text('GRACE',
+                        Text(AppText.of(context).scanLogScreenGraceLabel,
                             style: t.text.label.copyWith(color: t.color.warn)),
                     ],
                   ),
@@ -63,7 +64,7 @@ class ScanLogScreen extends ConsumerWidget {
                   if (reversible) ...[
                     const SizedBox(height: NbSpace.sm),
                     NbButton.secondary(
-                      label: 'Reverse',
+                      label: AppText.of(context).scanLogScreenReverseButton,
                       onPressed: () async {
                         final ok = await runGuarded(
                           context,
@@ -75,7 +76,8 @@ class ScanLogScreen extends ConsumerWidget {
                               throw _Msg(r.message);
                             }
                           },
-                          successMessage: 'Scan reversed.',
+                          successMessage:
+                              AppText.of(context).scanLogScreenReverseSuccess,
                         );
                         if (ok) ref.invalidate(_scansProvider);
                       },

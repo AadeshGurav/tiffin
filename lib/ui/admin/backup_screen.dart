@@ -14,6 +14,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Settings ▸ Backup & restore. Host-only. The `.tiffin` file is a complete,
 /// optionally-encrypted copy of the canteen — the supported way to move to a
@@ -41,13 +42,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     await Printing.sharePdf(
       bytes: Uint8List.fromList(bytes),
       filename: name,
-      subject: 'Tiffin backup',
+      subject: AppText.of(context).backupScreenShareSubject,
     );
   }
 
   Future<void> _exportBackup() async {
     if (_protect && _passphrase.text.length < 4) {
-      showNbSnack(context, 'Choose a password, or turn protection off.',
+      showNbSnack(
+          context, AppText.of(context).backupScreenPasswordRequired,
           ok: false);
       return;
     }
@@ -57,7 +59,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       final bytes = await container.backups
           .export(passphrase: _protect ? _passphrase.text : null);
       await _share(bytes, container.backups.fileName());
-    }, successMessage: 'Backup ready. Keep it somewhere safe.');
+    }, successMessage: AppText.of(context).backupScreenExportSuccess);
     if (mounted) setState(() => _busy = false);
   }
 
@@ -92,7 +94,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             bytes,
             passphrase: passphrase.isEmpty ? null : passphrase,
           );
-    }, successMessage: 'Restored. Sign in again to continue.');
+    }, successMessage: AppText.of(context).backupScreenRestoreSuccess);
     if (mounted) setState(() => _busy = false);
   }
 
@@ -100,7 +102,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     return Scaffold(
-      appBar: AppBar(title: const Text('Backup & restore')),
+      appBar: AppBar(title: Text(AppText.of(context).backupScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
@@ -109,12 +111,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('BACKUP', style: t.text.label),
+                Text(AppText.of(context).backupScreenSectionBackup,
+                    style: t.text.label),
                 const SizedBox(height: NbSpace.xs),
                 Text(
-                  'A complete copy of this canteen — members, balances, '
-                  'history, settings and accounts. Use it to move to a new '
-                  'phone, or to recover from one that is lost.',
+                  AppText.of(context).backupScreenBackupDescription,
                   style: t.text.body,
                 ),
                 const SizedBox(height: NbSpace.sm),
@@ -122,24 +123,24 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   contentPadding: EdgeInsets.zero,
                   value: _protect,
                   onChanged: _busy ? null : (v) => setState(() => _protect = v),
-                  title: Text('Protect with a password', style: t.text.body),
+                  title: Text(AppText.of(context).backupScreenProtectToggle,
+                      style: t.text.body),
                   subtitle: Text(
                     _protect
-                        ? 'Nobody can open the file without it — including '
-                            'you, so write it down.'
-                        : 'The file will hold member names and account '
-                            'details in the clear.',
+                        ? AppText.of(context).backupScreenProtectOnHint
+                        : AppText.of(context).backupScreenProtectOffHint,
                     style: t.text.body.copyWith(color: t.color.inkMuted),
                   ),
                 ),
                 if (_protect) ...[
                   const SizedBox(height: NbSpace.sm),
                   NbTextField(
-                      label: 'Backup password', controller: _passphrase),
+                      label: AppText.of(context).backupScreenPasswordLabel,
+                      controller: _passphrase),
                 ],
                 const SizedBox(height: NbSpace.md),
                 NbButton(
-                  label: 'Export backup',
+                  label: AppText.of(context).backupScreenExportButton,
                   icon: Icons.save_alt,
                   busy: _busy,
                   onPressed: _busy ? null : _exportBackup,
@@ -153,16 +154,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('RESTORE', style: t.text.label),
+                Text(AppText.of(context).backupScreenSectionRestore,
+                    style: t.text.label),
                 const SizedBox(height: NbSpace.xs),
                 Text(
-                  'Replaces everything on this device with the contents of a '
-                  'backup file. The current data is kept beside it as a copy.',
+                  AppText.of(context).backupScreenRestoreDescription,
                   style: t.text.body,
                 ),
                 const SizedBox(height: NbSpace.md),
                 NbButton.secondary(
-                  label: 'Restore from a backup',
+                  label: AppText.of(context).backupScreenRestoreButton,
                   icon: Icons.restore,
                   busy: _busy,
                   onPressed: _busy ? null : _restore,
@@ -205,29 +206,31 @@ class _RestoreConfirmDialogState extends State<_RestoreConfirmDialog> {
         (!m.encrypted || _passphrase.text.isNotEmpty);
 
     return AlertDialog(
-      title: Text('Replace everything?', style: t.text.heading),
+      title: Text(AppText.of(context).backupScreenRestoreDialogTitle,
+          style: t.text.heading),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'This backup was made on '
-              '${DateFormat('d MMM y, HH:mm').format(m.createdAt.toLocal())} '
-              'by Tiffin ${m.appVersion}, and holds ${m.totalRows} rows '
-              '(${m.rowCounts['members'] ?? 0} members).',
+              AppText.of(context).backupScreenRestoreManifestSummary(
+                DateFormat('d MMM y, HH:mm').format(m.createdAt.toLocal()),
+                m.appVersion,
+                m.totalRows,
+                m.rowCounts['members'] ?? 0,
+              ),
               style: t.text.body,
             ),
             const SizedBox(height: NbSpace.sm),
             Text(
-              'Everything currently on this device will be replaced. A copy '
-              'of the current data is kept next to it.',
+              AppText.of(context).backupScreenReplaceWarning,
               style: t.text.body.copyWith(color: t.color.reject),
             ),
             if (m.encrypted) ...[
               const SizedBox(height: NbSpace.md),
               NbTextField(
-                label: 'Backup password',
+                label: AppText.of(context).backupScreenPasswordLabel,
                 controller: _passphrase,
                 obscure: true,
                 onChanged: (_) => setState(() {}),
@@ -235,7 +238,7 @@ class _RestoreConfirmDialogState extends State<_RestoreConfirmDialog> {
             ],
             const SizedBox(height: NbSpace.md),
             NbTextField(
-              label: 'Type REPLACE to confirm',
+              label: AppText.of(context).backupScreenTypeReplaceLabel,
               controller: _confirm,
               onChanged: (_) => setState(() {}),
             ),
@@ -245,10 +248,10 @@ class _RestoreConfirmDialogState extends State<_RestoreConfirmDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppText.of(context).backupScreenCancelButton),
         ),
         NbButton(
-          label: 'Restore',
+          label: AppText.of(context).backupScreenRestoreConfirmButton,
           background: t.color.reject,
           onPressed:
               armed ? () => Navigator.pop(context, _passphrase.text) : null,

@@ -1,8 +1,9 @@
 {
   "@@locale": "en",
   "appTitle": "Tiffin",
-  "@appTitle": { "description": "Default app name; overridden at runtime by the branding setting (PRD §6.8)." },
-
+  "@appTitle": {
+    "description": "Default app name; overridden at runtime by the branding setting (PRD §6.8)."
+  },
   "modeSetupTitle": "Set up this device",
   "modeSetupSubtitle": "One app, two roles. You can change this later.",
   "modeHostName": "HOST",
@@ -12,18 +13,24 @@
   "modeClientBlurb": "This device connects to a host on the same Wi-Fi.",
   "modeClientAction": "Run as client",
   "modeChange": "Change mode",
-
   "hostUnreachable": "The host device is not responding. It may be offline or on a different network.",
-  "@hostUnreachable": { "description": "Client-mode error state (PRD §13.2)." },
+  "@hostUnreachable": {
+    "description": "Client-mode error state (PRD §13.2)."
+  },
   "retry": "Retry",
   "rediscover": "Find host again",
-
   "scanAccepted": "{name} — {meal}. {remaining} left.",
   "@scanAccepted": {
     "placeholders": {
-      "name": { "type": "String" },
-      "meal": { "type": "String" },
-      "remaining": { "type": "int" }
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "scanViaGrace": "on grace allowance",
@@ -32,10 +39,1003 @@
   "scanNoWindow": "No meal is currently being served.",
   "scanAlreadyDone": "{name} has already collected {meal} today.",
   "@scanAlreadyDone": {
-    "placeholders": { "name": { "type": "String" }, "meal": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
   },
   "scanNoUnits": "{name} has no {meal} units left.",
   "@scanNoUnits": {
-    "placeholders": { "name": { "type": "String" }, "meal": { "type": "String" } }
-  }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "apprScreenTitle": "Appearance",
+  "apprScreenEnforcedBanner": "The host sets the look for every device here. Your own choices are saved and will apply if that is turned off.",
+  "apprScreenThemeLabel": "THEME",
+  "apprScreenModeLabel": "LIGHT OR DARK",
+  "apprScreenModeSystem": "System",
+  "apprScreenModeLight": "Light",
+  "apprScreenModeDark": "Dark",
+  "apprScreenMotionLabel": "MOTION",
+  "apprScreenMotionTitle": "Animations",
+  "apprScreenMotionOnSubtitle": "Screens slide, tiles fade in, buttons press.",
+  "apprScreenMotionOffSubtitle": "Everything switches instantly.",
+  "apprScreenReduceMotionNote": "Your phone's own \"reduce motion\" accessibility setting always wins, whatever is chosen here.",
+  "apprScreenLanguageLabel": "LANGUAGE",
+  "apprScreenEnforceSectionLabel": "FOR EVERY DEVICE",
+  "apprScreenEnforceEnabledBody": "Every device on this host is using the look set here. Turn this off to let each phone choose its own again.",
+  "apprScreenEnforceDisabledBody": "Each phone currently picks its own look. Turn this on to make them all match the settings above.",
+  "apprScreenLetDevicesChoose": "Let devices choose",
+  "apprScreenUseEverywhere": "Use this look everywhere",
+  "apprScreenEnforceOnToast": "Every device will use this look.",
+  "apprScreenEnforceOffToast": "Devices can choose their own look again.",
+  "apprScreenSavedLoginsLabel": "SAVED LOGINS",
+  "apprScreenSavedLoginsEmpty": "Nothing saved on this device.",
+  "apprScreenSavedLoginsBlurb": "This phone remembers who signs in on each canteen host, so it can offer them next time. Passwords are kept only where you asked for them.",
+  "apprScreenSavedLoginsRow": "{name} — {logins}",
+  "@apprScreenSavedLoginsRow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "logins": {
+        "type": "String"
+      }
+    }
+  },
+  "apprScreenForgetAllLogins": "Forget all saved logins",
+  "apprScreenLoginsCleared": "Saved logins cleared.",
+  "emptyQuipsMembers1": "Not a soul on the list yet. Add your first hungry human.",
+  "emptyQuipsMembers2": "Emptier than the canteen at 3pm. Tap + to add someone.",
+  "emptyQuipsMembers3": "Zero members. Big \"new school\" energy.",
+  "emptyQuipsTopups1": "No top-ups yet. The ledger is squeaky clean.",
+  "emptyQuipsTopups2": "Nobody has paid up. Suspicious. Or just new.",
+  "emptyQuipsScans1": "No scans yet. The scanner is well-rested.",
+  "emptyQuipsScans2": "Nothing scanned. Peaceful, isn't it?",
+  "emptyQuipsMenu1": "No menu planned. Chef's surprise, then?",
+  "emptyQuipsMenu2": "Blank calendar. The kitchen awaits your genius.",
+  "emptyQuipsCategories1": "No categories. \"Jain\", \"Normal\", \"Staff\" — your call.",
+  "emptyQuipsIngredients1": "Pantry's empty on paper. Add what you actually buy.",
+  "emptyQuipsRecipes1": "No recipes. The dishes are keeping their secrets.",
+  "emptyQuipsPurchase1": "Shopping list is empty. Either you're stocked, or menus need planning.",
+  "emptyQuipsPurchase2": "Nothing to buy. Rare. Enjoy it.",
+  "emptyQuipsExpenses1": "No expenses logged. Profit looks amazing from here.",
+  "emptyQuipsRefunds1": "No refunds. Everyone's eating what they paid for.",
+  "emptyQuipsUsers1": "Just you so far. Add a counter or scanner account when you need one.",
+  "emptyQuipsNotifications1": "All quiet. Nothing needs you right now.",
+  "menuCategoriesScreenTitle": "Menu categories",
+  "menuCategoriesScreenNew": "New",
+  "menuCategoriesScreenLoading": "Loading categories…",
+  "menuCategoriesScreenEmptyTitle": "No categories yet",
+  "menuCategoriesScreenEmptyAction": "Add a category",
+  "menuCategoriesScreenDeleteSuccess": "Deleted.",
+  "menuCategoriesScreenNewCategoryTitle": "New category",
+  "menuCategoriesScreenNameLabel": "Name",
+  "menuCategoriesScreenDescriptionLabel": "Description (optional)",
+  "menuCategoriesScreenCancel": "Cancel",
+  "menuCategoriesScreenSave": "Save",
+  "menuCategoriesScreenSaveSuccess": "Saved.",
+  "usersScreenTitle": "Users",
+  "usersScreenNewUser": "New user",
+  "usersScreenLoading": "Loading users…",
+  "usersScreenEmptyTitle": "Only you so far",
+  "usersScreenEmptyAction": "Add a user",
+  "usersScreenDeleteSuccess": "User deleted.",
+  "usersScreenNewUserTitle": "New user",
+  "usersScreenUsernameLabel": "Username",
+  "usersScreenPasswordLabel": "Password",
+  "usersScreenNewPasswordLabel": "New password (blank = keep)",
+  "usersScreenStatusActive": "active",
+  "usersScreenStatusInactive": "inactive",
+  "usersScreenCancel": "Cancel",
+  "usersScreenSave": "Save",
+  "usersScreenSaveSuccess": "User saved.",
+  "hostingScreenTitle": "Hosting & LAN",
+  "hostingScreenServingOn": "SERVING ON LAN",
+  "hostingScreenNotServing": "NOT SERVING",
+  "hostingScreenPortHttpOnly": "Client phones connect on port {httpPort}",
+  "@hostingScreenPortHttpOnly": {
+    "placeholders": {
+      "httpPort": {
+        "type": "int"
+      }
+    }
+  },
+  "hostingScreenPortWithHttps": "Client phones connect on port {httpPort} · desktop HTTPS on {httpsPort}",
+  "@hostingScreenPortWithHttps": {
+    "placeholders": {
+      "httpPort": {
+        "type": "int"
+      },
+      "httpsPort": {
+        "type": "int"
+      }
+    }
+  },
+  "hostingScreenAutoDiscoveryOff": "Auto-discovery is off (no Wi-Fi router reachable). Clients can still connect with \"Connect by IP address\" using the address below.",
+  "hostingScreenStartServing": "Start serving",
+  "hostingScreenStop": "Stop",
+  "hostingScreenRestart": "Restart",
+  "hostingScreenDesktopAdminLabel": "DESKTOP ADMIN",
+  "hostingScreenNoLanAddress": "No LAN address — check Wi-Fi.",
+  "hostingScreenOpenInBrowser": "Open in a browser on the same Wi-Fi (tap to copy):",
+  "hostingScreenEncryptedWarning": "Encrypted (one \"not trusted\" warning per computer):",
+  "hostingScreenHotspotLabel": "SERVE WITHOUT WI-FI (HOTSPOT)",
+  "hostingScreenKeepAwakeLabel": "KEEP THIS DEVICE AWAKE",
+  "hostingScreenKeepAwakeIos": "While serving, the screen is held awake. Leave the app in the foreground — backgrounding it on iOS stops the server.",
+  "hostingScreenKeepAwakeAndroid": "While serving, the screen is held awake and a foreground service keeps the server running. Keep the phone on power and on Wi-Fi; don't force-stop the app.",
+  "hostingScreenTlsLabel": "DESKTOP-ADMIN TLS (OPTIONAL)",
+  "hostingScreenTlsDescription": "Encrypts admin login over the LAN. A self-signed certificate still shows a browser \"not trusted\" warning the first time each computer connects. It never affects phone-to-phone use. Restart serving after generating.",
+  "hostingScreenCertExpiry": "Current certificate valid until {expiry}",
+  "@hostingScreenCertExpiry": {
+    "placeholders": {
+      "expiry": {
+        "type": "String"
+      }
+    }
+  },
+  "hostingScreenGenerateCertificate": "Generate certificate",
+  "hostingScreenHotspotDescription": "No Wi-Fi at the canteen? This phone makes its own private network. It turns Wi-Fi off on this device while active, and has no internet — just the canteen app.",
+  "hostingScreenStartHotspot": "Start hotspot",
+  "hostingScreenNetworkLabel": "Network",
+  "hostingScreenPasswordLabel": "Password",
+  "hostingScreenHostAddressLabel": "Host address",
+  "hostingScreenOtherPhonesJoin": "Other phones: scan to join, then open the app and pick this host (or Connect by IP → {ip}).",
+  "@hostingScreenOtherPhonesJoin": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "hostingScreenStopHotspot": "Stop hotspot",
+  "hostingScreenCopiedSnack": "Copied \"{value}\".",
+  "@hostingScreenCopiedSnack": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesScreenTitle": "Expenses & revenue",
+  "expensesScreenLogExpense": "Log expense",
+  "expensesScreenRevenue": "Revenue",
+  "expensesScreenExpenses": "Expenses",
+  "expensesScreenProfit": "Profit",
+  "expensesScreenLoading": "Loading expenses…",
+  "expensesScreenEmptyTitle": "No expenses logged",
+  "expensesScreenEmptyAction": "Log an expense",
+  "expensesScreenAmount": "Rs. {amount}",
+  "@expensesScreenAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesScreenCategoryLabel": "Category (groceries, tables…)",
+  "expensesScreenDescriptionLabel": "Description",
+  "expensesScreenAmountLabel": "Amount (Rs.)",
+  "expensesScreenChangeDate": "Change date",
+  "expensesScreenCancel": "Cancel",
+  "expensesScreenSave": "Save",
+  "expensesScreenSaveSuccess": "Expense logged.",
+  "scanLogScreenTitle": "Scan log",
+  "scanLogScreenLoading": "Loading the scan log…",
+  "scanLogScreenEmptyTitle": "No scans yet",
+  "scanLogScreenReversedLabel": "REVERSED",
+  "scanLogScreenGraceLabel": "GRACE",
+  "scanLogScreenReverseButton": "Reverse",
+  "scanLogScreenReverseSuccess": "Scan reversed.",
+  "purchaseScheduleScreenTitle": "Purchase schedule",
+  "purchaseScheduleScreenGenerateFromMenu": "Generate from menu",
+  "purchaseScheduleScreenAddItem": "Add item",
+  "purchaseScheduleScreenLoading": "Loading the shopping list…",
+  "purchaseScheduleScreenEmptyTitle": "Nothing to buy",
+  "purchaseScheduleScreenSourceManual": "manual",
+  "purchaseScheduleScreenSourceFromMenu": "from menu",
+  "purchaseScheduleScreenSourceFromMenuBy": "from menu · by {purchasedBy}",
+  "@purchaseScheduleScreenSourceFromMenuBy": {
+    "placeholders": {
+      "purchasedBy": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenRemoved": "Removed.",
+  "purchaseScheduleScreenGenerateTitle": "Generate schedule",
+  "purchaseScheduleScreenGenerateDescription": "Builds the shopping list from menu entries in this date range. One-off items go in with the + button on the list.",
+  "purchaseScheduleScreenFromLabel": "From",
+  "purchaseScheduleScreenToLabel": "To",
+  "purchaseScheduleScreenCancel": "Cancel",
+  "purchaseScheduleScreenGenerateButton": "Generate",
+  "purchaseScheduleScreenAddedItems": "{count, plural, =0 {No items added to the list.} =1 {Added 1 item to the list.} other {Added {count} items to the list.}}",
+  "@purchaseScheduleScreenAddedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "purchaseScheduleScreenReasonNoMenuEntries": "There are no menu entries between those dates. Add meals on the Menu calendar first, then generate.",
+  "purchaseScheduleScreenReasonNoRecipes": "The menu has entries, but there are no recipes yet. A recipe links a dish name to its ingredients — add recipes on the Recipes screen, matching the item names you typed on the menu.",
+  "purchaseScheduleScreenReasonNoMatch": "The menu entries in that range don't match any recipe by dish name, or those recipes have no ingredients. Check that a recipe's dish name matches the menu item text, then try again. You can also add items directly with the + button.",
+  "purchaseScheduleScreenNothingToAddTitle": "Nothing to add",
+  "purchaseScheduleScreenOk": "OK",
+  "purchaseScheduleScreenBoughtTitle": "Bought {ingredientName}",
+  "@purchaseScheduleScreenBoughtTitle": {
+    "placeholders": {
+      "ingredientName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenPlannedLabel": "Planned: {quantityNote}. Enter what you actually got.",
+  "@purchaseScheduleScreenPlannedLabel": {
+    "placeholders": {
+      "quantityNote": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenQuantityLabel": "Quantity ({unit})",
+  "@purchaseScheduleScreenQuantityLabel": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenCostLabel": "Cost (Rs., optional)",
+  "purchaseScheduleScreenConfirm": "Confirm",
+  "purchaseScheduleScreenMarkedPurchased": "Marked purchased.",
+  "purchaseScheduleScreenAddOneOffTitle": "Add one-off item",
+  "purchaseScheduleScreenIngredientLabel": "Ingredient",
+  "purchaseScheduleScreenNewIngredientTooltip": "New ingredient",
+  "purchaseScheduleScreenDateLabel": "Date",
+  "purchaseScheduleScreenQuantityOnlyLabel": "Quantity",
+  "purchaseScheduleScreenAddButton": "Add",
+  "purchaseScheduleScreenItemAdded": "Item added.",
+  "purchaseScheduleScreenPickButton": "Pick",
+  "recipesScreenLoading": "Loading recipes…",
+  "recipesScreenEmptyTitle": "No recipes yet",
+  "recipesScreenAddRecipe": "Add a recipe",
+  "recipesScreenIngredientCount": "{count, plural, =1 {1 ingredient} other {{count} ingredients}}",
+  "@recipesScreenIngredientCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipesScreenNewRecipeTitle": "New recipe",
+  "recipesScreenDishNameLabel": "Dish name",
+  "recipesScreenQuantitiesHint": "Quantities are for ONE plate / one serving.",
+  "recipesScreenPerPlateLabel": "per plate",
+  "recipesScreenRemoveTooltip": "Remove",
+  "recipesScreenAddRow": "Add row",
+  "recipesScreenNewIngredient": "New ingredient",
+  "recipesScreenCancel": "Cancel",
+  "recipesScreenSave": "Save",
+  "recipesScreenSaveSuccess": "Saved.",
+  "menuScreenTitle": "Menu calendar",
+  "menuScreenManageCategoriesTooltip": "Manage categories",
+  "menuScreenAddFab": "Add · {date}",
+  "@menuScreenAddFab": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "menuScreenLoading": "Loading the month…",
+  "menuScreenRemoved": "Removed.",
+  "menuScreenCategoryLabel": "Category",
+  "menuScreenPickOrAddHint": "Pick or add one",
+  "menuScreenNewCategoryTooltip": "New category",
+  "menuScreenCategoryAdded": "Category added.",
+  "menuScreenApproxPlatesLabel": "Approx plates",
+  "menuScreenItemsLabel": "Items (comma-separated)",
+  "menuScreenErrorPickCategory": "Pick a category.",
+  "menuScreenErrorAddItem": "Add at least one item.",
+  "menuScreenCancel": "Cancel",
+  "menuScreenAddButton": "Add",
+  "menuScreenEntryAdded": "Entry added.",
+  "menuScreenSave": "Save",
+  "menuScreenEntryUpdated": "Entry updated.",
+  "menuScreenNewCategoryTitle": "New category",
+  "menuScreenNameLabel": "Name",
+  "menuScreenCreateButton": "Create",
+  "menuScreenNothingPlanned": "Nothing planned for this day.",
+  "menuScreenDayEntrySummary": "{mealType} · {category}  ·  ~{headcount} plates",
+  "@menuScreenDayEntrySummary": {
+    "placeholders": {
+      "mealType": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      },
+      "headcount": {
+        "type": "int"
+      }
+    }
+  },
+  "menuScreenAddEntryForDay": "Add an entry for this day",
+  "ingredientsScreenLoading": "Loading ingredients…",
+  "ingredientsScreenEmptyTitle": "No ingredients yet",
+  "ingredientsScreenAddIngredient": "Add an ingredient",
+  "ingredientsScreenInStock": "{qty} {unit} in stock",
+  "@ingredientsScreenInStock": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenLowLabel": "LOW",
+  "ingredientsScreenAdjustStockTooltip": "Adjust stock",
+  "ingredientsScreenDeleteSuccess": "Deleted.",
+  "ingredientsScreenAdjustTitle": "Adjust {name} stock",
+  "@ingredientsScreenAdjustTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenAdjustNowText": "Now: {qty} {unit}. Enter a change (e.g. 5 for a delivery, -2 for spoilage).",
+  "@ingredientsScreenAdjustNowText": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenChangeLabel": "Change ({unit})",
+  "@ingredientsScreenChangeLabel": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenReasonLabel": "Reason",
+  "ingredientsScreenCancel": "Cancel",
+  "ingredientsScreenApply": "Apply",
+  "ingredientsScreenStockUpdated": "Stock updated.",
+  "ingredientsScreenNewIngredientTitle": "New ingredient",
+  "ingredientsScreenNameLabel": "Name",
+  "ingredientsScreenStockOnHandLabel": "Stock on hand",
+  "ingredientsScreenLowStockAlertLabel": "Low-stock alert at (blank = no alert)",
+  "ingredientsScreenSave": "Save",
+  "ingredientsScreenSaveSuccess": "Saved.",
+  "backupScreenPasswordRequired": "Choose a password, or turn protection off.",
+  "backupScreenExportSuccess": "Backup ready. Keep it somewhere safe.",
+  "backupScreenRestoreSuccess": "Restored. Sign in again to continue.",
+  "backupScreenTitle": "Backup & restore",
+  "backupScreenSectionBackup": "BACKUP",
+  "backupScreenBackupDescription": "A complete copy of this canteen — members, balances, history, settings and accounts. Use it to move to a new phone, or to recover from one that is lost.",
+  "backupScreenProtectToggle": "Protect with a password",
+  "backupScreenProtectOnHint": "Nobody can open the file without it — including you, so write it down.",
+  "backupScreenProtectOffHint": "The file will hold member names and account details in the clear.",
+  "backupScreenPasswordLabel": "Backup password",
+  "backupScreenExportButton": "Export backup",
+  "backupScreenSectionRestore": "RESTORE",
+  "backupScreenRestoreDescription": "Replaces everything on this device with the contents of a backup file. The current data is kept beside it as a copy.",
+  "backupScreenRestoreButton": "Restore from a backup",
+  "backupScreenRestoreDialogTitle": "Replace everything?",
+  "backupScreenRestoreManifestSummary": "This backup was made on {date} by Tiffin {appVersion}, and holds {totalRows} rows ({membersCount} members).",
+  "@backupScreenRestoreManifestSummary": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "appVersion": {
+        "type": "String"
+      },
+      "totalRows": {
+        "type": "int"
+      },
+      "membersCount": {
+        "type": "int"
+      }
+    }
+  },
+  "backupScreenReplaceWarning": "Everything currently on this device will be replaced. A copy of the current data is kept next to it.",
+  "backupScreenTypeReplaceLabel": "Type REPLACE to confirm",
+  "backupScreenCancelButton": "Cancel",
+  "backupScreenRestoreConfirmButton": "Restore",
+  "backupScreenShareSubject": "Tiffin backup",
+  "topupHistoryLoading": "Loading top-ups…",
+  "topupHistoryEmptyTitle": "No top-ups yet",
+  "topupHistoryEmptyQuip": "Charge a member on the Top-up & bill screen first.",
+  "topupHistoryUnknownMember": "Member #{id}",
+  "@topupHistoryUnknownMember": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "topupHistoryReversedBadge": "REVERSED",
+  "topupHistoryLineSummary": "L{lunch} B{breakfast} Br{brunch}  ·  Rs. {amount}  ·  {method} ({status})",
+  "@topupHistoryLineSummary": {
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "method": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryCreatedInfo": "{date} · by {createdBy}",
+  "@topupHistoryCreatedInfo": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "createdBy": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryReversedInfo": "Reversed {date}{hasReverser, select, true { · by {reversedBy}} other {}}",
+  "@topupHistoryReversedInfo": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "hasReverser": {
+        "type": "String"
+      },
+      "reversedBy": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryReverseButton": "Reverse",
+  "topupHistoryReverseDialogTitle": "Reverse this top-up?",
+  "topupHistoryReverseDialogBody": "This subtracts L{lunch} B{breakfast} Br{brunch} back off {name} and records the reversal. It cannot be undone. If those units have already been used, process a refund instead.",
+  "@topupHistoryReverseDialogBody": {
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryCancelButton": "Cancel",
+  "topupHistorySuccessMessage": "Top-up reversed.",
+  "membersScreenTitle": "Members",
+  "membersScreenNewButton": "New",
+  "membersScreenLoading": "Loading members…",
+  "membersScreenEmptyTitle": "No members yet",
+  "membersScreenAddFirstButton": "Add the first member",
+  "membersScreenInactiveBadge": "INACTIVE",
+  "membersScreenTypeSummary": "{type, select, student {Student · {className} · roll {rollNumber}} other {Staff · {staffId}}}",
+  "@membersScreenTypeSummary": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "className": {
+        "type": "String"
+      },
+      "rollNumber": {
+        "type": "String"
+      },
+      "staffId": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenBalancesSummary": "Lunch {lunch}   Breakfast {breakfast}   Brunch {brunch}",
+  "@membersScreenBalancesSummary": {
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      }
+    }
+  },
+  "membersScreenCreditButton": "Credit",
+  "membersScreenQrButton": "QR",
+  "membersScreenCreditDialogTitle": "Credit {name}",
+  "@membersScreenCreditDialogTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenLunchUnitsLabel": "Lunch units",
+  "membersScreenBreakfastUnitsLabel": "Breakfast units",
+  "membersScreenBrunchUnitsLabel": "Brunch units",
+  "membersScreenCancelButton": "Cancel",
+  "membersScreenAddUnitsButton": "Add units",
+  "membersScreenUnitsAddedMessage": "Units added.",
+  "membersScreenCloseButton": "Close",
+  "membersScreenEditTitle": "Edit member",
+  "membersScreenNewTitle": "New member",
+  "membersScreenTypeStudent": "Student",
+  "membersScreenTypeStaff": "Staff",
+  "membersScreenNameLabel": "Name",
+  "membersScreenClassLabel": "Class",
+  "membersScreenRollNumberLabel": "Roll number",
+  "membersScreenStaffIdLabel": "Staff ID",
+  "membersScreenGraceOverrideLabel": "Grace override (blank = global default)",
+  "membersScreenStatusActive": "Active",
+  "membersScreenStatusInactive": "Inactive",
+  "membersScreenSaveButton": "Save",
+  "membersScreenDeleteButton": "Delete",
+  "membersScreenSaveSuccess": "{isEdit, select, true {Member updated.} other {Member created.}}",
+  "@membersScreenSaveSuccess": {
+    "placeholders": {
+      "isEdit": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenDeletedMessage": "Member deleted.",
+  "membersScreenCategoryLabel": "CATEGORY",
+  "kitchenSetupScreenTitle": "Kitchen setup",
+  "kitchenSetupScreenIngredientsTab": "Ingredients",
+  "kitchenSetupScreenRecipesTab": "Recipes",
+  "kitchenSetupScreenNewButton": "{onIngredients, select, true {New ingredient} other {New recipe}}",
+  "@kitchenSetupScreenNewButton": {
+    "placeholders": {
+      "onIngredients": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDashboardNotServingWarning": "Not serving on the LAN — other devices can't connect. Tap to open Hosting.",
+  "adminDashboardAppBarTitle": "Admin · {username}",
+  "@adminDashboardAppBarTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDashboardDestScan": "Scan",
+  "adminDashboardDestMembers": "Members",
+  "adminDashboardDestScanLog": "Scan log",
+  "adminDashboardDestTopup": "Top-up & bill",
+  "adminDashboardDestExpenses": "Expenses & revenue",
+  "adminDashboardDestRefunds": "Refunds",
+  "adminDashboardDestMenuCalendar": "Menu calendar",
+  "adminDashboardDestKitchenSetup": "Kitchen setup",
+  "adminDashboardDestPurchaseSchedule": "Purchase schedule",
+  "adminDashboardDestSettings": "Settings",
+  "topupScreenTitle": "Top-up & bill",
+  "topupScreenChargeTab": "Charge",
+  "topupScreenHistoryTab": "History",
+  "topupScreenBalancesCreditedMessage": "Balances credited.",
+  "topupScreenBillDialogTitle": "Bill #{id}",
+  "@topupScreenBillDialogTitle": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "topupScreenBillAmount": "Amount: Rs. {amount} ({method})",
+  "@topupScreenBillAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "topupScreenBillStatus": "Status: {status}",
+  "@topupScreenBillStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "topupScreenScanQrPrompt": "Ask the payer to scan:",
+  "topupScreenMarkReceivedButton": "Mark received",
+  "topupScreenPaymentConfirmedMessage": "Payment confirmed.",
+  "topupScreenDoneButton": "Done",
+  "topupScreenLoadingPrices": "Loading prices…",
+  "topupScreenLoadingMembers": "Loading members…",
+  "topupScreenEmptyTitle": "No active members",
+  "topupScreenEmptyQuip": "Add someone on the Members page first, then come back to top up.",
+  "topupScreenMemberLabel": "MEMBER",
+  "topupScreenLunchLabel": "Lunch  (Rs. {price})",
+  "@topupScreenLunchLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "topupScreenBreakfastLabel": "Breakfast  (Rs. {price})",
+  "@topupScreenBreakfastLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "topupScreenBrunchLabel": "Brunch  (Rs. {price})",
+  "@topupScreenBrunchLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "topupScreenPaymentCash": "Cash",
+  "topupScreenPaymentUpi": "UPI",
+  "topupScreenTotalLabel": "TOTAL",
+  "topupScreenChargeButton": "Charge & generate bill",
+  "settingsConfigScreenTitle": "Canteen configuration",
+  "settingsConfigScreenSavedMessage": "Settings saved.",
+  "settingsConfigScreenSectionBranding": "Branding",
+  "settingsConfigScreenAppNameLabel": "App name",
+  "settingsConfigScreenSectionPrices": "Unit prices (Rs.)",
+  "settingsConfigScreenLunchLabel": "Lunch",
+  "settingsConfigScreenBreakfastLabel": "Breakfast",
+  "settingsConfigScreenBrunchLabel": "Brunch",
+  "settingsConfigScreenSectionMealWindows": "Meal windows (HH:MM, 24h)",
+  "settingsConfigScreenStartLabel": "start",
+  "settingsConfigScreenEndLabel": "end",
+  "settingsConfigScreenSectionTimezone": "Timezone (IANA)",
+  "settingsConfigScreenTimezoneFieldLabel": "Timezone",
+  "settingsConfigScreenSectionGrace": "Grace allowance",
+  "settingsConfigScreenGraceEnabledLabel": "Enabled",
+  "settingsConfigScreenGraceUnitsLabel": "Default grace units",
+  "settingsConfigScreenSectionWindowsReminders": "Windows & reminders",
+  "settingsConfigScreenReversalWindowLabel": "Scan reversal window (minutes)",
+  "settingsConfigScreenPrepLeadLabel": "Prep reminder lead (minutes)",
+  "settingsConfigScreenPurchaseLeadLabel": "Purchase reminder lead (days)",
+  "settingsConfigScreenSectionUpi": "UPI",
+  "settingsConfigScreenUpiIdLabel": "UPI ID (blank = cash only)",
+  "settingsConfigScreenPayeeNameLabel": "Payee name",
+  "settingsConfigScreenSaveButton": "Save settings",
+  "refundsScreenTitle": "Refunds",
+  "refundsScreenNewButton": "New refund",
+  "refundsScreenLoading": "Loading refunds…",
+  "refundsScreenEmptyTitle": "No refunds yet",
+  "refundsScreenProcessButton": "Process a refund",
+  "refundsScreenLineSummary": "L{lunch} B{breakfast} Br{brunch}  ·  Rs. {amount}",
+  "@refundsScreenLineSummary": {
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "refundsScreenLineInfo": "{date} · by {processedBy}{hasReason, select, true { · {reason}} other {}}",
+  "@refundsScreenLineInfo": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "processedBy": {
+        "type": "String"
+      },
+      "hasReason": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "refundsScreenDialogTitle": "New refund",
+  "refundsScreenMemberLabel": "Member",
+  "refundsScreenLunchUnitsLabel": "Lunch units",
+  "refundsScreenBreakfastUnitsLabel": "Breakfast units",
+  "refundsScreenBrunchUnitsLabel": "Brunch units",
+  "refundsScreenReasonLabel": "Reason (optional)",
+  "refundsScreenCancelButton": "Cancel",
+  "refundsScreenProcessConfirmButton": "Process",
+  "refundsScreenSuccessMessage": "Refund recorded.",
+  "reportsScreenShareSubject": "Tiffin report",
+  "reportsScreenTitle": "Reports",
+  "reportsScreenReadyMessage": "Report ready.",
+  "reportsScreenSectionTitle": "SPREADSHEET REPORT",
+  "reportsScreenDescription": "An .xlsx you can open in Excel or Google Sheets. For reading and printing — it is not a way to put data back.",
+  "reportsScreenAllDatesLabel": "Everything",
+  "reportsScreenDatesButton": "Dates",
+  "reportsScreenAllDatesTooltip": "All dates",
+  "reportsScreenExportButton": "Export spreadsheet",
+  "hostSetupPasswordMismatch": "The two passwords do not match.",
+  "hostSetupFailed": "Could not finish setup: {error}",
+  "@hostSetupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hostSetupTitle": "Set up this host",
+  "hostSetupSubtitle": "Create the admin account for this canteen. You will use it to sign in here and on the desktop admin page. You can change both later in Users.",
+  "hostSetupUsernameLabel": "Admin username",
+  "hostSetupPasswordLabel": "Password",
+  "hostSetupConfirmPasswordLabel": "Confirm password",
+  "hostSetupSuggestButton": "Suggest a strong one",
+  "hostSetupHidePassword": "Hide password",
+  "hostSetupShowPassword": "Show password",
+  "hostSetupSubmitButton": "Create admin & continue",
+  "hostSetupPasswordWarning": "Write this password down. It is stored only as a one-way hash — nobody, including this app, can read it back.",
+  "hostSetupSwitchToClient": "Run as a client instead",
+  "loginFailed": "Could not sign in: {error}",
+  "@loginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginPasswordResetSnack": "Password reset. Sign in to continue.",
+  "loginResumingMessage": "Signing you in…",
+  "loginHostDeviceLabel": "Host device",
+  "loginSignInLabel": "Sign in",
+  "loginUsernameLabel": "Username",
+  "loginPasswordLabel": "Password",
+  "loginRememberPasswordLabel": "Remember password on this device",
+  "loginSignInButton": "Sign in",
+  "loginForgotPasswordButton": "Forgot the password?",
+  "loginSwitchRoleButton": "Switch device role",
+  "loginSavedLoginsHeader": "SAVED ON THIS DEVICE",
+  "loginSavedLoginTapToSignIn": "Tap to sign in",
+  "loginSavedLoginTapToFillUsername": "Tap to fill the username",
+  "loginForgetAccountTooltip": "Forget this account",
+  "loginRecoverDialogTitle": "Reset a password",
+  "loginRecoverDialogBody": "Only possible on this host device. The new password is shown below — write it down, it cannot be read back afterwards. Any open session for this account is signed out.",
+  "loginRecoverAccountLabel": "Account",
+  "loginRecoverNewPasswordLabel": "New password",
+  "loginRecoverConfirmLabel": "Type RESET to confirm",
+  "loginRecoverCancelButton": "Cancel",
+  "loginRecoverSubmitButton": "Reset password",
+  "settingsScreenTitle": "Settings",
+  "settingsScreenGroupCanteen": "Canteen",
+  "settingsScreenCanteenConfigTitle": "Canteen configuration",
+  "settingsScreenCanteenConfigSubtitle": "Prices, meal windows, timezone, grace, reminders, UPI.",
+  "settingsScreenUsersTitle": "Users & access",
+  "settingsScreenUsersSubtitle": "Login accounts and roles.",
+  "settingsScreenMenuCategoriesTitle": "Menu categories",
+  "settingsScreenMenuCategoriesSubtitle": "The Jain / Normal / Staff… list menu entries are tagged with. Also editable from the menu planner.",
+  "settingsScreenGroupDisplay": "Display",
+  "settingsScreenAppearanceTitle": "Appearance",
+  "settingsScreenAppearanceSubtitle": "Theme, light/dark, motion.",
+  "settingsScreenGroupThisHost": "This host",
+  "settingsScreenHostingTitle": "Hosting & LAN",
+  "settingsScreenHostingSubtitleServing": "Serving. URLs, restart, certificate.",
+  "settingsScreenHostingSubtitleNotServing": "Not serving. Tap to start.",
+  "settingsScreenReportsTitle": "Reports",
+  "settingsScreenReportsSubtitle": "Export an .xlsx for reading and printing.",
+  "settingsScreenBackupTitle": "Backup & restore",
+  "settingsScreenBackupSubtitle": "A full encrypted copy — move phones, recover data.",
+  "settingsScreenGroupDevice": "Device",
+  "settingsScreenSignOutTitle": "Sign out",
+  "settingsScreenSignOutSubtitle": "End this session on this device.",
+  "settingsScreenSwitchRoleTitle": "Switch device role",
+  "settingsScreenSwitchRoleSubtitle": "Host or client. Signs you out; data is untouched.",
+  "settingsScreenResetDataTitle": "Reset all data",
+  "settingsScreenResetDataSubtitle": "Permanently wipe this host. No undo.",
+  "settingsScreenSignOutDialogTitle": "Sign out?",
+  "settingsScreenSignOutDialogBody": "You will need to sign in again on this device.",
+  "settingsScreenCancelButton": "Cancel",
+  "settingsScreenSwitchRoleDialogTitle": "Switch device role?",
+  "settingsScreenSwitchRoleDialogBody": "You will be signed out and taken back to Host / Client setup. Your data is not touched.",
+  "settingsScreenSwitchButton": "Switch",
+  "settingsScreenResetSuccessSnack": "All data cleared. Set the device up again.",
+  "settingsScreenResetDialogTitle": "Reset all data?",
+  "settingsScreenResetDialogBody": "This cannot be undone. Type RESET to confirm.",
+  "settingsScreenDeleteEverythingButton": "Delete everything",
+  "counterHomeScanItem": "Scan",
+  "counterHomeTopUpItem": "Top-up & bill",
+  "counterHomePurchaseScheduleItem": "Purchase schedule",
+  "counterHomeAppBarTitle": "Counter · {username}",
+  "@counterHomeAppBarTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "scannerTorchTooltip": "Torch",
+  "scannerSwitchCameraTooltip": "Switch camera",
+  "scannerAppBarTitle": "Scan · {username}",
+  "@scannerAppBarTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "scannerAppBarTitlePlain": "SCAN",
+  "scannerErrorTitle": "SCAN ERROR",
+  "scannerAccepted": "ACCEPTED",
+  "scannerRejected": "REJECTED",
+  "scannerGraceAllowanceBadge": "ON GRACE ALLOWANCE",
+  "scannerHeadcountBadge": "PLANNED ~{plannedCount} {category} — THIS IS #{servedCount}",
+  "@scannerHeadcountBadge": {
+    "placeholders": {
+      "plannedCount": {
+        "type": "int"
+      },
+      "category": {
+        "type": "String"
+      },
+      "servedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "scannerNextButton": "Next",
+  "scannerTryAgainButton": "Try again",
+  "discoverScreenTitle": "FIND HOST",
+  "discoverScreenChangeMode": "Change mode",
+  "discoverScreenSubtitle": "Canteen devices on this Wi-Fi",
+  "discoverScreenReconnect": "Reconnect to {name}",
+  "@discoverScreenReconnect": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverScreenSearchAgain": "Search again",
+  "discoverScreenConnectByIp": "Connect by IP address",
+  "discoverScreenHostHotspot": "On the host's hotspot",
+  "discoverScreenInvalidIpPort": "Enter a valid IP and port.",
+  "discoverScreenHostAtIp": "Host at {ip}",
+  "@discoverScreenHostAtIp": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverScreenConnectByIpTitle": "Connect by IP",
+  "discoverScreenHostIpLabel": "Host IP",
+  "discoverScreenHostIpHint": "192.168.1.42",
+  "discoverScreenPortLabel": "Port",
+  "discoverScreenCancel": "Cancel",
+  "discoverScreenConnect": "Connect",
+  "discoverScreenSearching": "Looking for a host…",
+  "discoverScreenSearchingHint": "Make sure a device here is running in host mode\nand both are on the same Wi-Fi.",
+  "appShellSettingsTooltip": "Settings",
+  "appShellNotificationsTitle": "NOTIFICATIONS",
+  "appShellNotificationsEmpty": "Nothing right now.",
+  "copyableUrlQuip1": "Yoinked! It is on your clipboard now. 📋",
+  "copyableUrlQuip2": "Copied. Paste it like it is hot. 🔥",
+  "copyableUrlQuip3": "URL beamed to your clipboard. 🛸",
+  "copyableUrlQuip4": "Snatched. Ctrl+V is your friend now. ✌️",
+  "copyableUrlQuip5": "Got it. Go forth and paste. 📎",
+  "copyableUrlQuip6": "Clipboard: fed. You: welcome. 🍽️",
+  "ingredientQuickAddTitle": "New ingredient",
+  "ingredientQuickAddNameLabel": "Name",
+  "ingredientQuickAddUnitLabel": "Unit (kg, litre, pcs…)",
+  "ingredientQuickAddCancel": "Cancel",
+  "ingredientQuickAddCreate": "Create",
+  "ingredientQuickAddSuccess": "Ingredient added.",
+  "iosHostAdvisoryTitle": "HOSTING ON IPHONE — READ THIS",
+  "iosHostAdvisoryPointForeground": "Keep Tiffin open and on screen while you host. iOS stops the server the moment you lock the phone or switch apps, and every connected device drops.",
+  "iosHostAdvisoryPointWifi": "iOS can't make its own Wi-Fi. Every device must be on the same Wi-Fi router — or turn on Personal Hotspot (Settings ▸ Personal Hotspot) and have the others join it.",
+  "iosHostAdvisoryPointAndroid": "For a full meal service, host on an Android phone instead — it keeps serving with the screen off.",
+  "memberPickerTapToChoose": "Tap to choose a member",
+  "memberPickerCreateSuccess": "Member added.",
+  "memberPickerTitle": "Member",
+  "memberPickerCancel": "Cancel",
+  "memberPickerSearchLabel": "Search",
+  "memberPickerNewMember": "+ New member",
+  "memberPickerNoMembers": "No members yet.",
+  "memberPickerNoMatches": "Nothing matches \"{query}\".",
+  "@memberPickerNoMatches": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "memberPickerNewMemberTitle": "New member",
+  "memberPickerStudent": "Student",
+  "memberPickerStaff": "Staff",
+  "memberPickerNameLabel": "Name",
+  "memberPickerClassLabel": "Class",
+  "memberPickerRollNumberLabel": "Roll number",
+  "memberPickerStaffIdLabel": "Staff ID",
+  "memberPickerCategoryLabel": "CATEGORY",
+  "memberPickerCreate": "Create",
+  "nbFeedbackLoading": "Loading…",
+  "nbFeedbackHostUnreachable": "HOST UNREACHABLE",
+  "nbFeedbackSessionProblem": "SESSION PROBLEM",
+  "nbFeedbackErrorCode": "ERROR · {code}",
+  "@nbFeedbackErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "nbFeedbackSomethingBroke": "SOMETHING BROKE",
+  "nbFeedbackTryAgain": "Try again",
+  "nbFeedbackWorking": "Working…",
+  "nbFeedbackDone": "Done.",
+  "nbFeedbackUnexpected": "Unexpected: {error}",
+  "@nbFeedbackUnexpected": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nbPickerNotSet": "Not set",
+  "nbPickerCancel": "Cancel",
+  "nbPickerSearchLabel": "Search",
+  "nbPickerNoMatches": "Nothing matches \"{query}\".",
+  "@nbPickerNoMatches": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "unitFieldLabel": "UNIT",
+  "unitFieldCustomOption": "Custom…",
+  "unitFieldCustomLabel": "Custom unit"
 }

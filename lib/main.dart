@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/appearance_providers.dart';
 import 'app/bootstrap.dart';
+import 'app/locale_providers.dart';
 import 'app/mode_gate.dart';
 import 'app/providers.dart';
 import 'core/app_mode.dart';
 import 'core/logging.dart';
+import 'l10n/app_localizations.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/theme/tokens.dart';
 
@@ -53,6 +55,7 @@ class TiffinApp extends ConsumerWidget {
     // Light and dark are both built and handed to MaterialApp so "system"
     // follows the OS without us watching for brightness changes ourselves.
     final appearance = ref.watch(effectiveAppearanceProvider);
+    final localeId = ref.watch(deviceLocaleProvider);
     ThemeData themeFor(Brightness brightness) => buildTiffinTheme(
           appearance.theme,
           brightness,
@@ -65,13 +68,17 @@ class TiffinApp extends ConsumerWidget {
       theme: themeFor(Brightness.light),
       darkTheme: themeFor(Brightness.dark),
       themeMode: appearance.mode,
-      // i18n-ready from day one (CLAUDE.md §13) even though only en ships now.
+      // English, Hindi, Marathi (CLAUDE.md §13, PRD i18n plan §15.2). The
+      // device's own saved choice drives this, never the OS locale — see
+      // LocaleStore's doc comment for why.
+      locale: localeId.locale,
       localizationsDelegates: const [
+        AppText.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('en')],
+      supportedLocales: AppText.supportedLocales,
       // WithForegroundTask lets the plugin manage the app lifecycle cleanly
       // while the host-keep-alive service runs (PRD §13.3).
       home: const WithForegroundTask(child: _AppRoot()),

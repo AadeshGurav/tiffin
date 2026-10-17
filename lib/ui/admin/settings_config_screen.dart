@@ -9,6 +9,7 @@ import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_picker.dart';
 import '../theme/tokens.dart';
 import '../shared_widgets/nb_text_field.dart';
+import '../../l10n/app_localizations.dart';
 
 final _settingsProvider = FutureProvider.autoDispose<SettingsSnapshot>(
     (ref) => ref.watch(backendProvider).getSettings());
@@ -26,7 +27,8 @@ class SettingsConfigScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(_settingsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Canteen configuration')),
+      appBar:
+          AppBar(title: Text(AppText.of(context).settingsConfigScreenTitle)),
       body: AsyncView<SettingsSnapshot>(
         value: settings,
         onRetry: () => ref.invalidate(_settingsProvider),
@@ -97,7 +99,7 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
                     start: e.value.$1.text.trim(), end: e.value.$2.text.trim()),
             },
           ));
-    }, successMessage: 'Settings saved.');
+    }, successMessage: AppText.of(context).settingsConfigScreenSavedMessage);
     if (mounted) setState(() => _busy = false);
     if (ok) ref.invalidate(_settingsProvider);
   }
@@ -110,24 +112,30 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.lg),
         children: [
-          _section(t, 'Branding'),
-          NbTextField(label: 'App name', controller: _appName),
-          _section(t, 'Unit prices (Rs.)'),
+          _section(t, AppText.of(context).settingsConfigScreenSectionBranding),
           NbTextField(
-              label: 'Lunch',
+              label: AppText.of(context).settingsConfigScreenAppNameLabel,
+              controller: _appName),
+          _section(t, AppText.of(context).settingsConfigScreenSectionPrices),
+          NbTextField(
+              label: AppText.of(context).settingsConfigScreenLunchLabel,
               controller: _lunchPrice,
               keyboardType: TextInputType.number),
           const SizedBox(height: NbSpace.sm),
           NbTextField(
-              label: 'Breakfast',
+              label: AppText.of(context).settingsConfigScreenBreakfastLabel,
               controller: _breakfastPrice,
               keyboardType: TextInputType.number),
           const SizedBox(height: NbSpace.sm),
           NbTextField(
-              label: 'Brunch',
+              label: AppText.of(context).settingsConfigScreenBrunchLabel,
               controller: _brunchPrice,
               keyboardType: TextInputType.number),
-          _section(t, 'Meal windows (HH:MM, 24h)'),
+          _section(
+              t, AppText.of(context).settingsConfigScreenSectionMealWindows),
+          // Meal key `m` doubles as the map key into `_windows` — it can't be
+          // localized without decoupling display text from data lookup, so
+          // it's left as-is (skipped per the retrofit conventions).
           for (final m in const ['breakfast', 'lunch', 'brunch'])
             Padding(
               padding: const EdgeInsets.only(bottom: NbSpace.sm),
@@ -136,51 +144,63 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
                   SizedBox(width: 90, child: Text(m, style: t.text.label)),
                   Expanded(
                       child: NbTextField(
-                          label: 'start', controller: _windows[m]!.$1)),
+                          label: AppText.of(context)
+                              .settingsConfigScreenStartLabel,
+                          controller: _windows[m]!.$1)),
                   const SizedBox(width: NbSpace.sm),
                   Expanded(
                       child: NbTextField(
-                          label: 'end', controller: _windows[m]!.$2)),
+                          label:
+                              AppText.of(context).settingsConfigScreenEndLabel,
+                          controller: _windows[m]!.$2)),
                 ],
               ),
             ),
-          _section(t, 'Timezone (IANA)'),
+          _section(
+              t, AppText.of(context).settingsConfigScreenSectionTimezone),
           NbPickerField(
-            label: 'Timezone',
+            label: AppText.of(context).settingsConfigScreenTimezoneFieldLabel,
             value: zones.contains(_timezone) ? _timezone : zones.first,
             options: zones,
             onSelected: (z) => setState(() => _timezone = z),
           ),
-          _section(t, 'Grace allowance'),
+          _section(t, AppText.of(context).settingsConfigScreenSectionGrace),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('Enabled', style: t.text.body),
+            title: Text(AppText.of(context).settingsConfigScreenGraceEnabledLabel,
+                style: t.text.body),
             value: _graceEnabled,
             onChanged: (v) => setState(() => _graceEnabled = v),
           ),
           NbTextField(
-              label: 'Default grace units',
+              label: AppText.of(context).settingsConfigScreenGraceUnitsLabel,
               controller: _graceUnits,
               keyboardType: TextInputType.number),
-          _section(t, 'Windows & reminders'),
+          _section(t,
+              AppText.of(context).settingsConfigScreenSectionWindowsReminders),
           NbTextField(
-              label: 'Scan reversal window (minutes)',
+              label:
+                  AppText.of(context).settingsConfigScreenReversalWindowLabel,
               controller: _reversal,
               keyboardType: TextInputType.number),
           const SizedBox(height: NbSpace.sm),
           NbTextField(
-              label: 'Prep reminder lead (minutes)',
+              label: AppText.of(context).settingsConfigScreenPrepLeadLabel,
               controller: _prepLead,
               keyboardType: TextInputType.number),
           const SizedBox(height: NbSpace.sm),
           NbTextField(
-              label: 'Purchase reminder lead (days)',
+              label: AppText.of(context).settingsConfigScreenPurchaseLeadLabel,
               controller: _purchaseLead,
               keyboardType: TextInputType.number),
-          _section(t, 'UPI'),
-          NbTextField(label: 'UPI ID (blank = cash only)', controller: _upiId),
+          _section(t, AppText.of(context).settingsConfigScreenSectionUpi),
+          NbTextField(
+              label: AppText.of(context).settingsConfigScreenUpiIdLabel,
+              controller: _upiId),
           const SizedBox(height: NbSpace.sm),
-          NbTextField(label: 'Payee name', controller: _upiPayee),
+          NbTextField(
+              label: AppText.of(context).settingsConfigScreenPayeeNameLabel,
+              controller: _upiPayee),
           const SizedBox(height: NbSpace.xl),
         ],
       ),
@@ -189,7 +209,7 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
         minimum: const EdgeInsets.fromLTRB(
             NbSpace.lg, NbSpace.sm, NbSpace.lg, NbSpace.sm),
         child: NbButton(
-          label: 'Save settings',
+          label: AppText.of(context).settingsConfigScreenSaveButton,
           busy: _busy,
           onPressed: _busy ? null : _save,
         ),
