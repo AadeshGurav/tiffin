@@ -24,13 +24,23 @@ export 'bootstrap.dart' show sharedPreferencesProvider;
 // Firebase project — the only thing this build is configured with
 // ===========================================================================
 
+/// Development switch: run against the local Firebase emulators
+/// (`firebase emulators:start`) instead of a real project. From an Android
+/// emulator the host machine is 10.0.2.2; pass EMULATOR_HOST for a phone on
+/// the same Wi-Fi.
+const _useEmulator = bool.fromEnvironment('USE_EMULATOR');
+const _emulatorHost =
+    String.fromEnvironment('EMULATOR_HOST', defaultValue: '10.0.2.2');
+
 final firebaseConfigStoreProvider = Provider<FirebaseConfigStore>(
     (ref) => FirebaseConfigStore(ref.read(sharedPreferencesProvider)));
 
 /// The imported config. Null → the "Connect to Firebase" screen.
 class FirebaseConfigController extends Notifier<FirebaseConfig?> {
   @override
-  FirebaseConfig? build() => ref.read(firebaseConfigStoreProvider).read();
+  FirebaseConfig? build() => _useEmulator
+      ? FirebaseConfig.demo
+      : ref.read(firebaseConfigStoreProvider).read();
 
   /// Parses and stores a console config file. Throws a coded
   /// ValidationException for the wrong file, before anything is saved.
@@ -44,6 +54,7 @@ class FirebaseConfigController extends Notifier<FirebaseConfig?> {
   /// data, and go back to the connect screen. Nothing is deleted in Firebase.
   Future<void> forget() async {
     if (Firebase.apps.isNotEmpty) {
+      _firestoreTerminated = true;
       await FirebaseAuth.instance.signOut();
       final db = FirebaseFirestore.instance;
       await db.terminate();
@@ -58,13 +69,19 @@ final firebaseConfigProvider =
     NotifierProvider<FirebaseConfigController, FirebaseConfig?>(
         FirebaseConfigController.new);
 
-/// True when the running process was started against a different project
-/// than the one now imported. Firebase's default app can't be re-pointed in
-/// place, so the UI asks for a restart instead of half-switching.
+/// Set once this process has shut its Firestore instance down; a terminated
+/// instance can't be used again, even for the same project.
+bool _firestoreTerminated = false;
+
+/// True when a project is imported but this process can't serve it: it was
+/// started against a different project, or its Firestore was shut down by
+/// [FirebaseConfigController.forget]. Firebase's default app can't be
+/// re-pointed in place, so the UI asks for a restart instead of half-switching.
 final needsRestartProvider = Provider<bool>((ref) {
   final config = ref.watch(firebaseConfigProvider);
   if (config == null || Firebase.apps.isEmpty) return false;
-  return Firebase.app().options.projectId != config.projectId;
+  return _firestoreTerminated ||
+      Firebase.app().options.projectId != config.projectId;
 });
 
 final firebaseAppProvider = FutureProvider<FirebaseApp>((ref) async {
@@ -74,8 +91,13 @@ final firebaseAppProvider = FutureProvider<FirebaseApp>((ref) async {
   final app = await Firebase.initializeApp(options: config.options);
   // Persistence is what lets a scanner work with no internet (FlutterFire
   // docs: on by default on mobile; set explicitly so it is a decision).
-  FirebaseFirestore.instanceFor(app: app).settings =
-      const Settings(persistenceEnabled: true);
+  final db = FirebaseFirestore.instanceFor(app: app)
+    ..settings = const Settings(persistenceEnabled: true);
+  if (_useEmulator) {
+    db.useFirestoreEmulator(_emulatorHost, 8080);
+    await FirebaseAuth.instanceFor(app: app)
+        .useAuthEmulator(_emulatorHost, 9099);
+  }
   return app;
 });
 

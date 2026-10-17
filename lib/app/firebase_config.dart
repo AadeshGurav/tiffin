@@ -109,6 +109,15 @@ class FirebaseConfig {
     );
   }
 
+  /// Development only (`--dart-define=USE_EMULATOR=true`): a `demo-` project
+  /// the Firebase emulators accept without any real config file.
+  static const demo = FirebaseConfig._(FirebaseOptions(
+    apiKey: 'demo-key',
+    appId: '1:1:android:1',
+    messagingSenderId: '1',
+    projectId: 'demo-tiffin',
+  ));
+
   Map<String, String?> toJson() => {
         'apiKey': options.apiKey,
         'appId': options.appId,
