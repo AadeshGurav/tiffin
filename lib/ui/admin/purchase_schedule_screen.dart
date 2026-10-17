@@ -13,6 +13,7 @@ import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _scheduleProvider =
     FutureProvider.autoDispose<List<PurchaseScheduleItem>>(
@@ -91,7 +92,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                             children: [
                               Text(
                                   '${it.ingredientName} — ${it.quantityNote} '
-                                  '(${it.ingredientUnit})',
+                                  '(${AppText.of(context).unitLabel(it.ingredientUnit)})',
                                   style: t.text.body),
                               Text(
                                   it.source == 'manual'
@@ -110,6 +111,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                         if (isAdmin)
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
+                            tooltip: AppText.of(context).tooltipDelete,
                             onPressed: () async {
                               final ok = await runGuarded(
                                 context,
@@ -270,8 +272,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                 style: t.text.label),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
-              label: AppText.of(context)
-                  .purchaseScheduleScreenQuantityLabel(it.ingredientUnit),
+              label: AppText.of(context).purchaseScheduleScreenQuantityLabel(
+                  AppText.of(context).unitLabel(it.ingredientUnit)),
               controller: qty,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
@@ -391,7 +393,8 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                     const SizedBox(width: NbSpace.sm),
                     Padding(
                       padding: const EdgeInsets.only(top: NbSpace.md),
-                      child: Text(selected.unit, style: t.text.label),
+                      child: Text(AppText.of(context).unitLabel(selected.unit),
+                          style: t.text.label),
                     ),
                   ],
                 ),

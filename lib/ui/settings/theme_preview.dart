@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
+
 import '../theme/theme_catalog.dart';
 import '../theme/tokens.dart';
 
@@ -53,9 +56,10 @@ class ThemePreviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(id.label, style: host.text.heading),
+                    Text(AppText.of(context).themeLabel(id),
+                        style: host.text.heading),
                     const SizedBox(height: NbSpace.xs),
-                    Text(id.blurb,
+                    Text(AppText.of(context).themeBlurb(id),
                         style: host.text.body.copyWith(
                             color: host.color.inkMuted, fontSize: 14)),
                   ],

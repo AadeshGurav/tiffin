@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../core/meal_type.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
+import '../ui/theme/theme_catalog.dart';
 import 'app_localizations.dart';
 
 /// Words for the values the app stores in English wire form (`lunch`,
@@ -53,6 +54,20 @@ extension AppTextLabels on AppText {
       };
 
   String yesNo(bool value) => value ? commonYes : commonNo;
+
+  String themeLabel(TiffinThemeId id) => switch (id) {
+        TiffinThemeId.neobrutal => themeNeobrutalLabel,
+        TiffinThemeId.clean => themeCleanLabel,
+        TiffinThemeId.frost => themeFrostLabel,
+        TiffinThemeId.clay => themeClayLabel,
+      };
+
+  String themeBlurb(TiffinThemeId id) => switch (id) {
+        TiffinThemeId.neobrutal => themeNeobrutalBlurb,
+        TiffinThemeId.clean => themeCleanBlurb,
+        TiffinThemeId.frost => themeFrostBlurb,
+        TiffinThemeId.clay => themeClayBlurb,
+      };
 
   /// Known units get a translated name; anything an admin typed is theirs and
   /// is shown as typed.

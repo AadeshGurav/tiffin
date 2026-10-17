@@ -12,6 +12,7 @@ import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/labels.dart';
 
 final _recipesProvider = FutureProvider.autoDispose<List<Recipe>>(
     (ref) => ref.watch(backendProvider).listRecipes());
@@ -163,7 +164,9 @@ Future<void> openRecipeForm(
                           ),
                         ),
                         const SizedBox(width: NbSpace.xs),
-                        Text(unitFor(lines[i].ingredientId),
+                        Text(
+                            AppText.of(context)
+                                .unitLabel(unitFor(lines[i].ingredientId)),
                             style: t.text.label),
                         IconButton(
                           icon: const Icon(Icons.close, size: 18),
