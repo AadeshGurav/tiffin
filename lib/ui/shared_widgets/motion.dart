@@ -5,7 +5,7 @@ import '../theme/tokens.dart';
 /// The motion this device should actually use, right now.
 ///
 /// Three things can switch it off and any one of them wins: the device's own
-/// Appearance setting, a host policy, and the phone's system "reduce motion"
+/// Appearance setting, the canteen's policy, and the phone's system "reduce motion"
 /// accessibility preference. The OS preference is read here rather than baked
 /// into the theme because it belongs to the viewer, not the app, and it can
 /// change while the app is running (CLAUDE.md §11.5.0 rule 6).

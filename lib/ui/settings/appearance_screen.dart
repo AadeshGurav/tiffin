@@ -19,7 +19,7 @@ import 'theme_preview.dart';
 /// Settings ▸ Appearance. Available to every role on every device, because how
 /// a screen looks is a property of the screen, not of who signed in.
 ///
-/// When the host enforces an appearance the controls stay visible but go
+/// When the canteen enforces an appearance the controls stay visible but go
 /// read-only, with the reason stated — silently ignoring a tap is worse than
 /// disabling it (CLAUDE.md §11.1 heuristic 1).
 class AppearanceScreen extends ConsumerWidget {
@@ -216,7 +216,7 @@ class _LanguageSelector extends StatelessWidget {
   }
 }
 
-/// Host-admin control: push this device's appearance to every device.
+/// Admin control: make this device's appearance every device's.
 class _EnforceCard extends ConsumerStatefulWidget {
   const _EnforceCard({required this.enforced, required this.appearance});
 
