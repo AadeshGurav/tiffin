@@ -36,9 +36,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // A device coming back to a host it already knows shouldn't have to sign
-    // in again. The saved token is offered to the host, which is free to
-    // reject it — that's the fallback to this form.
+    // Someone who signed in on this phone earlier shouldn't have to again
+    // until the session ends. A saved token is checked against this phone's
+    // sessions and the account's status; if either refuses, this form shows.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final resumed = await ref.read(sessionMemoryProvider).tryResume();
       if (!mounted) return;
