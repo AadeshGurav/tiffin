@@ -1,0 +1,7 @@
+# English, Hindi and Marathi ship (CLAUDE.md §13). Strings live in resource
+# files, not in code; app_en.arb is the template and gaps fall back to English.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppText
+nullable-getter: false

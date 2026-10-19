@@ -1,0 +1,1605 @@
+{
+  "@@locale": "en",
+  "appTitle": "Tiffin",
+  "@appTitle": {
+    "description": "Brand name. Kept in Latin letters in every language, matching the launcher icon label."
+  },
+  "retry": "Retry",
+  "scanAccepted": "{name} — {meal}. {remaining, plural, =1{1 unit left} other{{remaining} units left}}.",
+  "@scanAccepted": {
+    "description": "Shown full-screen at the counter after an accepted scan. remaining can be 0 or negative (grace allowance).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "scanUnknownCode": "No member found for this code.",
+  "scanInactive": "This member's account is inactive.",
+  "scanNoWindow": "No meal is currently being served.",
+  "scanAlreadyDone": "{name} has already collected {meal} today.",
+  "@scanAlreadyDone": {
+    "description": "On scan result. name = a person's or item's name; meal = a meal name (Breakfast, Lunch, Brunch).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNoUnits": "{name} has no {meal} units left.",
+  "@scanNoUnits": {
+    "description": "On scan result. name = a person's or item's name; meal = a meal name (Breakfast, Lunch, Brunch).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "apprScreenTitle": "Appearance",
+  "apprScreenEnforcedBanner": "The host sets the look for every device here. Your own choices are saved and will apply if that is turned off.",
+  "apprScreenThemeLabel": "THEME",
+  "apprScreenModeLabel": "LIGHT OR DARK",
+  "apprScreenModeSystem": "System",
+  "apprScreenModeLight": "Light",
+  "apprScreenModeDark": "Dark",
+  "apprScreenMotionLabel": "MOTION",
+  "apprScreenMotionTitle": "Animations",
+  "apprScreenMotionOnSubtitle": "Screens slide, tiles fade in, buttons press.",
+  "apprScreenMotionOffSubtitle": "Everything switches instantly.",
+  "apprScreenReduceMotionNote": "Your phone's own \"reduce motion\" accessibility setting always wins, whatever is chosen here.",
+  "apprScreenLanguageLabel": "LANGUAGE",
+  "apprScreenEnforceSectionLabel": "FOR EVERY DEVICE",
+  "apprScreenEnforceEnabledBody": "Every device on this host is using the look set here. Turn this off to let each phone choose its own again.",
+  "apprScreenEnforceDisabledBody": "Each phone currently picks its own look. Turn this on to make them all match the settings above.",
+  "apprScreenLetDevicesChoose": "Let devices choose",
+  "apprScreenUseEverywhere": "Use this look everywhere",
+  "apprScreenEnforceOnToast": "Every device will use this look.",
+  "apprScreenEnforceOffToast": "Devices can choose their own look again.",
+  "apprScreenSavedLoginsLabel": "SAVED LOGINS",
+  "apprScreenSavedLoginsEmpty": "Nothing saved on this device.",
+  "apprScreenSavedLoginsBlurb": "This phone remembers who signs in on each canteen host, so it can offer them next time. Passwords are kept only where you asked for them.",
+  "apprScreenSavedLoginsRow": "{name} — {logins}",
+  "@apprScreenSavedLoginsRow": {
+    "description": "On Appearance. name = a person's or item's name; logins = a number of saved accounts.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "logins": {
+        "type": "String"
+      }
+    }
+  },
+  "apprScreenForgetAllLogins": "Forget all saved logins",
+  "apprScreenLoginsCleared": "Saved logins cleared.",
+  "emptyQuipsMembers1": "Not a soul on the list yet. Add your first hungry human.",
+  "emptyQuipsMembers2": "Emptier than the canteen at 3pm. Tap + to add someone.",
+  "emptyQuipsMembers3": "Zero members. Big \"new school\" energy.",
+  "emptyQuipsTopups1": "No top-ups yet. The ledger is squeaky clean.",
+  "emptyQuipsTopups2": "Nobody has paid up. Suspicious. Or just new.",
+  "emptyQuipsScans1": "No scans yet. The scanner is well-rested.",
+  "emptyQuipsScans2": "Nothing scanned. Peaceful, isn't it?",
+  "emptyQuipsMenu1": "No menu planned. Chef's surprise, then?",
+  "emptyQuipsMenu2": "Blank calendar. The kitchen awaits your genius.",
+  "emptyQuipsCategories1": "No categories. \"Jain\", \"Normal\", \"Staff\" — your call.",
+  "emptyQuipsIngredients1": "Pantry's empty on paper. Add what you actually buy.",
+  "emptyQuipsRecipes1": "No recipes. The dishes are keeping their secrets.",
+  "emptyQuipsPurchase1": "Shopping list is empty. Either you're stocked, or menus need planning.",
+  "emptyQuipsPurchase2": "Nothing to buy. Rare. Enjoy it.",
+  "emptyQuipsExpenses1": "No expenses logged. Profit looks amazing from here.",
+  "emptyQuipsRefunds1": "No refunds. Everyone's eating what they paid for.",
+  "emptyQuipsUsers1": "Just you so far. Add a counter or scanner account when you need one.",
+  "emptyQuipsNotifications1": "All quiet. Nothing needs you right now.",
+  "menuCategoriesScreenTitle": "Menu categories",
+  "menuCategoriesScreenNew": "New",
+  "menuCategoriesScreenLoading": "Loading categories…",
+  "menuCategoriesScreenEmptyTitle": "No categories yet",
+  "menuCategoriesScreenEmptyAction": "Add a category",
+  "menuCategoriesScreenDeleteSuccess": "Deleted.",
+  "menuCategoriesScreenNewCategoryTitle": "New category",
+  "menuCategoriesScreenNameLabel": "Name",
+  "menuCategoriesScreenDescriptionLabel": "Description (optional)",
+  "menuCategoriesScreenCancel": "Cancel",
+  "menuCategoriesScreenSave": "Save",
+  "menuCategoriesScreenSaveSuccess": "Saved.",
+  "usersScreenTitle": "Users",
+  "usersScreenNewUser": "New user",
+  "usersScreenLoading": "Loading users…",
+  "usersScreenEmptyTitle": "Only you so far",
+  "usersScreenEmptyAction": "Add a user",
+  "usersScreenDeleteSuccess": "User deleted.",
+  "usersScreenNewUserTitle": "New user",
+  "usersScreenUsernameLabel": "Username",
+  "usersScreenPasswordLabel": "Password",
+  "usersScreenNewPasswordLabel": "New password (blank = keep)",
+  "usersScreenStatusActive": "active",
+  "usersScreenStatusInactive": "inactive",
+  "usersScreenCancel": "Cancel",
+  "usersScreenSave": "Save",
+  "usersScreenSaveSuccess": "User saved.",
+  "expensesScreenTitle": "Expenses & revenue",
+  "expensesScreenLogExpense": "Log expense",
+  "expensesScreenRevenue": "Revenue",
+  "expensesScreenExpenses": "Expenses",
+  "expensesScreenProfit": "Profit",
+  "expensesScreenLoading": "Loading expenses…",
+  "expensesScreenEmptyTitle": "No expenses logged",
+  "expensesScreenEmptyAction": "Log an expense",
+  "expensesScreenCategoryLabel": "Category (groceries, tables…)",
+  "expensesScreenDescriptionLabel": "Description",
+  "expensesScreenAmountLabel": "Amount (₹)",
+  "expensesScreenChangeDate": "Change date",
+  "expensesScreenCancel": "Cancel",
+  "expensesScreenSave": "Save",
+  "expensesScreenSaveSuccess": "Expense logged.",
+  "scanLogScreenTitle": "Scan log",
+  "scanLogScreenLoading": "Loading the scan log…",
+  "scanLogScreenEmptyTitle": "No scans yet",
+  "scanLogScreenReversedLabel": "REVERSED",
+  "scanLogScreenGraceLabel": "GRACE",
+  "scanLogScreenReverseButton": "Reverse",
+  "purchaseScheduleScreenTitle": "Purchase schedule",
+  "purchaseScheduleScreenGenerateFromMenu": "Generate from menu",
+  "purchaseScheduleScreenAddItem": "Add item",
+  "purchaseScheduleScreenLoading": "Loading the shopping list…",
+  "purchaseScheduleScreenEmptyTitle": "Nothing to buy",
+  "purchaseScheduleScreenSourceManual": "manual",
+  "purchaseScheduleScreenSourceFromMenu": "from menu",
+  "purchaseScheduleScreenSourceFromMenuBy": "from menu · by {purchasedBy}",
+  "@purchaseScheduleScreenSourceFromMenuBy": {
+    "description": "On purchase schedule. purchasedBy = a username.",
+    "placeholders": {
+      "purchasedBy": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenRemoved": "Removed.",
+  "purchaseScheduleScreenGenerateTitle": "Generate schedule",
+  "purchaseScheduleScreenGenerateDescription": "Builds the shopping list from menu entries in this date range. One-off items go in with the + button on the list.",
+  "purchaseScheduleScreenFromLabel": "From",
+  "purchaseScheduleScreenToLabel": "To",
+  "purchaseScheduleScreenCancel": "Cancel",
+  "purchaseScheduleScreenGenerateButton": "Generate",
+  "purchaseScheduleScreenAddedItems": "{count, plural, =0 {No items added to the list.} =1 {Added 1 item to the list.} other {Added {count} items to the list.}}",
+  "@purchaseScheduleScreenAddedItems": {
+    "description": "On purchase schedule. count = a number.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "purchaseScheduleScreenReasonNoMenuEntries": "There are no menu entries between those dates. Add meals on the Menu calendar first, then generate.",
+  "purchaseScheduleScreenReasonNoRecipes": "The menu has entries, but there are no recipes yet. A recipe links a dish name to its ingredients — add recipes on the Recipes screen, matching the item names you typed on the menu.",
+  "purchaseScheduleScreenReasonNoMatch": "The menu entries in that range don't match any recipe by dish name, or those recipes have no ingredients. Check that a recipe's dish name matches the menu item text, then try again. You can also add items directly with the + button.",
+  "purchaseScheduleScreenNothingToAddTitle": "Nothing to add",
+  "purchaseScheduleScreenOk": "OK",
+  "purchaseScheduleScreenBoughtTitle": "Bought {ingredientName}",
+  "@purchaseScheduleScreenBoughtTitle": {
+    "description": "On purchase schedule. ingredientName = an ingredient name.",
+    "placeholders": {
+      "ingredientName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenPlannedLabel": "Planned: {quantityNote}. Enter what you actually got.",
+  "@purchaseScheduleScreenPlannedLabel": {
+    "description": "On purchase schedule. quantityNote = a quantity like 2 kg.",
+    "placeholders": {
+      "quantityNote": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenQuantityLabel": "Quantity ({unit})",
+  "@purchaseScheduleScreenQuantityLabel": {
+    "description": "On purchase schedule. unit = a unit of measure, e.g. kg.",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseScheduleScreenCostLabel": "Cost (₹, optional)",
+  "purchaseScheduleScreenConfirm": "Confirm",
+  "purchaseScheduleScreenMarkedPurchased": "Marked purchased.",
+  "purchaseScheduleScreenAddOneOffTitle": "Add one-off item",
+  "purchaseScheduleScreenIngredientLabel": "Ingredient",
+  "purchaseScheduleScreenNewIngredientTooltip": "New ingredient",
+  "purchaseScheduleScreenDateLabel": "Date",
+  "purchaseScheduleScreenQuantityOnlyLabel": "Quantity",
+  "purchaseScheduleScreenAddButton": "Add",
+  "purchaseScheduleScreenItemAdded": "Item added.",
+  "purchaseScheduleScreenPickButton": "Pick",
+  "recipesScreenLoading": "Loading recipes…",
+  "recipesScreenEmptyTitle": "No recipes yet",
+  "recipesScreenAddRecipe": "Add a recipe",
+  "recipesScreenIngredientCount": "{count, plural, =1 {1 ingredient} other {{count} ingredients}}",
+  "@recipesScreenIngredientCount": {
+    "description": "On recipes. count = a number.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipesScreenNewRecipeTitle": "New recipe",
+  "recipesScreenDishNameLabel": "Dish name",
+  "recipesScreenQuantitiesHint": "Quantities are for ONE plate / one serving.",
+  "recipesScreenPerPlateLabel": "per plate",
+  "recipesScreenRemoveTooltip": "Remove",
+  "recipesScreenAddRow": "Add row",
+  "recipesScreenNewIngredient": "New ingredient",
+  "recipesScreenCancel": "Cancel",
+  "recipesScreenSave": "Save",
+  "recipesScreenSaveSuccess": "Saved.",
+  "menuScreenTitle": "Menu calendar",
+  "menuScreenManageCategoriesTooltip": "Manage categories",
+  "menuScreenAddFab": "Add · {date}",
+  "@menuScreenAddFab": {
+    "description": "On menu calendar. date = a formatted date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "menuScreenLoading": "Loading the month…",
+  "menuScreenRemoved": "Removed.",
+  "menuScreenCategoryLabel": "Category",
+  "menuScreenPickOrAddHint": "Pick or add one",
+  "menuScreenNewCategoryTooltip": "New category",
+  "menuScreenCategoryAdded": "Category added.",
+  "menuScreenApproxPlatesLabel": "Approx plates",
+  "menuScreenItemsLabel": "Items (comma-separated)",
+  "menuScreenErrorPickCategory": "Pick a category.",
+  "menuScreenErrorAddItem": "Add at least one item.",
+  "menuScreenCancel": "Cancel",
+  "menuScreenAddButton": "Add",
+  "menuScreenEntryAdded": "Entry added.",
+  "menuScreenSave": "Save",
+  "menuScreenEntryUpdated": "Entry updated.",
+  "menuScreenNewCategoryTitle": "New category",
+  "menuScreenNameLabel": "Name",
+  "menuScreenCreateButton": "Create",
+  "menuScreenNothingPlanned": "Nothing planned for this day.",
+  "menuScreenDayEntrySummary": "{mealType} · {category}  ·  ~{headcount, plural, =1{1 plate} other{{headcount} plates}}",
+  "@menuScreenDayEntrySummary": {
+    "description": "One menu entry in the day list; headcount is the planned number of plates.",
+    "placeholders": {
+      "mealType": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      },
+      "headcount": {
+        "type": "int"
+      }
+    }
+  },
+  "menuScreenAddEntryForDay": "Add an entry for this day",
+  "ingredientsScreenLoading": "Loading ingredients…",
+  "ingredientsScreenEmptyTitle": "No ingredients yet",
+  "ingredientsScreenAddIngredient": "Add an ingredient",
+  "ingredientsScreenInStock": "{qty} {unit} in stock",
+  "@ingredientsScreenInStock": {
+    "description": "On ingredients. qty = a quantity; unit = a unit of measure, e.g. kg.",
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenLowLabel": "LOW",
+  "ingredientsScreenAdjustStockTooltip": "Adjust stock",
+  "ingredientsScreenDeleteSuccess": "Deleted.",
+  "ingredientsScreenAdjustTitle": "Adjust {name} stock",
+  "@ingredientsScreenAdjustTitle": {
+    "description": "On ingredients. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenAdjustNowText": "Now: {qty} {unit}. Enter a change (e.g. 5 for a delivery, -2 for spoilage).",
+  "@ingredientsScreenAdjustNowText": {
+    "description": "On ingredients. qty = a quantity; unit = a unit of measure, e.g. kg.",
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenChangeLabel": "Change ({unit})",
+  "@ingredientsScreenChangeLabel": {
+    "description": "On ingredients. unit = a unit of measure, e.g. kg.",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientsScreenReasonLabel": "Reason",
+  "ingredientsScreenCancel": "Cancel",
+  "ingredientsScreenApply": "Apply",
+  "ingredientsScreenStockUpdated": "Stock updated.",
+  "ingredientsScreenNewIngredientTitle": "New ingredient",
+  "ingredientsScreenNameLabel": "Name",
+  "ingredientsScreenStockOnHandLabel": "Stock on hand",
+  "ingredientsScreenLowStockAlertLabel": "Low-stock alert at (blank = no alert)",
+  "ingredientsScreenSave": "Save",
+  "ingredientsScreenSaveSuccess": "Saved.",
+  "backupScreenPasswordRequired": "Choose a password, or turn protection off.",
+  "backupScreenExportSuccess": "Backup ready. Keep it somewhere safe.",
+  "backupScreenRestoreSuccess": "Restored. Sign in again to continue.",
+  "backupScreenTitle": "Backup & restore",
+  "backupScreenSectionBackup": "BACKUP",
+  "backupScreenBackupDescription": "A complete copy of this canteen — members, balances, history, settings and accounts. Use it to move to a new phone, or to recover from one that is lost.",
+  "backupScreenProtectToggle": "Protect with a password",
+  "backupScreenProtectOnHint": "Nobody can open the file without it — including you, so write it down.",
+  "backupScreenProtectOffHint": "The file will hold member names and account details in the clear.",
+  "backupScreenPasswordLabel": "Backup password",
+  "backupScreenExportButton": "Export backup",
+  "backupScreenSectionRestore": "RESTORE",
+  "backupScreenRestoreDescription": "Replaces everything on this device with the contents of a backup file. The current data is kept beside it as a copy.",
+  "backupScreenRestoreButton": "Restore from a backup",
+  "backupScreenRestoreDialogTitle": "Replace everything?",
+  "backupScreenRestoreManifestSummary": "This backup was made on {date} by Tiffin {appVersion}, and holds {totalRows, plural, =1{1 record} other{{totalRows} records}} ({membersCount, plural, =1{1 member} other{{membersCount} members}}).",
+  "@backupScreenRestoreManifestSummary": {
+    "description": "On Backup & restore. date = a formatted date; appVersion = an app version like 3.0.0; totalRows = a number of records; membersCount = a number of members.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "appVersion": {
+        "type": "String"
+      },
+      "totalRows": {
+        "type": "int"
+      },
+      "membersCount": {
+        "type": "int"
+      }
+    }
+  },
+  "backupScreenReplaceWarning": "Everything currently on this device will be replaced. A copy of the current data is kept next to it.",
+  "backupScreenTypeReplaceLabel": "Type REPLACE to confirm",
+  "backupScreenCancelButton": "Cancel",
+  "backupScreenRestoreConfirmButton": "Restore",
+  "backupScreenShareSubject": "Tiffin backup",
+  "topupHistoryLoading": "Loading top-ups…",
+  "topupHistoryEmptyTitle": "No top-ups yet",
+  "topupHistoryEmptyQuip": "Charge a member on the Top-up & bill screen first.",
+  "topupHistoryUnknownMember": "Member #{id}",
+  "@topupHistoryUnknownMember": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    },
+    "description": "id is a short record code like 3F9A2C."
+  },
+  "topupHistoryReversedBadge": "REVERSED",
+  "topupHistoryLineSummary": "L{lunch} B{breakfast} Br{brunch}  ·  {amount}  ·  {method} ({status})",
+  "@topupHistoryLineSummary": {
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "method": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    },
+    "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
+  },
+  "topupHistoryCreatedInfo": "{date} · by {createdBy}",
+  "@topupHistoryCreatedInfo": {
+    "description": "On top-up history. date = a formatted date; createdBy = a username.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "createdBy": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryReversedInfo": "Reversed {date}{hasReverser, select, true { · by {reversedBy}} other {}}",
+  "@topupHistoryReversedInfo": {
+    "description": "On top-up history. date = a formatted date; hasReverser = 'true' or 'false' (select); reversedBy = a username.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "hasReverser": {
+        "type": "String"
+      },
+      "reversedBy": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryReverseButton": "Reverse",
+  "topupHistoryReverseDialogTitle": "Reverse this top-up?",
+  "topupHistoryReverseDialogBody": "This subtracts L{lunch} B{breakfast} Br{brunch} back off {name} and records the reversal. It cannot be undone. If those units have already been used, process a refund instead.",
+  "@topupHistoryReverseDialogBody": {
+    "description": "On top-up history. lunch = a number of lunch units; breakfast = a number of breakfast units; brunch = a number of brunch units; name = a person's or item's name.",
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "topupHistoryCancelButton": "Cancel",
+  "membersScreenTitle": "Members",
+  "membersScreenNewButton": "New",
+  "membersScreenLoading": "Loading members…",
+  "membersScreenEmptyTitle": "No members yet",
+  "membersScreenAddFirstButton": "Add the first member",
+  "membersScreenInactiveBadge": "INACTIVE",
+  "membersScreenTypeSummary": "{type, select, student {Student · {className} · roll {rollNumber}} other {Staff · {staffId}}}",
+  "@membersScreenTypeSummary": {
+    "description": "On Members screen. type = member type; className = a school class; rollNumber = a roll number; staffId = a staff ID.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "className": {
+        "type": "String"
+      },
+      "rollNumber": {
+        "type": "String"
+      },
+      "staffId": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenBalancesSummary": "Lunch {lunch}   Breakfast {breakfast}   Brunch {brunch}",
+  "@membersScreenBalancesSummary": {
+    "description": "On Members screen. lunch = a number of lunch units; breakfast = a number of breakfast units; brunch = a number of brunch units.",
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      }
+    }
+  },
+  "membersScreenCreditButton": "Credit",
+  "membersScreenQrButton": "QR",
+  "membersScreenCreditDialogTitle": "Credit {name}",
+  "@membersScreenCreditDialogTitle": {
+    "description": "On Members screen. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenLunchUnitsLabel": "Lunch units",
+  "membersScreenBreakfastUnitsLabel": "Breakfast units",
+  "membersScreenBrunchUnitsLabel": "Brunch units",
+  "membersScreenCancelButton": "Cancel",
+  "membersScreenAddUnitsButton": "Add units",
+  "membersScreenUnitsAddedMessage": "Units added.",
+  "membersScreenCloseButton": "Close",
+  "membersScreenEditTitle": "Edit member",
+  "membersScreenNewTitle": "New member",
+  "membersScreenTypeStudent": "Student",
+  "membersScreenTypeStaff": "Staff",
+  "membersScreenNameLabel": "Name",
+  "membersScreenClassLabel": "Class",
+  "membersScreenRollNumberLabel": "Roll number",
+  "membersScreenStaffIdLabel": "Staff ID",
+  "membersScreenGraceOverrideLabel": "Grace override (blank = global default)",
+  "membersScreenStatusActive": "Active",
+  "membersScreenStatusInactive": "Inactive",
+  "membersScreenSaveButton": "Save",
+  "membersScreenDeleteButton": "Delete",
+  "membersScreenSaveSuccess": "{isEdit, select, true {Member updated.} other {Member created.}}",
+  "@membersScreenSaveSuccess": {
+    "description": "On Members screen. isEdit = 'true' or 'false' (select).",
+    "placeholders": {
+      "isEdit": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenDeletedMessage": "Member deleted.",
+  "membersScreenCategoryLabel": "CATEGORY",
+  "kitchenSetupScreenTitle": "Kitchen setup",
+  "kitchenSetupScreenIngredientsTab": "Ingredients",
+  "kitchenSetupScreenRecipesTab": "Recipes",
+  "kitchenSetupScreenNewButton": "{onIngredients, select, true {New ingredient} other {New recipe}}",
+  "@kitchenSetupScreenNewButton": {
+    "description": "On kitchen setup. onIngredients = 'true' or 'false' (select).",
+    "placeholders": {
+      "onIngredients": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDashboardAppBarTitle": "Admin · {username}",
+  "@adminDashboardAppBarTitle": {
+    "description": "On admin home. username = an account username.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDashboardDestScan": "Scan",
+  "adminDashboardDestMembers": "Members",
+  "adminDashboardDestScanLog": "Scan log",
+  "adminDashboardDestTopup": "Top-up & bill",
+  "adminDashboardDestExpenses": "Expenses & revenue",
+  "adminDashboardDestRefunds": "Refunds",
+  "adminDashboardDestMenuCalendar": "Menu calendar",
+  "adminDashboardDestKitchenSetup": "Kitchen setup",
+  "adminDashboardDestPurchaseSchedule": "Purchase schedule",
+  "adminDashboardDestSettings": "Settings",
+  "topupScreenTitle": "Top-up & bill",
+  "topupScreenChargeTab": "Charge",
+  "topupScreenHistoryTab": "History",
+  "topupScreenBalancesCreditedMessage": "Balances credited.",
+  "topupScreenBillDialogTitle": "Bill #{id}",
+  "@topupScreenBillDialogTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    },
+    "description": "id is a short record code like 3F9A2C."
+  },
+  "topupScreenBillStatus": "Status: {status}",
+  "@topupScreenBillStatus": {
+    "description": "On Top-up screen. status = a status word.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "topupScreenScanQrPrompt": "Ask the payer to scan:",
+  "topupScreenMarkReceivedButton": "Mark received",
+  "topupScreenPaymentConfirmedMessage": "Payment confirmed.",
+  "topupScreenDoneButton": "Done",
+  "topupScreenLoadingPrices": "Loading prices…",
+  "topupScreenLoadingMembers": "Loading members…",
+  "topupScreenEmptyTitle": "No active members",
+  "topupScreenEmptyQuip": "Add someone on the Members page first, then come back to top up.",
+  "topupScreenMemberLabel": "MEMBER",
+  "topupScreenLunchLabel": "Lunch  ({price})",
+  "@topupScreenLunchLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    },
+    "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
+  },
+  "topupScreenBreakfastLabel": "Breakfast  ({price})",
+  "@topupScreenBreakfastLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    },
+    "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
+  },
+  "topupScreenBrunchLabel": "Brunch  ({price})",
+  "@topupScreenBrunchLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    },
+    "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
+  },
+  "topupScreenPaymentCash": "Cash",
+  "topupScreenPaymentUpi": "UPI",
+  "topupScreenTotalLabel": "TOTAL",
+  "topupScreenChargeButton": "Charge & generate bill",
+  "settingsConfigScreenTitle": "Canteen configuration",
+  "settingsConfigScreenSavedMessage": "Settings saved.",
+  "settingsConfigScreenSectionBranding": "Branding",
+  "settingsConfigScreenAppNameLabel": "App name",
+  "settingsConfigScreenSectionPrices": "Unit prices (₹)",
+  "settingsConfigScreenLunchLabel": "Lunch",
+  "settingsConfigScreenBreakfastLabel": "Breakfast",
+  "settingsConfigScreenBrunchLabel": "Brunch",
+  "settingsConfigScreenSectionMealWindows": "Meal windows (HH:MM, 24h)",
+  "settingsConfigScreenStartLabel": "start",
+  "settingsConfigScreenEndLabel": "end",
+  "settingsConfigScreenSectionTimezone": "Timezone (IANA)",
+  "settingsConfigScreenTimezoneFieldLabel": "Timezone",
+  "settingsConfigScreenSectionGrace": "Grace allowance",
+  "settingsConfigScreenGraceEnabledLabel": "Enabled",
+  "settingsConfigScreenGraceUnitsLabel": "Default grace units",
+  "settingsConfigScreenSectionWindowsReminders": "Windows & reminders",
+  "settingsConfigScreenReversalWindowLabel": "Scan reversal window (minutes)",
+  "settingsConfigScreenPrepLeadLabel": "Prep reminder lead (minutes)",
+  "settingsConfigScreenPurchaseLeadLabel": "Purchase reminder lead (days)",
+  "settingsConfigScreenSectionUpi": "UPI",
+  "settingsConfigScreenUpiIdLabel": "UPI ID (blank = cash only)",
+  "settingsConfigScreenPayeeNameLabel": "Payee name",
+  "settingsConfigScreenSaveButton": "Save settings",
+  "refundsScreenTitle": "Refunds",
+  "refundsScreenNewButton": "New refund",
+  "refundsScreenLoading": "Loading refunds…",
+  "refundsScreenEmptyTitle": "No refunds yet",
+  "refundsScreenProcessButton": "Process a refund",
+  "refundsScreenLineSummary": "L{lunch} B{breakfast} Br{brunch}  ·  {amount}",
+  "@refundsScreenLineSummary": {
+    "placeholders": {
+      "lunch": {
+        "type": "int"
+      },
+      "breakfast": {
+        "type": "int"
+      },
+      "brunch": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    },
+    "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
+  },
+  "refundsScreenLineInfo": "{date} · by {processedBy}{hasReason, select, true { · {reason}} other {}}",
+  "@refundsScreenLineInfo": {
+    "description": "On Refunds screen. date = a formatted date; processedBy = a username; hasReason = 'true' or 'false' (select); reason = free text the admin typed.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "processedBy": {
+        "type": "String"
+      },
+      "hasReason": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "refundsScreenDialogTitle": "New refund",
+  "refundsScreenMemberLabel": "Member",
+  "refundsScreenLunchUnitsLabel": "Lunch units",
+  "refundsScreenBreakfastUnitsLabel": "Breakfast units",
+  "refundsScreenBrunchUnitsLabel": "Brunch units",
+  "refundsScreenReasonLabel": "Reason (optional)",
+  "refundsScreenCancelButton": "Cancel",
+  "refundsScreenProcessConfirmButton": "Process",
+  "refundsScreenSuccessMessage": "Refund recorded.",
+  "reportsScreenShareSubject": "Tiffin report",
+  "reportsScreenTitle": "Reports",
+  "reportsScreenReadyMessage": "Report ready.",
+  "reportsScreenSectionTitle": "SPREADSHEET REPORT",
+  "reportsScreenDescription": "An .xlsx you can open in Excel or Google Sheets. For reading and printing — it is not a way to put data back.",
+  "reportsScreenAllDatesLabel": "Everything",
+  "reportsScreenDatesButton": "Dates",
+  "reportsScreenAllDatesTooltip": "All dates",
+  "reportsScreenExportButton": "Export spreadsheet",
+  "hostSetupPasswordMismatch": "The two passwords do not match.",
+  "hostSetupTitle": "Set up this host",
+  "hostSetupSubtitle": "Create the admin account for this canteen. You will use it to sign in here and on the desktop admin page. You can change both later in Users.",
+  "hostSetupUsernameLabel": "Admin username",
+  "hostSetupPasswordLabel": "Password",
+  "hostSetupConfirmPasswordLabel": "Confirm password",
+  "hostSetupSuggestButton": "Suggest a strong one",
+  "hostSetupHidePassword": "Hide password",
+  "hostSetupShowPassword": "Show password",
+  "hostSetupSubmitButton": "Create admin & continue",
+  "hostSetupPasswordWarning": "Write this password down. It is stored only as a one-way hash — nobody, including this app, can read it back.",
+  "loginPasswordResetSnack": "Password reset. Sign in to continue.",
+  "loginResumingMessage": "Signing you in…",
+  "loginSignInLabel": "Sign in",
+  "loginUsernameLabel": "Username",
+  "loginPasswordLabel": "Password",
+  "loginRememberPasswordLabel": "Remember password on this device",
+  "loginSignInButton": "Sign in",
+  "loginForgotPasswordButton": "Forgot the password?",
+  "loginSavedLoginsHeader": "SAVED ON THIS DEVICE",
+  "loginSavedLoginTapToSignIn": "Tap to sign in",
+  "loginSavedLoginTapToFillUsername": "Tap to fill the username",
+  "loginForgetAccountTooltip": "Forget this account",
+  "loginRecoverDialogTitle": "Reset a password",
+  "loginRecoverDialogBody": "Only possible on this host device. The new password is shown below — write it down, it cannot be read back afterwards. Any open session for this account is signed out.",
+  "loginRecoverAccountLabel": "Account",
+  "loginRecoverNewPasswordLabel": "New password",
+  "loginRecoverConfirmLabel": "Type RESET to confirm",
+  "loginRecoverCancelButton": "Cancel",
+  "loginRecoverSubmitButton": "Reset password",
+  "settingsScreenTitle": "Settings",
+  "settingsScreenGroupCanteen": "Canteen",
+  "settingsScreenCanteenConfigTitle": "Canteen configuration",
+  "settingsScreenCanteenConfigSubtitle": "Prices, meal windows, timezone, grace, reminders, UPI.",
+  "settingsScreenUsersTitle": "Users & access",
+  "settingsScreenUsersSubtitle": "Login accounts and roles.",
+  "settingsScreenMenuCategoriesTitle": "Menu categories",
+  "settingsScreenMenuCategoriesSubtitle": "The Jain / Normal / Staff… list menu entries are tagged with. Also editable from the menu planner.",
+  "settingsScreenGroupDisplay": "Display",
+  "settingsScreenAppearanceTitle": "Appearance",
+  "settingsScreenAppearanceSubtitle": "Theme, light/dark, motion.",
+  "settingsScreenReportsTitle": "Reports",
+  "settingsScreenReportsSubtitle": "Export an .xlsx for reading and printing.",
+  "settingsScreenBackupTitle": "Backup & restore",
+  "settingsScreenBackupSubtitle": "A full encrypted copy — move phones, recover data.",
+  "settingsScreenGroupDevice": "Device",
+  "settingsScreenSignOutTitle": "Sign out",
+  "settingsScreenSignOutSubtitle": "End this session on this device.",
+  "settingsScreenResetDataTitle": "Reset all data",
+  "settingsScreenResetDataSubtitle": "Permanently wipe this host. No undo.",
+  "settingsScreenSignOutDialogTitle": "Sign out?",
+  "settingsScreenSignOutDialogBody": "You will need to sign in again on this device.",
+  "settingsScreenCancelButton": "Cancel",
+  "settingsScreenResetSuccessSnack": "All data cleared. Set the device up again.",
+  "settingsScreenResetDialogTitle": "Reset all data?",
+  "settingsScreenResetDialogBody": "This cannot be undone. Type RESET to confirm.",
+  "settingsScreenDeleteEverythingButton": "Delete everything",
+  "counterHomeScanItem": "Scan",
+  "counterHomeTopUpItem": "Top-up & bill",
+  "counterHomePurchaseScheduleItem": "Purchase schedule",
+  "counterHomeAppBarTitle": "Counter · {username}",
+  "@counterHomeAppBarTitle": {
+    "description": "On counter home. username = an account username.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "scannerTorchTooltip": "Torch",
+  "scannerSwitchCameraTooltip": "Switch camera",
+  "scannerAppBarTitle": "Scan · {username}",
+  "@scannerAppBarTitle": {
+    "description": "On scan screen. username = an account username.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "scannerAppBarTitlePlain": "SCAN",
+  "scannerErrorTitle": "SCAN ERROR",
+  "scannerAccepted": "ACCEPTED",
+  "scannerRejected": "REJECTED",
+  "scannerGraceAllowanceBadge": "ON GRACE ALLOWANCE",
+  "scannerHeadcountBadge": "Planned about {plannedCount} {category} — this is plate {servedCount}",
+  "@scannerHeadcountBadge": {
+    "description": "Warning badge on the scan result when more plates were served than planned.",
+    "placeholders": {
+      "plannedCount": {
+        "type": "int"
+      },
+      "category": {
+        "type": "String"
+      },
+      "servedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "scannerNextButton": "Next",
+  "scannerTryAgainButton": "Try again",
+  "appShellSettingsTooltip": "Settings",
+  "appShellNotificationsTitle": "NOTIFICATIONS",
+  "appShellNotificationsEmpty": "Nothing right now.",
+  "ingredientQuickAddTitle": "New ingredient",
+  "ingredientQuickAddNameLabel": "Name",
+  "ingredientQuickAddUnitLabel": "Unit (kg, litre, pcs…)",
+  "ingredientQuickAddCancel": "Cancel",
+  "ingredientQuickAddCreate": "Create",
+  "ingredientQuickAddSuccess": "Ingredient added.",
+  "memberPickerTapToChoose": "Tap to choose a member",
+  "memberPickerCreateSuccess": "Member added.",
+  "memberPickerTitle": "Member",
+  "memberPickerCancel": "Cancel",
+  "memberPickerSearchLabel": "Search",
+  "memberPickerNewMember": "+ New member",
+  "memberPickerNoMembers": "No members yet.",
+  "memberPickerNoMatches": "Nothing matches \"{query}\".",
+  "@memberPickerNoMatches": {
+    "description": "On member picker. query = what the user searched for.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "memberPickerNewMemberTitle": "New member",
+  "memberPickerStudent": "Student",
+  "memberPickerStaff": "Staff",
+  "memberPickerNameLabel": "Name",
+  "memberPickerClassLabel": "Class",
+  "memberPickerRollNumberLabel": "Roll number",
+  "memberPickerStaffIdLabel": "Staff ID",
+  "memberPickerCategoryLabel": "CATEGORY",
+  "memberPickerCreate": "Create",
+  "nbFeedbackLoading": "Loading…",
+  "nbFeedbackSessionProblem": "SESSION PROBLEM",
+  "nbFeedbackSomethingBroke": "SOMETHING BROKE",
+  "nbFeedbackTryAgain": "Try again",
+  "nbFeedbackWorking": "Working…",
+  "nbFeedbackDone": "Done.",
+  "nbPickerNotSet": "Not set",
+  "nbPickerCancel": "Cancel",
+  "nbPickerSearchLabel": "Search",
+  "nbPickerNoMatches": "Nothing matches \"{query}\".",
+  "@nbPickerNoMatches": {
+    "description": "On the app. query = what the user searched for.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "unitFieldLabel": "UNIT",
+  "unitFieldCustomOption": "Custom…",
+  "unitFieldCustomLabel": "Custom unit",
+  "mealBreakfast": "Breakfast",
+  "@mealBreakfast": {
+    "description": "Meal name."
+  },
+  "mealLunch": "Lunch",
+  "@mealLunch": {
+    "description": "Meal name."
+  },
+  "mealBrunch": "Brunch",
+  "@mealBrunch": {
+    "description": "Meal name (Saturday service)."
+  },
+  "roleAdmin": "Admin",
+  "@roleAdmin": {
+    "description": "Account / phone role."
+  },
+  "roleCounter": "Counter",
+  "@roleCounter": {
+    "description": "Account / phone role: takes payments and scans."
+  },
+  "roleScanner": "Scanner",
+  "@roleScanner": {
+    "description": "Account / phone role: scans only."
+  },
+  "memberTypeStudent": "Student",
+  "@memberTypeStudent": {
+    "description": "Member type."
+  },
+  "memberTypeStaff": "Staff",
+  "@memberTypeStaff": {
+    "description": "Member type."
+  },
+  "statusActive": "Active",
+  "@statusActive": {
+    "description": "Account or member status."
+  },
+  "statusInactive": "Inactive",
+  "@statusInactive": {
+    "description": "Account or member status."
+  },
+  "paymentCash": "Cash",
+  "@paymentCash": {
+    "description": "Payment method."
+  },
+  "paymentUpi": "UPI",
+  "@paymentUpi": {
+    "description": "Payment method; UPI is a proper noun, keep as is."
+  },
+  "paymentPending": "Pending",
+  "@paymentPending": {
+    "description": "Payment status: not yet received."
+  },
+  "paymentConfirmed": "Confirmed",
+  "@paymentConfirmed": {
+    "description": "Payment status: received."
+  },
+  "commonYes": "Yes",
+  "commonNo": "No",
+  "unitKg": "kg",
+  "@unitKg": {
+    "description": "Unit of measure, short form."
+  },
+  "unitG": "g",
+  "@unitG": {
+    "description": "Unit of measure, short form."
+  },
+  "unitLitre": "litre",
+  "@unitLitre": {
+    "description": "Unit of measure."
+  },
+  "unitMl": "ml",
+  "@unitMl": {
+    "description": "Unit of measure, short form."
+  },
+  "unitPcs": "pcs",
+  "@unitPcs": {
+    "description": "Unit of measure: pieces."
+  },
+  "unitPacket": "packet",
+  "@unitPacket": {
+    "description": "Unit of measure."
+  },
+  "unitDozen": "dozen",
+  "@unitDozen": {
+    "description": "Unit of measure."
+  },
+  "unitBunch": "bunch",
+  "@unitBunch": {
+    "description": "Unit of measure: a bunch of greens."
+  },
+  "unitBottle": "bottle",
+  "@unitBottle": {
+    "description": "Unit of measure."
+  },
+  "unitCan": "can",
+  "@unitCan": {
+    "description": "Unit of measure: a tin can."
+  },
+  "unitBox": "box",
+  "@unitBox": {
+    "description": "Unit of measure."
+  },
+  "reportSheetSummary": "Summary",
+  "@reportSheetSummary": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetMembers": "Members",
+  "@reportSheetMembers": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetBalances": "Balances",
+  "@reportSheetBalances": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetScans": "Scans",
+  "@reportSheetScans": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetTopups": "Top-ups",
+  "@reportSheetTopups": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetRefunds": "Refunds",
+  "@reportSheetRefunds": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetExpenses": "Expenses",
+  "@reportSheetExpenses": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportSheetMenu": "Menu",
+  "@reportSheetMenu": {
+    "description": "Spreadsheet tab name; max 31 characters."
+  },
+  "reportColFigure": "Figure",
+  "@reportColFigure": {
+    "description": "Column header in the summary tab."
+  },
+  "reportColValue": "Value",
+  "@reportColValue": {
+    "description": "Column header in the summary tab."
+  },
+  "reportGenerated": "Generated",
+  "@reportGenerated": {
+    "description": "Summary row: when the file was made."
+  },
+  "reportTimezone": "Time zone",
+  "reportRangeFrom": "From",
+  "@reportRangeFrom": {
+    "description": "Summary row: start of the date range."
+  },
+  "reportRangeTo": "To",
+  "@reportRangeTo": {
+    "description": "Summary row: end of the date range."
+  },
+  "reportRangeBeginning": "the beginning",
+  "@reportRangeBeginning": {
+    "description": "Shown when no start date was chosen."
+  },
+  "reportRangeToday": "today",
+  "@reportRangeToday": {
+    "description": "Shown when no end date was chosen."
+  },
+  "reportRevenue": "Revenue (confirmed top-ups)",
+  "reportProfit": "Profit",
+  "reportNoSections": "No sections were selected.",
+  "reportColId": "ID",
+  "reportColType": "Type",
+  "reportColName": "Name",
+  "reportColClass": "Class",
+  "reportColRoll": "Roll no.",
+  "reportColStaffId": "Staff ID",
+  "reportColQr": "QR code",
+  "reportColStatus": "Status",
+  "reportColAdded": "Added",
+  "reportColTotal": "Total",
+  "reportColWhen": "When",
+  "reportColMember": "Member",
+  "reportColMeal": "Meal",
+  "reportColOnGrace": "On grace",
+  "@reportColOnGrace": {
+    "description": "Scan was allowed on the grace allowance."
+  },
+  "reportColReversed": "Reversed",
+  "reportColReversedBy": "Reversed by",
+  "reportColAmount": "Amount",
+  "reportColMethod": "Method",
+  "@reportColMethod": {
+    "description": "Payment method column."
+  },
+  "reportColBy": "By",
+  "@reportColBy": {
+    "description": "Who recorded the row."
+  },
+  "reportColReason": "Reason",
+  "reportColDate": "Date",
+  "reportColCategory": "Category",
+  "reportColDescription": "Description",
+  "reportColPlates": "Plates",
+  "@reportColPlates": {
+    "description": "Planned number of plates."
+  },
+  "reportColItems": "Items",
+  "@reportColItems": {
+    "description": "Dishes on the menu."
+  },
+  "billId": "Bill ID",
+  "billMember": "Member",
+  "billUnitsPurchased": "Units purchased",
+  "billNewBalances": "New balances",
+  "billAmount": "Amount",
+  "errBadCredentials": "Incorrect username or password.",
+  "errNotSignedIn": "You're signed out. Sign in again.",
+  "errRoleNotAllowedOnDevice": "This phone is approved as a {deviceRole} phone, so {role} accounts can’t sign in here.",
+  "@errRoleNotAllowedOnDevice": {
+    "description": "deviceRole and role are role names (Admin, Counter, Scanner).",
+    "placeholders": {
+      "deviceRole": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "errAlreadySetUp": "This canteen is already set up. Sign in instead.",
+  "errUsernameRequired": "Choose a username.",
+  "errUsernameLength": "Usernames are 3 to 50 characters.",
+  "errUsernameChars": "Usernames can use letters, digits, and _ . - only.",
+  "errUsernameTaken": "The username {name} is already taken.",
+  "@errUsernameTaken": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errPasswordTooShort": "Use at least {min} characters.",
+  "@errPasswordTooShort": {
+    "description": "On an error message. min = a number of characters.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "errCannotDeactivateSelf": "You can't deactivate your own account.",
+  "errCannotDeleteSelf": "You can't delete your own account.",
+  "errNoSuchAccount": "There's no account called {name}.",
+  "@errNoSuchAccount": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errUserNotFound": "That account no longer exists.",
+  "errOnlineAccountsDisabled": "Online accounts are turned off for this canteen.",
+  "errDeviceNotApproved": "This phone isn't approved yet. Ask the admin to approve it in Settings ▸ Devices.",
+  "errNeedsInternet": "This needs an internet connection. Connect and try again.",
+  "errPermissionDenied": "This phone isn't allowed to do that. Ask the admin to check its role in Settings ▸ Devices.",
+  "errFirebaseConfigUnreadable": "That isn't a Firebase config file. Download google-services.json (Android) or GoogleService-Info.plist (iPhone) from the Firebase console.",
+  "errFirebaseConfigWrongApp": "That file is for a different app. In the Firebase console, add an app with the ID {appId} and download its file.",
+  "@errFirebaseConfigWrongApp": {
+    "description": "appId is a package name like com.canteen.canteen_coupon; keep it as is.",
+    "placeholders": {
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "errMemberNotFound": "That member no longer exists.",
+  "errMemberStudentHasStaffId": "A student can't have a staff ID.",
+  "errMemberStaffHasClass": "Staff members don't have a class or roll number.",
+  "errMemberUnknownType": "Unknown member type: {type}.",
+  "@errMemberUnknownType": {
+    "description": "On an error message. type = member type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "errMemberHasHistory": "This member has scans, top-ups or refunds, so they can't be deleted. Set them to inactive instead.",
+  "errTopupNeedsUnits": "A top-up needs at least one unit.",
+  "errTopupNotFound": "That top-up no longer exists.",
+  "errRefundNeedsUnits": "A refund needs at least one unit.",
+  "errRefundExceedsBalance": "Can't refund {requested} {meal} units — the member has only {available}.",
+  "@errRefundExceedsBalance": {
+    "description": "On an error message. requested = a number of units; meal = a meal name (Breakfast, Lunch, Brunch); available = a number of units.",
+    "placeholders": {
+      "requested": {
+        "type": "int"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      }
+    }
+  },
+  "errCategoryNameBlank": "Give the category a name.",
+  "errCategoryExists": "There's already a category called {name}.",
+  "@errCategoryExists": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errCategoryNotFound": "That category no longer exists.",
+  "errUnknownCategory": "There's no menu category called {name}. Create it first.",
+  "@errUnknownCategory": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errMenuItemsRequired": "Add at least one item.",
+  "errHeadcountNegative": "Plates can't be negative.",
+  "errMenuEntryExists": "There's already a {meal} entry for {category} on that day — edit it instead.",
+  "@errMenuEntryExists": {
+    "description": "On an error message. meal = a meal name (Breakfast, Lunch, Brunch); category = a menu category name, e.g. Jain.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "errMenuEntryNotFound": "That menu entry no longer exists.",
+  "errIngredientNameUnitRequired": "An ingredient needs a name and a unit.",
+  "errIngredientExists": "There's already an ingredient called {name}.",
+  "@errIngredientExists": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errIngredientNotFound": "That ingredient no longer exists.",
+  "errNothingToUpdate": "Nothing has changed.",
+  "errRecipeDishBlank": "Give the dish a name.",
+  "errRecipeNeedsIngredient": "A recipe needs at least one ingredient.",
+  "errRecipeQuantityPositive": "Every ingredient needs a quantity above zero.",
+  "errRecipeUnknownIngredient": "One of these ingredients no longer exists. Pick it again.",
+  "errRecipeExists": "There's already a recipe for {name}.",
+  "@errRecipeExists": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errRecipeNotFound": "That recipe no longer exists.",
+  "errPurchaseRangeInvalid": "The start date must be on or before the end date.",
+  "errPurchaseQuantityRequired": "Enter how much to buy.",
+  "errPurchaseItemNotFound": "That shopping item no longer exists.",
+  "errExpenseAmountNegative": "The amount can't be negative.",
+  "errSettingsNegative": "These values can't be negative.",
+  "errSettingsBadTimezone": "{name} isn't a time zone. Pick one from the list.",
+  "@errSettingsBadTimezone": {
+    "description": "On an error message. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errSettingsBadTime": "{meal} times must be in 24-hour HH:MM form.",
+  "@errSettingsBadTime": {
+    "description": "On an error message. meal = a meal name (Breakfast, Lunch, Brunch).",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "errSettingsWindowOrder": "{meal} must start before it ends ({start} – {end}).",
+  "@errSettingsWindowOrder": {
+    "description": "On an error message. meal = a meal name (Breakfast, Lunch, Brunch); start = a time, HH:MM; end = a time, HH:MM.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "errSettingsBlank": "The canteen name can't be empty.",
+  "errNotificationNotFound": "That notification has already gone.",
+  "errBackupUnreadable": "That backup is damaged or incomplete.",
+  "errBackupNotTiffin": "That isn't a Tiffin backup file.",
+  "errBackupNeedsPassphrase": "This backup is password-protected. Enter its password.",
+  "errBackupWrongPassphrase": "That password doesn't open this backup.",
+  "errBackupNewerVersion": "That backup was made by a newer version of Tiffin. Update the app first.",
+  "errBackupTargetNotEmpty": "This canteen already has members. To replace them, use Settings ▸ Backup & restore.",
+  "errInternal": "Something went wrong on this phone. It has been written to the log.",
+  "errUnexpected": "Something unexpected went wrong. It has been written to the log.",
+  "reversalScanReversed": "Scan reversed — {meal} balance is now {restored}.",
+  "@reversalScanReversed": {
+    "description": "On a reversal result. meal = a meal name (Breakfast, Lunch, Brunch); restored = a balance after the reversal.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "restored": {
+        "type": "int"
+      }
+    }
+  },
+  "reversalScanNotFound": "That scan no longer exists.",
+  "reversalScanAlreadyReversed": "That scan was already reversed.",
+  "reversalScanWindowExpired": "Scans can only be reversed within {minutes, plural, =1{1 minute} other{{minutes} minutes}}.",
+  "@reversalScanWindowExpired": {
+    "description": "On a reversal result. minutes = a number of minutes.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "reversalTopupReversed": "Top-up reversed and the balance corrected.",
+  "reversalTopupNotFound": "That top-up no longer exists.",
+  "reversalTopupAlreadyReversed": "This top-up is already reversed.",
+  "reversalTopupUnitsUsed": "Some of these units have already been used. Process a refund instead.",
+  "reversalMemberNotFound": "That member no longer exists.",
+  "notifPrepTitle": "Start prepping {meal}",
+  "@notifPrepTitle": {
+    "description": "On a notification. meal = a meal name (Breakfast, Lunch, Brunch).",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPrepBody": "{meal} starts at {start} — in about {minutes, plural, =1{1 minute} other{{minutes} minutes}}.",
+  "@notifPrepBody": {
+    "description": "On a notification. meal = a meal name (Breakfast, Lunch, Brunch); start = a time, HH:MM; minutes = a number of minutes.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "notifPurchaseTitle": "Ingredient purchase due",
+  "notifPurchaseBody": "{count, plural, =1{1 item still needs} other{{count} items still need}} buying for {date}.",
+  "@notifPurchaseBody": {
+    "description": "On a notification. count = a number; date = a formatted date.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifLowStockTitle": "Low stock: {name}",
+  "@notifLowStockTitle": {
+    "description": "On a notification. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifLowStockBody": "{qty} {unit} left (alert at {threshold} {unit}). Restock soon.",
+  "@notifLowStockBody": {
+    "description": "On a notification. qty = a quantity; unit = a unit of measure, e.g. kg; threshold = a quantity.",
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "notifOverrunTitle": "More {category} {meal} plates than planned",
+  "@notifOverrunTitle": {
+    "description": "On a notification. category = a menu category name, e.g. Jain; meal = a meal name (Breakfast, Lunch, Brunch).",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "notifOverrunBody": "Planned about {planned}, served {served} so far.",
+  "@notifOverrunBody": {
+    "description": "On a notification. planned = a number of plates; served = a number of plates.",
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "served": {
+        "type": "int"
+      }
+    }
+  },
+  "notifScanRejectedTitle": "Offline scan not counted",
+  "notifScanRejectedBody": "{name} had already been served {meal} on {date} on another phone, so this scan was dropped and the unit kept.",
+  "@notifScanRejectedBody": {
+    "description": "On a notification. name = a person's or item's name; meal = a meal name (Breakfast, Lunch, Brunch); date = a formatted date.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifUnknown": "Notice",
+  "@notifUnknown": {
+    "description": "Title for a notification type this app version does not know."
+  },
+  "connectTitle": "Connect to your Firebase project",
+  "connectBody": "Tiffin keeps the canteen's records in your own Firebase project. Pick the config file you downloaded from the Firebase console — google-services.json on Android, GoogleService-Info.plist on iPhone.",
+  "connectPickButton": "Choose config file",
+  "connectHelp": "Where is it? Firebase console ▸ Project settings ▸ Your apps ▸ the app with ID {appId} ▸ download the config file.",
+  "@connectHelp": {
+    "description": "appId is a package name; keep it as is.",
+    "placeholders": {
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "connectConnecting": "Connecting…",
+  "deviceSetupTitle": "Set up this phone",
+  "deviceSetupBody": "Give this phone a name the admin will recognise, then join. This needs internet once; after that the phone works offline too.",
+  "deviceSetupNameLabel": "Phone name",
+  "deviceSetupNameHint": "e.g. Counter 1",
+  "deviceSetupJoinButton": "Join this canteen",
+  "deviceSetupOnlineButton": "Sign in with an online account instead",
+  "deviceSetupProject": "Firebase project: {projectId}",
+  "@deviceSetupProject": {
+    "description": "On phone setup screen. projectId = a Firebase project id, keep as is.",
+    "placeholders": {
+      "projectId": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSetupChangeProject": "Use a different Firebase project",
+  "newCanteenTitle": "Start a new canteen?",
+  "newCanteenBody": "Nobody has set up this Firebase project yet. This phone will become the first admin phone.",
+  "newCanteenButton": "Start the canteen on this phone",
+  "waitingTitle": "Waiting for approval",
+  "waitingBody": "Ask the admin to open Settings ▸ Devices on their phone and approve {name}. This screen moves on by itself once they do.",
+  "@waitingBody": {
+    "description": "On waiting-for-approval screen. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingCode": "Phone code: {code}",
+  "@waitingCode": {
+    "description": "A short code the admin matches against the Devices list.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingRevoked": "The admin removed this phone. Ask them to approve it again.",
+  "waitingRequestAgain": "Ask for approval again",
+  "waitingStartOver": "Start over",
+  "onlineSignInTitle": "Online account",
+  "onlineEmailLabel": "Email",
+  "onlinePasswordLabel": "Password",
+  "onlineSignInButton": "Sign in",
+  "onlineForgotButton": "Email me a reset link",
+  "onlineResetSent": "Check {email} for a link to reset the password.",
+  "@onlineResetSent": {
+    "description": "On online accounts. email = an email address.",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineInactive": "This online account is turned off. Ask the admin.",
+  "onlineSignOutButton": "Sign out",
+  "onlineBack": "Back",
+  "onlineAccountsTitle": "Online accounts",
+  "onlineAccountsSubtitle": "Email sign-in that works on any phone",
+  "onlineAccountsToggle": "Allow online accounts",
+  "onlineAccountsExplainer": "Online accounts sign in with an email and password on any phone, without the phone being approved first. They need internet to sign in. Offline accounts keep working either way.",
+  "onlineAccountsAdd": "Add online account",
+  "onlineAccountsEmpty": "No online accounts yet.",
+  "onlineAccountsTurnOff": "Turn off",
+  "onlineAccountsTurnOn": "Turn on",
+  "onlineAccountsCreated": "Created {email}.",
+  "@onlineAccountsCreated": {
+    "description": "On online accounts. email = an email address.",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineAccountsOff": "Online accounts are off. Turn them on to add one.",
+  "splashPreparing": "Getting ready…",
+  "splashSyncing": "Downloading the canteen's records…",
+  "syncOffline": "Offline — changes will sync",
+  "noAccountsTitle": "No accounts yet",
+  "noAccountsBody": "The admin hasn't created any accounts. Set them up on the admin phone first.",
+  "devicesTitle": "Devices",
+  "devicesSubtitle": "Phones that can use this canteen",
+  "devicesPending": "Waiting for approval",
+  "devicesApproveButton": "Approve",
+  "devicesRoleLabel": "Role on this phone",
+  "devicesRemoveButton": "Remove",
+  "devicesRemoveConfirm": "Remove {name}? It will need approving again before it can be used.",
+  "@devicesRemoveConfirm": {
+    "description": "On Devices screen. name = a person's or item's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesThisPhone": "This phone",
+  "devicesEmpty": "No other phones yet.",
+  "devicesRoleExplainer": "A phone's role limits who can sign in on it: an admin phone allows everyone, a counter phone allows counter and scanner accounts, a scanner phone allows scanner accounts only.",
+  "settingsScreenGroupAccess": "Access",
+  "settingsScreenFirebaseTitle": "Firebase project",
+  "settingsScreenFirebaseSubtitle": "Connected to {projectId}",
+  "@settingsScreenFirebaseSubtitle": {
+    "description": "On Settings. projectId = a Firebase project id, keep as is.",
+    "placeholders": {
+      "projectId": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenChangeFirebaseDialogTitle": "Use a different Firebase project?",
+  "settingsScreenChangeFirebaseDialogBody": "This phone signs out and forgets its copy of this canteen's records. Nothing is deleted from Firebase. Changes not yet synced from this phone will be lost.",
+  "settingsScreenChangeButton": "Change",
+  "importTitle": "Bring over existing records?",
+  "importBody": "If this canteen used the earlier version of Tiffin, make a backup there (Settings ▸ Backup & restore) and pick that .tiffin file here.",
+  "importPickButton": "Pick a .tiffin backup",
+  "importDone": "{count, plural, =1{Imported 1 record.} other{Imported {count} records.}}",
+  "@importDone": {
+    "description": "On first-run import. count = a number.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importPassphraseLabel": "Backup password (if it has one)",
+  "confirmWordReset": "RESET",
+  "@confirmWordReset": {
+    "description": "A word the user must type to confirm a destructive action. Keep it one short word; the English word is accepted too."
+  },
+  "confirmWordReplace": "REPLACE",
+  "@confirmWordReplace": {
+    "description": "A word the user must type to confirm replacing all data. Keep it one short word; the English word is accepted too."
+  },
+  "themeNeobrutalLabel": "Neobrutal",
+  "themeNeobrutalBlurb": "Hard borders, offset shadows, loud colour. The Tiffin original.",
+  "themeCleanLabel": "Clean",
+  "themeCleanBlurb": "Flat and quiet. Easiest on the eyes for a long admin shift.",
+  "themeFrostLabel": "Frost",
+  "themeFrostBlurb": "Frosted glass bars and sheets over solid content.",
+  "themeClayLabel": "Clay",
+  "themeClayBlurb": "Soft, round and warm. Friendliest of the four.",
+  "crashTitle": "This screen hit a problem.",
+  "crashBody": "Go back and try again — it has been written to the log.",
+  "tooltipDelete": "Delete",
+  "tooltipNotifications": "Notifications",
+  "tooltipDismiss": "Dismiss",
+  "tooltipPreviousMonth": "Previous month",
+  "tooltipNextMonth": "Next month",
+  "errEmailInUse": "An online account with that email already exists.",
+  "restartTitle": "Close and reopen Tiffin",
+  "restartBody": "The new Firebase project is saved. It takes effect the next time the app starts.",
+  "topupScreenShareBill": "Share bill",
+  "tooltipLess": "One less",
+  "tooltipMore": "One more"
+}

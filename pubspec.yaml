@@ -1,0 +1,103 @@
+name: tiffin
+description: >-
+  Tiffin — a unit-based canteen coupon system. One native Flutter app; every
+  phone reads and writes the canteen's own Firebase project directly, and keeps
+  working offline. See docs/PRD.md §15 and docs/adr/0005.
+publish_to: none
+version: 3.0.0+3
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+# Every dependency is a decision (CLAUDE.md §10). Versions are the current
+# stable line at the time of the change that added them.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # --- State management / DI ---
+  flutter_riverpod: ^3.4.2
+
+  # --- Data: Firebase (ADR 0005) ---
+  #  Pinned to the 6.x line of cloud_firestore because fake_cloud_firestore,
+  #  which the service tests run on, doesn't support 7.x yet.
+  cloud_firestore: ^6.7.1
+  firebase_core: ^4.15.0
+  firebase_auth: ^6.7.0
+  #  Import-only: reads the SQLite snapshot inside a backup made by the
+  #  earlier LAN-host build (lib/services/legacy_import.dart).
+  sqlite3: ^3.7.1
+
+  # --- QR scanning / generation ---
+  mobile_scanner: ^7.2.0
+  qr_flutter: ^4.1.0
+
+  # --- Bill PDF + the share sheet ---
+  pdf: ^3.11.1
+  printing: ^5.13.4
+
+  # --- PBKDF2 password hashes and AES-GCM backup encryption ---
+  pointycastle: ^4.0.0
+
+  # --- IANA timezone conversion (PRD §6.8) ---
+  #  Meal windows resolve in the canteen's own zone and Dart's core library
+  #  ships no tz database. Pure Dart, no native dependency.
+  timezone: ^0.9.4
+
+  # --- Small cross-cutting helpers ---
+  shared_preferences: ^2.3.2
+  flutter_secure_storage: ^11.0.0
+  archive: ^4.0.2        # .xlsx and .tiffin containers are both zips
+  file_picker: ^12.2.0   # pick a Firebase config file or a backup
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  collection: ^1.18.0
+  intl: ^0.20.2
+  logging: ^1.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  # App-icon generator (build tooling only). Source art in assets/icon/.
+  flutter_launcher_icons: ^0.14.4
+  # Native launch screen. Regenerate: dart run flutter_native_splash:create
+  flutter_native_splash: ^2.4.3
+  # Service and rules tests run against an in-memory Firestore.
+  fake_cloud_firestore: ^4.2.0
+  firebase_auth_mocks: ^0.15.2
+  # custom_lint / riverpod_lint are intentionally omitted: at these versions
+  # their analyzer_plugin constraints don't co-resolve (riverpod_lint 3.1.8
+  # wants ^0.14, the current custom_lint wants ^0.13). They're lint-only dev
+  # tooling — `dart analyze` + flutter_lints cover the Definition of Done
+  # (PRD §11). Re-add once a matching custom_lint ships.
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/icon/icon_foreground.png
+
+# App icon — neobrutalism coupon/ticket stub. Regenerate after editing the
+# source art:  dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  adaptive_icon_background: "#F5F1E8"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  ios: true
+  remove_alpha_ios: true
+
+# Native launch screen — the ticket mark on the warm ground, matching the
+# in-app landing. Regenerate:  dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#F5F1E8"
+  image: "assets/icon/icon_foreground.png"
+  android_12:
+    color: "#F5F1E8"
+    image: "assets/icon/icon_foreground.png"
+  ios: true
+  android: true
