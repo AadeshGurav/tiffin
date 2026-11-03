@@ -7,7 +7,7 @@ import '../../domain/inventory.dart';
 import '../shared_widgets/ingredient_quick_add.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
@@ -41,10 +41,10 @@ class RecipesTab extends ConsumerWidget {
       builder: (list) => ListView.separated(
         padding: const EdgeInsets.all(NbSpace.md),
         itemCount: list.length,
-        separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+        separatorBuilder: nbRowSeparator,
         itemBuilder: (_, i) {
           final r = list[i];
-          return NbSurface(
+          return NbRow(
             onTap: () => openRecipeForm(context, ref, r),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

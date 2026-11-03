@@ -6,7 +6,7 @@ import '../../app/providers.dart';
 import '../../domain/ledger.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/labels.dart';
@@ -38,13 +38,12 @@ class ScanLogScreen extends ConsumerWidget {
           quips: EmptyQuips.scans(context),
         ),
         builder: (list) => ListView.separated(
-          padding: const EdgeInsets.all(NbSpace.md),
           itemCount: list.length,
-          separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+          separatorBuilder: nbRowSeparator,
           itemBuilder: (_, i) {
             final s = list[i];
             final reversible = s.result == 'accepted' && !s.reversed;
-            return NbSurface(
+            return NbRow(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

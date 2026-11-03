@@ -128,3 +128,39 @@ class NbListRow extends StatelessWidget {
     );
   }
 }
+
+/// A flat row for long lists: the surface colour, a tap highlight and padding,
+/// nothing else. Pair with [nbRowSeparator] so the list is one ruled sheet
+/// rather than a stack of boxes — and stays lazily built, unlike [NbGroup].
+class NbRow extends StatelessWidget {
+  const NbRow({super.key, required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Material(
+      color: t.color.surface,
+      child: InkWell(
+        onTap: onTap,
+        highlightColor: t.color.surfaceMuted,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: NbSpace.md, vertical: NbSpace.sm),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The hairline between [NbRow]s.
+Widget nbRowSeparator(BuildContext context, int index) {
+  final t = context.tokens;
+  return Divider(height: t.shape.borderHair, color: t.color.border);
+}

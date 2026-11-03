@@ -8,7 +8,7 @@ import '../../domain/member.dart';
 import '../shared_widgets/member_picker.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
@@ -51,12 +51,11 @@ class RefundsScreen extends ConsumerWidget {
           onAction: () => _form(context, ref),
         ),
         builder: (list) => ListView.separated(
-          padding: const EdgeInsets.all(NbSpace.md),
           itemCount: list.length,
-          separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+          separatorBuilder: nbRowSeparator,
           itemBuilder: (_, i) {
             final r = list[i];
-            return NbSurface(
+            return NbRow(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -7,7 +7,6 @@ import '../../app/providers.dart';
 import '../../domain/member.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../shared_widgets/motion.dart';
@@ -45,10 +44,12 @@ class MembersScreen extends ConsumerWidget {
           actionLabel: AppText.of(context).membersScreenAddFirstButton,
           onAction: () => _openForm(context, ref, null),
         ),
+        // One flat, lazily built list with hairlines: a card per member made
+        // a long list hard to scan, and its two buttons per card hid the name.
         builder: (list) => ListView.separated(
-          padding: const EdgeInsets.all(NbSpace.md),
           itemCount: list.length,
-          separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+          separatorBuilder: (_, __) =>
+              Divider(height: t.shape.borderHair, color: t.color.border),
           itemBuilder: (_, i) => _MemberTile(
             member: list[i],
             onChanged: () => ref.invalidate(_membersProvider),
@@ -76,56 +77,46 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
+    final text = AppText.of(context);
     final b = member.balances;
-    return NbSurface(
-      onTap: () => MembersScreen._openForm(context, ref, member),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(member.name, style: t.text.heading),
-              ),
-              if (!member.isActive)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: NbSpace.sm, vertical: 2),
-                  color: t.color.surfaceMuted,
-                  child: Text(AppText.of(context).membersScreenInactiveBadge,
-                      style: t.text.label),
-                ),
-            ],
-          ),
-          Text(
-            AppText.of(context).membersScreenTypeSummary(
-              member.type, // an ICU select on the stored value
-              member.className ?? '—',
-              member.rollNumber ?? '—',
-              member.staffId ?? '—',
+    final summary = text.membersScreenTypeSummary(
+      member.type, // an ICU select on the stored value
+      member.className ?? '—',
+      member.rollNumber ?? '—',
+      member.staffId ?? '—',
+    );
+    final balances =
+        text.membersScreenBalancesSummary(b.lunch, b.breakfast, b.brunch);
+    return ColoredBox(
+      color: t.color.surface,
+      child: ListTile(
+        minTileHeight: 72,
+        onTap: () => MembersScreen._openForm(context, ref, member),
+        title: Text(member.name, style: t.text.heading.copyWith(fontSize: 18)),
+        subtitle: Text(
+          [
+            if (!member.isActive) text.membersScreenInactiveBadge,
+            summary,
+            balances,
+          ].join('\n'),
+          style: t.text.body.copyWith(color: t.color.inkMuted, fontSize: 14),
+        ),
+        // Secondary actions live behind one 48px menu, so the row reads as
+        // "a person" first and the two rare actions are still one tap away.
+        trailing: PopupMenuButton<VoidCallback>(
+          tooltip: text.membersScreenCreditButton,
+          onSelected: (run) => run(),
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: () => _credit(context, ref),
+              child: Text(text.membersScreenCreditButton),
             ),
-            style: t.text.label,
-          ),
-          const SizedBox(height: NbSpace.sm),
-          Text(
-              AppText.of(context)
-                  .membersScreenBalancesSummary(b.lunch, b.breakfast, b.brunch),
-              style: t.text.body),
-          const SizedBox(height: NbSpace.sm),
-          Wrap(
-            spacing: NbSpace.sm,
-            children: [
-              NbButton.secondary(
-                label: AppText.of(context).membersScreenCreditButton,
-                onPressed: () => _credit(context, ref),
-              ),
-              NbButton.secondary(
-                label: AppText.of(context).membersScreenQrButton,
-                onPressed: () => _showQr(context, ref),
-              ),
-            ],
-          ),
-        ],
+            PopupMenuItem(
+              value: () => _showQr(context, ref),
+              child: Text(text.membersScreenQrButton),
+            ),
+          ],
+        ),
       ),
     );
   }

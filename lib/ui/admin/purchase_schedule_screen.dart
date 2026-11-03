@@ -8,7 +8,7 @@ import '../../domain/inventory.dart';
 import '../shared_widgets/ingredient_quick_add.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import 'ingredients_screen.dart';
@@ -71,63 +71,63 @@ class PurchaseScheduleScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(NbSpace.md),
             children: [
-              for (final day in byDay.entries) ...[
-                Padding(
-                  padding: const EdgeInsets.only(
-                      top: NbSpace.md, bottom: NbSpace.xs),
-                  child: Text(day.key, style: t.text.label),
-                ),
-                for (final it in day.value)
-                  NbSurface(
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: it.purchased,
-                          onChanged: (v) =>
-                              _togglePurchased(context, ref, it, v ?? false),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                  '${it.ingredientName} — ${it.quantityNote} '
-                                  '(${AppText.of(context).unitLabel(it.ingredientUnit)})',
-                                  style: t.text.body),
-                              Text(
-                                  it.source == 'manual'
-                                      ? AppText.of(context)
-                                          .purchaseScheduleScreenSourceManual
-                                      : (it.purchased
+              // One box per day; its items are rows inside it.
+              for (final day in byDay.entries)
+                NbGroup(
+                  title: day.key,
+                  children: [
+                    for (final it in day.value)
+                      NbRow(
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: it.purchased,
+                              onChanged: (v) => _togglePurchased(
+                                  context, ref, it, v ?? false),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                      '${it.ingredientName} — ${it.quantityNote} '
+                                      '(${AppText.of(context).unitLabel(it.ingredientUnit)})',
+                                      style: t.text.body),
+                                  Text(
+                                      it.source == 'manual'
                                           ? AppText.of(context)
-                                              .purchaseScheduleScreenSourceFromMenuBy(
-                                                  it.purchasedBy ?? '')
-                                          : AppText.of(context)
-                                              .purchaseScheduleScreenSourceFromMenu),
-                                  style: t.text.label),
-                            ],
-                          ),
+                                              .purchaseScheduleScreenSourceManual
+                                          : (it.purchased
+                                              ? AppText.of(context)
+                                                  .purchaseScheduleScreenSourceFromMenuBy(
+                                                      it.purchasedBy ?? '')
+                                              : AppText.of(context)
+                                                  .purchaseScheduleScreenSourceFromMenu),
+                                      style: t.text.label),
+                                ],
+                              ),
+                            ),
+                            if (isAdmin)
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                tooltip: AppText.of(context).tooltipDelete,
+                                onPressed: () async {
+                                  final ok = await runGuarded(
+                                    context,
+                                    () => ref
+                                        .read(backendProvider)
+                                        .deletePurchaseItem(it.id),
+                                    successMessage: AppText.of(context)
+                                        .purchaseScheduleScreenRemoved,
+                                  );
+                                  if (ok) ref.invalidate(_scheduleProvider);
+                                },
+                              ),
+                          ],
                         ),
-                        if (isAdmin)
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline),
-                            tooltip: AppText.of(context).tooltipDelete,
-                            onPressed: () async {
-                              final ok = await runGuarded(
-                                context,
-                                () => ref
-                                    .read(backendProvider)
-                                    .deletePurchaseItem(it.id),
-                                successMessage: AppText.of(context)
-                                    .purchaseScheduleScreenRemoved,
-                              );
-                              if (ok) ref.invalidate(_scheduleProvider);
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
+                      ),
+                  ],
+                ),
             ],
           );
         },

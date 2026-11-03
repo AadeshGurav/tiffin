@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../domain/ops.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
@@ -71,10 +72,10 @@ class ExpensesScreen extends ConsumerWidget {
               builder: (list) => ListView.separated(
                 padding: const EdgeInsets.all(NbSpace.md),
                 itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+                separatorBuilder: nbRowSeparator,
                 itemBuilder: (_, i) {
                   final e = list[i];
-                  return NbSurface(
+                  return NbRow(
                     child: Row(
                       children: [
                         Expanded(
