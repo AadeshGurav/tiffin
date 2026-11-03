@@ -703,8 +703,6 @@
   "createNameLabel": "कॅन्टीनचे नाव",
   "createNameHint": "उदा. मेन गेट कॅन्टीन",
   "createSignedInAs": "{email} म्हणून साइन इन",
-  "createUseExisting": "माझे खाते आधीपासून आहे",
-  "createUseNew": "नवीन खाते तयार करा",
   "createButton": "कॅन्टीन तयार करा",
   "switchCanteenButton": "कॅन्टीन बदला किंवा दुसरीशी जोडा",
   "deviceSetupCanteen": "कॅन्टीन: {name}",

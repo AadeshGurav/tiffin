@@ -207,6 +207,16 @@ describe('canteens', () => {
     await assertFails(getDocs(collection(anonymous('p'), 'canteens')));
   });
 
+  test('the creator can restore their own admin row, nobody else can', async () => {
+    await seed({
+      'canteens/ABCD2345': { name: 'x', ownerUid: 'owner' },
+      'canteens/ABCD2345/onlineUsers/owner': { email: 'a@b.c', role: 'scanner', status: 'pending' },
+    });
+    const row = { email: 'a@b.c', role: 'admin', status: 'active' };
+    await assertSucceeds(setDoc(doc(person('owner'), 'canteens/ABCD2345/onlineUsers/owner'), row));
+    await assertFails(setDoc(doc(person('late'), 'canteens/ABCD2345/onlineUsers/late'), row));
+  });
+
   test('a role in one canteen grants nothing in another', async () => {
     await seed({
       'canteens/c1/devices/admin': approved('admin'),

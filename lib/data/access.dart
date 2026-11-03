@@ -231,7 +231,28 @@ class AccessService {
   Future<OnlineAccount> requestOnlineAccess(User user) async {
     final ref = _store.doc(Col.onlineUsers, user.uid);
     final row = await _store.freshDoc(ref);
-    if (row != null) return OnlineAccount.fromJson(row);
+    final owner = await _isOwner(user);
+    if (row != null && !(owner && row['status'] != 'active')) {
+      return OnlineAccount.fromJson(row);
+    }
+    if (owner) {
+      // The creator must never be locked out of their own canteen, whatever
+      // happened to their row.
+      await _store.commit(
+          _store.batch()
+            ..set(ref, {
+              'email': user.email ?? '',
+              'role': Role.admin.wire,
+              'status': 'active',
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+          'onlineUsers.reclaim');
+      return OnlineAccount(
+          uid: user.uid,
+          email: user.email ?? '',
+          role: Role.admin,
+          status: 'active');
+    }
     await _store.commit(
         _store.batch()
           ..set(ref, {
@@ -246,6 +267,11 @@ class AccessService {
         email: user.email ?? '',
         role: Role.scanner,
         status: 'pending');
+  }
+
+  Future<bool> _isOwner(User user) async {
+    final root = await _store.canteenDoc.get();
+    return root.data()?['ownerUid'] == user.uid;
   }
 
   Future<void> sendPasswordReset(String email) =>

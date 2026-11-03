@@ -53,16 +53,16 @@ class CanteenService {
     }
   }
 
-  /// Email sign-in before any canteen is active. Registering and signing in
-  /// are separate on purpose: a wrong password must not silently create an
-  /// account.
-  Future<void> signInWithEmail(String email, String password,
-      {required bool register}) async {
+  /// Email sign-in before any canteen is active: one path for new and
+  /// returning people. A known address signs in with the same password (a
+  /// wrong one still fails there), so nobody has to say which they are.
+  Future<void> signInWithEmail(String email, String password) async {
     final address = email.trim();
-    if (register) {
+    try {
       await _auth.createUserWithEmailAndPassword(
           email: address, password: password);
-    } else {
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'email-already-in-use') rethrow;
       await _auth.signInWithEmailAndPassword(
           email: address, password: password);
     }

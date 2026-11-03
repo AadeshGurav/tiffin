@@ -31,7 +31,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   _Step _step = _Step.home;
-  bool _registering = true;
   bool _fromBackup = false;
   bool _busy = false;
   String? _error;
@@ -82,8 +81,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         final service = ref.read(canteenServiceProvider);
         final user = ref.read(identityProvider).currentUser;
         if (user == null || user.isAnonymous) {
-          await service.signInWithEmail(_email.text, _password.text,
-              register: _registering);
+          await service.signInWithEmail(_email.text, _password.text);
         }
         final made = await service.create(_name.text);
         ref.read(startFromBackupProvider.notifier).set(_fromBackup);
@@ -170,13 +168,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 label: text.onlinePasswordLabel,
                 controller: _password,
                 obscure: true),
-            TextButton(
-              onPressed: _busy
-                  ? null
-                  : () => setState(() => _registering = !_registering),
-              child: Text(
-                  _registering ? text.createUseExisting : text.createUseNew),
-            ),
           ],
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
