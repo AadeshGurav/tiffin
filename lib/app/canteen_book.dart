@@ -104,3 +104,16 @@ final canteenBookProvider =
 /// reads canteen data watches this, so switching rebuilds it all.
 final activeCanteenProvider =
     Provider<String?>((ref) => ref.watch(canteenBookProvider).activeCode);
+
+/// Set when someone creates a canteen "from a backup": the new admin lands on
+/// the backup screen once, instead of an empty dashboard.
+class StartFromBackup extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  // ignore: use_setters_to_change_properties
+  void set(bool value) => state = value;
+}
+
+final startFromBackupProvider =
+    NotifierProvider<StartFromBackup, bool>(StartFromBackup.new);

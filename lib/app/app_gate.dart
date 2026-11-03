@@ -5,6 +5,7 @@ import '../core/role.dart';
 import '../data/access.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/admin/admin_dashboard.dart';
+import '../ui/admin/open_backup_once.dart';
 import '../ui/auth/device_setup_screen.dart';
 import '../ui/auth/host_setup_screen.dart';
 import '../ui/auth/login_screen.dart';
@@ -92,7 +93,7 @@ class _SignedInGate extends ConsumerWidget {
     return switch (session.role) {
       Role.scanner => const ScannerScreen(isRoleHome: true),
       Role.counter => const CounterHome(),
-      Role.admin => const AdminDashboard(),
+      Role.admin => const OpenBackupOnce(child: AdminDashboard()),
     };
   }
 }

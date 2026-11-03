@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
+import '../../data/canteens.dart';
 import '../../l10n/messages.dart';
 import '../../services/backup_service.dart';
 import '../admin/backup_screen.dart';
@@ -118,6 +119,15 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: text.settingsScreenSwitchSubtitle(canteen?.name ?? ''),
             onTap: () => _switchCanteen(context, ref),
           ),
+          if (_isOnlineIdentity(ref)) ...[
+            const SizedBox(height: NbSpace.sm),
+            SettingsRow(
+              icon: Icons.link,
+              title: text.settingsScreenAddMethodTitle,
+              subtitle: text.settingsScreenAddMethodSubtitle,
+              onTap: () => _addMethod(context, ref),
+            ),
+          ],
           if (isAdmin && canteen != null) ...[
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
@@ -177,6 +187,39 @@ class SettingsScreen extends ConsumerWidget {
     if (context.mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
+  }
+
+  bool _isOnlineIdentity(WidgetRef ref) {
+    final user = ref.watch(identityChangesProvider).asData?.value;
+    return user != null && !user.isAnonymous;
+  }
+
+  Future<void> _addMethod(BuildContext context, WidgetRef ref) async {
+    final text = AppText.of(context);
+    final which = await showModalBottomSheet<SignInProvider>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            minTileHeight: 56,
+            leading: const Icon(Icons.g_mobiledata),
+            title: Text(text.addMethodGoogle),
+            onTap: () => Navigator.pop(context, SignInProvider.google),
+          ),
+          ListTile(
+            minTileHeight: 56,
+            leading: const Icon(Icons.window),
+            title: Text(text.addMethodMicrosoft),
+            onTap: () => Navigator.pop(context, SignInProvider.microsoft),
+          ),
+        ]),
+      ),
+    );
+    if (which == null || !context.mounted) return;
+    await runGuarded(context, () async {
+      await ref.read(canteenServiceProvider).addSignInMethod(which);
+      if (context.mounted) showNbSnack(context, text.addMethodDone);
+    });
   }
 
   /// Nothing is lost by leaving a canteen's screen: the phone keeps its
