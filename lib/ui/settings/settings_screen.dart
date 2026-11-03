@@ -17,7 +17,7 @@ import '../admin/settings_config_screen.dart';
 import '../admin/users_screen.dart';
 import '../shared_widgets/motion.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/settings_row.dart';
+import '../shared_widgets/nb_group.dart';
 import '../theme/tokens.dart';
 import 'appearance_screen.dart';
 import '../../l10n/app_localizations.dart';
@@ -32,7 +32,6 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = context.tokens;
     final text = AppText.of(context);
     final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
     final canteen = ref.watch(canteenBookProvider).active;
@@ -40,128 +39,105 @@ class SettingsScreen extends ConsumerWidget {
     void go(Widget screen) =>
         Navigator.of(context).push(tiffinRoute<void>(context, () => screen));
 
+    NbListRow row(IconData icon, String title, String subtitle, Widget screen,
+            {NbTone tone = NbTone.system}) =>
+        NbListRow(
+            icon: icon,
+            title: title,
+            subtitle: subtitle,
+            tone: tone,
+            onTap: () => go(screen));
+
+    // Grouped by what the row is about, one box per group. Sign-out and the
+    // destructive reset are last and apart, so they are never a stray tap.
     return Scaffold(
       appBar: AppBar(title: Text(text.settingsScreenTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(NbSpace.lg),
+        padding: const EdgeInsets.all(NbSpace.md),
         children: [
+          if (isAdmin)
+            NbGroup(title: text.settingsScreenGroupCanteen, children: [
+              row(
+                  Icons.tune,
+                  text.settingsScreenCanteenConfigTitle,
+                  text.settingsScreenCanteenConfigSubtitle,
+                  const SettingsConfigScreen()),
+              row(Icons.admin_panel_settings, text.settingsScreenUsersTitle,
+                  text.settingsScreenUsersSubtitle, const UsersScreen()),
+              row(
+                  Icons.category,
+                  text.settingsScreenMenuCategoriesTitle,
+                  text.settingsScreenMenuCategoriesSubtitle,
+                  const MenuCategoriesScreen()),
+              row(Icons.table_view, text.settingsScreenReportsTitle,
+                  text.settingsScreenReportsSubtitle, const ReportsScreen()),
+              row(Icons.save_alt, text.settingsScreenBackupTitle,
+                  text.settingsScreenBackupSubtitle, const BackupScreen()),
+            ]),
+          if (isAdmin)
+            NbGroup(title: text.settingsScreenGroupAccess, children: [
+              row(Icons.devices, text.devicesTitle, text.devicesSubtitle,
+                  const DevicesScreen()),
+              row(Icons.alternate_email, text.onlineAccountsTitle,
+                  text.onlineAccountsSubtitle, const OnlineAccountsScreen()),
+            ]),
+          NbGroup(title: text.settingsScreenGroupDisplay, children: [
+            row(
+                Icons.palette_outlined,
+                text.settingsScreenAppearanceTitle,
+                text.settingsScreenAppearanceSubtitle,
+                const AppearanceScreen()),
+          ]),
+          NbGroup(title: text.settingsScreenGroupDevice, children: [
+            if (isAdmin && canteen != null)
+              NbListRow(
+                icon: Icons.key_outlined,
+                title: text.settingsScreenCanteenCodeTitle,
+                subtitle: text.settingsScreenCanteenCodeSubtitle(canteen.code),
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: canteen.code));
+                  if (context.mounted) {
+                    showNbSnack(context, text.canteenCodeCopied);
+                  }
+                },
+              ),
+            NbListRow(
+              icon: Icons.swap_horiz,
+              title: text.settingsScreenSwitchTitle,
+              subtitle: text.settingsScreenSwitchSubtitle(canteen?.name ?? ''),
+              onTap: () => _switchCanteen(context, ref),
+            ),
+            if (_isOnlineIdentity(ref))
+              NbListRow(
+                icon: Icons.link,
+                title: text.settingsScreenAddMethodTitle,
+                subtitle: text.settingsScreenAddMethodSubtitle,
+                onTap: () => _addMethod(context, ref),
+              ),
+            NbListRow(
+              icon: Icons.logout,
+              title: text.settingsScreenSignOutTitle,
+              subtitle: text.settingsScreenSignOutSubtitle,
+              onTap: () => _confirmSignOut(context, ref),
+            ),
+          ]),
           if (isAdmin) ...[
-            _group(t, text.settingsScreenGroupCanteen),
-            SettingsRow(
-              icon: Icons.tune,
-              title: text.settingsScreenCanteenConfigTitle,
-              subtitle: text.settingsScreenCanteenConfigSubtitle,
-              onTap: () => go(const SettingsConfigScreen()),
-            ),
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.admin_panel_settings,
-              title: text.settingsScreenUsersTitle,
-              subtitle: text.settingsScreenUsersSubtitle,
-              onTap: () => go(const UsersScreen()),
-            ),
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.category,
-              title: text.settingsScreenMenuCategoriesTitle,
-              subtitle: text.settingsScreenMenuCategoriesSubtitle,
-              onTap: () => go(const MenuCategoriesScreen()),
-            ),
-          ],
-          _group(t, text.settingsScreenGroupDisplay),
-          SettingsRow(
-            icon: Icons.palette_outlined,
-            title: text.settingsScreenAppearanceTitle,
-            subtitle: text.settingsScreenAppearanceSubtitle,
-            onTap: () => go(const AppearanceScreen()),
-          ),
-          if (isAdmin) ...[
-            _group(t, text.settingsScreenGroupAccess),
-            SettingsRow(
-              icon: Icons.devices,
-              title: text.devicesTitle,
-              subtitle: text.devicesSubtitle,
-              onTap: () => go(const DevicesScreen()),
-            ),
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.alternate_email,
-              title: text.onlineAccountsTitle,
-              subtitle: text.onlineAccountsSubtitle,
-              onTap: () => go(const OnlineAccountsScreen()),
-            ),
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.table_view,
-              title: text.settingsScreenReportsTitle,
-              subtitle: text.settingsScreenReportsSubtitle,
-              onTap: () => go(const ReportsScreen()),
-            ),
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.save_alt,
-              title: text.settingsScreenBackupTitle,
-              subtitle: text.settingsScreenBackupSubtitle,
-              onTap: () => go(const BackupScreen()),
-            ),
-          ],
-          _group(t, text.settingsScreenGroupDevice),
-          SettingsRow(
-            icon: Icons.logout,
-            title: text.settingsScreenSignOutTitle,
-            subtitle: text.settingsScreenSignOutSubtitle,
-            onTap: () => _confirmSignOut(context, ref),
-          ),
-          const SizedBox(height: NbSpace.sm),
-          SettingsRow(
-            icon: Icons.swap_horiz,
-            title: text.settingsScreenSwitchTitle,
-            subtitle: text.settingsScreenSwitchSubtitle(canteen?.name ?? ''),
-            onTap: () => _switchCanteen(context, ref),
-          ),
-          if (_isOnlineIdentity(ref)) ...[
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.link,
-              title: text.settingsScreenAddMethodTitle,
-              subtitle: text.settingsScreenAddMethodSubtitle,
-              onTap: () => _addMethod(context, ref),
-            ),
-          ],
-          if (isAdmin && canteen != null) ...[
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.key_outlined,
-              title: text.settingsScreenCanteenCodeTitle,
-              subtitle: text.settingsScreenCanteenCodeSubtitle(canteen.code),
-              onTap: () async {
-                await Clipboard.setData(ClipboardData(text: canteen.code));
-                if (context.mounted) {
-                  showNbSnack(context, text.canteenCodeCopied);
-                }
-              },
-            ),
-          ],
-          if (isAdmin) ...[
-            const SizedBox(height: NbSpace.sm),
-            SettingsRow(
-              icon: Icons.delete_forever,
-              title: text.settingsScreenResetDataTitle,
-              subtitle: text.settingsScreenResetDataSubtitle,
-              danger: true,
-              onTap: () => _confirmReset(context, ref),
-            ),
+            const SizedBox(height: NbSpace.xl),
+            NbGroup(children: [
+              NbListRow(
+                icon: Icons.delete_forever,
+                title: text.settingsScreenResetDataTitle,
+                subtitle: text.settingsScreenResetDataSubtitle,
+                danger: true,
+                onTap: () => _confirmReset(context, ref),
+              ),
+            ]),
           ],
           const SizedBox(height: NbSpace.xl),
         ],
       ),
     );
   }
-
-  Widget _group(TiffinTokens t, String label) => Padding(
-        padding: const EdgeInsets.only(top: NbSpace.lg, bottom: NbSpace.sm),
-        child: Text(label.toUpperCase(), style: t.text.heading),
-      );
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
     final text = AppText.of(context);

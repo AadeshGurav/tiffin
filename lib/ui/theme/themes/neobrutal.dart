@@ -18,11 +18,12 @@ TiffinTokens buildNeobrutal(Brightness brightness) {
     shape: TiffinShape(
       radius: BorderRadius.zero,
       borderHair: 1.5,
-      borderBase: 3,
-      borderBold: 5,
-      shadowRestrained: [
-        BoxShadow(color: palette.shadow, offset: const Offset(3, 3)),
-      ],
+      // Calm by default: lists, forms and data sit on a 2px line with no
+      // shadow; the bold border and hard shadow are kept for the things that
+      // are actions (buttons, scan verdicts) so they are what stands out.
+      borderBase: 2,
+      borderBold: 4,
+      shadowRestrained: const [],
       shadowFull: [
         BoxShadow(color: palette.shadow, offset: const Offset(6, 6)),
       ],
