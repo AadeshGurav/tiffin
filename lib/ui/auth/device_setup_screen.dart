@@ -25,7 +25,9 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _online = false;
+  // Online sign-in first: managers and admins come back this way, and a shared
+  // phone is the rarer case (it is one tap away below).
+  bool _online = true;
   bool _busy = false;
   String? _error;
 
@@ -172,7 +174,7 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
                         _online ? Icons.arrow_back : Icons.alternate_email,
                         size: 18),
                     label: Text(_online
-                        ? text.onlineBack
+                        ? text.deviceSetupTitle
                         : text.deviceSetupOnlineButton),
                     onPressed: _busy
                         ? null
