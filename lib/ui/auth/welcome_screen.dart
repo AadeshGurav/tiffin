@@ -7,12 +7,12 @@ import '../../core/errors.dart';
 import '../../data/canteens.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
-import '../shared_widgets/app_logo.dart';
 import '../shared_widgets/nb_button.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import 'provider_buttons.dart';
 import '../theme/tokens.dart';
+import 'auth_frame.dart';
 
 enum _Step { home, join, create }
 
@@ -103,142 +103,122 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final user = ref.watch(identityChangesProvider).asData?.value;
     final signedIn = user != null && !user.isAnonymous;
 
-    final card = switch (_step) {
-      _Step.home => [
-          Text(text.welcomeTitle, style: t.text.heading),
-          const SizedBox(height: NbSpace.xs),
-          Text(text.welcomeBody, style: t.text.body),
-          const SizedBox(height: NbSpace.lg),
-          NbButton(
-            label: text.welcomeJoinButton,
-            icon: Icons.login,
-            onPressed: () => _go(_Step.join),
-          ),
-          const SizedBox(height: NbSpace.md),
-          NbButton.secondary(
-            label: text.welcomeCreateButton,
-            icon: Icons.storefront_outlined,
-            onPressed: () => _go(_Step.create),
-          ),
-        ],
-      _Step.join => [
-          Text(text.joinTitle, style: t.text.heading),
-          const SizedBox(height: NbSpace.xs),
-          Text(text.joinBody, style: t.text.body),
-          const SizedBox(height: NbSpace.lg),
-          NbTextField(
-            label: text.joinCodeLabel,
-            controller: _code,
-            autofocus: true,
-          ),
-          const SizedBox(height: NbSpace.md),
-          if (signedIn)
-            Text(text.createSignedInAs(user.email ?? ''), style: t.text.body)
-          else
-            ProviderButtons(onSignedIn: () async {}),
-          const SizedBox(height: NbSpace.lg),
-          NbButton(
+    final back = TextButton.icon(
+      icon: const Icon(Icons.arrow_back, size: 18),
+      label: Text(text.onlineBack),
+      onPressed: _busy ? null : () => _go(_Step.home),
+    );
+
+    return switch (_step) {
+      // With canteens already on this phone the first job is picking one, so
+      // they lead and joining or creating is the quieter second choice.
+      _Step.home => AuthFrame(
+          title: known.isEmpty ? text.welcomeTitle : text.welcomeYourCanteens,
+          subtitle: known.isEmpty ? text.welcomeBody : null,
+          body: [
+            if (known.isNotEmpty) ...[
+              _KnownCanteens(canteens: known),
+              const SizedBox(height: NbSpace.lg),
+            ],
+            if (known.isEmpty)
+              NbButton(
+                label: text.welcomeJoinButton,
+                icon: Icons.login,
+                onPressed: () => _go(_Step.join),
+              )
+            else
+              NbButton.secondary(
+                label: text.welcomeJoinButton,
+                icon: Icons.login,
+                onPressed: () => _go(_Step.join),
+              ),
+            const SizedBox(height: NbSpace.md),
+            NbButton.secondary(
+              label: text.welcomeCreateButton,
+              icon: Icons.storefront_outlined,
+              onPressed: () => _go(_Step.create),
+            ),
+          ],
+        ),
+      // Signing in is not asked here: the next screen opens on it, so a
+      // returning admin is recognised without a second place to do it.
+      _Step.join => AuthFrame(
+          title: text.joinTitle,
+          subtitle: text.joinBody,
+          body: [
+            NbTextField(
+              label: text.joinCodeLabel,
+              controller: _code,
+              autofocus: true,
+            ),
+            if (signedIn) ...[
+              const SizedBox(height: NbSpace.md),
+              Text(text.createSignedInAs(user.email ?? ''),
+                  style: t.text.body.copyWith(color: t.color.inkMuted)),
+            ],
+          ],
+          error: _error,
+          action: NbButton(
             label: text.joinContinueButton,
             icon: Icons.search,
             busy: _busy,
             onPressed: _busy ? null : _join,
           ),
-        ],
-      _Step.create => [
-          Text(text.createTitle, style: t.text.heading),
-          const SizedBox(height: NbSpace.xs),
-          Text(text.createBody, style: t.text.body),
-          const SizedBox(height: NbSpace.lg),
-          NbTextField(
-            label: text.createNameLabel,
-            hint: text.createNameHint,
-            controller: _name,
-            autofocus: true,
-          ),
-          const SizedBox(height: NbSpace.md),
-          if (signedIn)
-            Text(text.createSignedInAs(user.email ?? ''), style: t.text.body)
-          else ...[
-            ProviderButtons(onSignedIn: () async {}),
-            const SizedBox(height: NbSpace.md),
-            Text(text.signInOr, style: t.text.label),
-            const SizedBox(height: NbSpace.sm),
+          footer: [back],
+        ),
+      _Step.create => AuthFrame(
+          title: text.createTitle,
+          subtitle: text.createBody,
+          body: [
             NbTextField(
-              label: text.onlineEmailLabel,
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
+              label: text.createNameLabel,
+              hint: text.createNameHint,
+              controller: _name,
+              autofocus: true,
             ),
-            const SizedBox(height: NbSpace.md),
-            NbTextField(
-                label: text.onlinePasswordLabel,
-                hint: text.createPasswordHint,
-                controller: _password,
-                obscure: true),
+            const SizedBox(height: NbSpace.lg),
+            if (signedIn)
+              Text(text.createSignedInAs(user.email ?? ''),
+                  style: t.text.body.copyWith(color: t.color.inkMuted))
+            else ...[
+              ProviderButtons(onSignedIn: () async {}),
+              const SizedBox(height: NbSpace.md),
+              Text(text.signInOr,
+                  style: t.text.label.copyWith(color: t.color.inkMuted)),
+              const SizedBox(height: NbSpace.sm),
+              NbTextField(
+                label: text.onlineEmailLabel,
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: NbSpace.md),
+              NbTextField(
+                  label: text.onlinePasswordLabel,
+                  hint: text.createPasswordHint,
+                  controller: _password,
+                  obscure: true),
+            ],
+            const SizedBox(height: NbSpace.sm),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _fromBackup,
+              onChanged: _busy
+                  ? null
+                  : (v) => setState(() => _fromBackup = v ?? false),
+              title: Text(text.createFromBackup, style: t.text.body),
+            ),
           ],
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            value: _fromBackup,
-            onChanged:
-                _busy ? null : (v) => setState(() => _fromBackup = v ?? false),
-            title: Text(text.createFromBackup, style: t.text.body),
-          ),
-          const SizedBox(height: NbSpace.md),
-          NbButton(
+          error: _error,
+          action: NbButton(
             label: text.createButton,
             icon: Icons.storefront_outlined,
             busy: _busy,
             onPressed: _busy ? null : _create,
           ),
-        ],
-    };
-
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(NbSpace.lg),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(child: AppWordmark()),
-                  const SizedBox(height: NbSpace.lg),
-                  if (_step == _Step.home && known.isNotEmpty) ...[
-                    _KnownCanteens(canteens: known),
-                    const SizedBox(height: NbSpace.md),
-                  ],
-                  NbSurface(
-                    intensity: NbIntensity.full,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ...card,
-                        if (_error != null) ...[
-                          const SizedBox(height: NbSpace.md),
-                          Text(_error!,
-                              style:
-                                  t.text.body.copyWith(color: t.color.reject)),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (_step != _Step.home)
-                    TextButton.icon(
-                      icon: const Icon(Icons.arrow_back, size: 18),
-                      label: Text(text.onlineBack),
-                      onPressed: _busy ? null : () => _go(_Step.home),
-                    ),
-                ],
-              ),
-            ),
-          ),
+          footer: [back],
         ),
-      ),
-    );
+    };
   }
 }
 
@@ -250,33 +230,22 @@ class _KnownCanteens extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = context.tokens;
     final text = AppText.of(context);
     final book = ref.read(canteenBookProvider.notifier);
-    return NbSurface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(text.welcomeYourCanteens, style: t.text.label),
-          const SizedBox(height: NbSpace.xs),
-          for (final c in canteens)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minTileHeight: 48,
-              leading: Icon(Icons.storefront_outlined, color: t.color.ink),
-              title: Text(c.name, style: t.text.body),
-              subtitle: Text(c.code,
-                  style: t.text.body.copyWith(color: t.color.inkMuted)),
-              onTap: () => book.activate(c.code, c.name),
-              trailing: IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: text.welcomeLeaveTooltip,
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                onPressed: () => book.leave(c.code),
-              ),
-            ),
-        ],
-      ),
-    );
+    return NbGroup(children: [
+      for (final c in canteens)
+        NbListRow(
+          icon: Icons.storefront_outlined,
+          title: c.name,
+          subtitle: c.code,
+          onTap: () => book.activate(c.code, c.name),
+          trailing: IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: text.welcomeLeaveTooltip,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            onPressed: () => book.leave(c.code),
+          ),
+        ),
+    ]);
   }
 }

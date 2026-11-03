@@ -4,11 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../l10n/messages.dart';
 import '../admin/backup_screen.dart' show showImportDialog;
-import '../shared_widgets/app_logo.dart';
 import '../shared_widgets/nb_button.dart';
-import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import 'auth_frame.dart';
 import '../../l10n/app_localizations.dart';
 
 /// First run on a new canteen: the operator creates the admin account (or
@@ -87,123 +86,81 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final text = AppText.of(context);
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(NbSpace.lg),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(child: AppWordmark()),
-                  const SizedBox(height: NbSpace.lg),
-                  NbSurface(
-                    intensity: NbIntensity.full,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(text.hostSetupTitle, style: t.text.heading),
-                        const SizedBox(height: NbSpace.xs),
-                        Text(
-                          text.hostSetupSubtitle,
-                          style: t.text.body,
-                        ),
-                        const SizedBox(height: NbSpace.lg),
-                        NbTextField(
-                          label: text.hostSetupUsernameLabel,
-                          controller: _username,
-                          autofocus: true,
-                        ),
-                        const SizedBox(height: NbSpace.md),
-                        NbTextField(
-                          label: text.hostSetupPasswordLabel,
-                          controller: _password,
-                          obscure: !_revealed,
-                        ),
-                        const SizedBox(height: NbSpace.md),
-                        NbTextField(
-                          label: text.hostSetupConfirmPasswordLabel,
-                          controller: _confirm,
-                          obscure: !_revealed,
-                        ),
-                        const SizedBox(height: NbSpace.sm),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton.icon(
-                                icon:
-                                    const Icon(Icons.casino_outlined, size: 18),
-                                label: Text(text.hostSetupSuggestButton),
-                                onPressed: _busy ? null : _suggest,
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(_revealed
-                                  ? Icons.visibility_off
-                                  : Icons.visibility),
-                              tooltip: _revealed
-                                  ? text.hostSetupHidePassword
-                                  : text.hostSetupShowPassword,
-                              onPressed: () =>
-                                  setState(() => _revealed = !_revealed),
-                            ),
-                          ],
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: NbSpace.sm),
-                          Text(_error!,
-                              style:
-                                  t.text.body.copyWith(color: t.color.reject)),
-                        ],
-                        const SizedBox(height: NbSpace.md),
-                        NbButton(
-                          label: text.hostSetupSubmitButton,
-                          icon: Icons.check,
-                          busy: _busy,
-                          onPressed: _busy ? null : _submit,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: NbSpace.md),
-                  NbSurface(
-                    background: t.color.warn,
-                    child: Row(
-                      children: [
-                        Icon(Icons.key_outlined, color: t.color.onWarn),
-                        const SizedBox(width: NbSpace.sm),
-                        Expanded(
-                          child: Text(
-                            text.hostSetupPasswordWarning,
-                            style: t.text.body.copyWith(color: t.color.onWarn),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: NbSpace.md),
-                  // Offered before choosing credentials: an imported backup
-                  // brings its own accounts, and replaces anything made here.
-                  TextButton.icon(
-                    icon: const Icon(Icons.drive_file_move_outline, size: 18),
-                    label: Text(text.importTitle),
-                    onPressed: _busy
-                        ? null
-                        : () async {
-                            final imported = await showImportDialog(context);
-                            if (imported) ref.invalidate(setupRequiredProvider);
-                          },
-                  ),
-                ],
+    return AuthFrame(
+      title: text.hostSetupTitle,
+      subtitle: text.hostSetupSubtitle,
+      body: [
+        NbTextField(
+          label: text.hostSetupUsernameLabel,
+          controller: _username,
+          autofocus: true,
+        ),
+        const SizedBox(height: NbSpace.md),
+        NbTextField(
+          label: text.hostSetupPasswordLabel,
+          controller: _password,
+          obscure: !_revealed,
+        ),
+        const SizedBox(height: NbSpace.md),
+        NbTextField(
+          label: text.hostSetupConfirmPasswordLabel,
+          controller: _confirm,
+          obscure: !_revealed,
+        ),
+        const SizedBox(height: NbSpace.sm),
+        Row(
+          children: [
+            Expanded(
+              child: TextButton.icon(
+                icon: const Icon(Icons.casino_outlined, size: 18),
+                label: Text(text.hostSetupSuggestButton),
+                onPressed: _busy ? null : _suggest,
               ),
             ),
-          ),
+            IconButton(
+              icon: Icon(_revealed ? Icons.visibility_off : Icons.visibility),
+              tooltip: _revealed
+                  ? text.hostSetupHidePassword
+                  : text.hostSetupShowPassword,
+              onPressed: () => setState(() => _revealed = !_revealed),
+            ),
+          ],
         ),
+        // A hint beside the fields, not a yellow card of its own: it is advice
+        // about this password, not a second thing to act on.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.key_outlined, size: 20, color: t.color.inkMuted),
+            const SizedBox(width: NbSpace.sm),
+            Expanded(
+              child: Text(text.hostSetupPasswordWarning,
+                  style: t.text.body.copyWith(color: t.color.inkMuted)),
+            ),
+          ],
+        ),
+      ],
+      error: _error,
+      action: NbButton(
+        label: text.hostSetupSubmitButton,
+        icon: Icons.check,
+        busy: _busy,
+        onPressed: _busy ? null : _submit,
       ),
+      // Offered before choosing credentials: an imported backup brings its own
+      // accounts, and replaces anything made here.
+      footer: [
+        TextButton.icon(
+          icon: const Icon(Icons.drive_file_move_outline, size: 18),
+          label: Text(text.importTitle),
+          onPressed: _busy
+              ? null
+              : () async {
+                  final imported = await showImportDialog(context);
+                  if (imported) ref.invalidate(setupRequiredProvider);
+                },
+        ),
+      ],
     );
   }
 }

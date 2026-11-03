@@ -11,9 +11,10 @@ import '../../l10n/messages.dart';
 import '../shared_widgets/brand_splash.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
+import 'auth_frame.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Sign-in for scanner / counter / admin roles (PRD §4, §6.4). The session is
@@ -115,111 +116,82 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final t = context.tokens;
     final text = AppText.of(context);
     final greeting = ref.watch(hostGreetingProvider);
+    final canteen = ref.watch(canteenBookProvider).active?.name;
     // Recovery is offered on admin phones only: such a phone can already
     // manage every account from Settings, so it grants nothing new.
     final isAdminPhone = ref.watch(grantProvider)?.role == Role.admin;
+    final hasSaved =
+        (ref.watch(savedLoginsForHostProvider).asData?.value?.logins ??
+                const [])
+            .isNotEmpty;
 
     // While a saved token is being offered to the host, show the splash
     // rather than a login form that may be about to disappear.
     if (_resuming) return BrandSplash(message: text.loginResumingMessage);
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(NbSpace.lg),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // The sign-in card comes first — advisories are context, not
-                  // the task, and pushing the fields down the screen buries the
-                  // one thing the operator opened this screen to do.
-                  NbSurface(
-                    intensity: NbIntensity.full,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          greeting.asData?.value.appName ?? text.appTitle,
-                          style: t.text.heading,
-                        ),
-                        const SizedBox(height: NbSpace.xs),
-                        Text(text.loginSignInLabel, style: t.text.body),
-                        const SizedBox(height: NbSpace.lg),
-                        NbTextField(
-                          label: text.loginUsernameLabel,
-                          controller: _username,
-                          autofocus: true,
-                        ),
-                        const SizedBox(height: NbSpace.md),
-                        NbTextField(
-                          label: text.loginPasswordLabel,
-                          controller: _password,
-                          obscure: true,
-                        ),
-                        // Opt-in, and per account: these are shared canteen
-                        // phones, so saving a password is a decision someone
-                        // makes rather than a side effect of signing in.
-                        CheckboxListTile(
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          value: _rememberPassword,
-                          onChanged: (v) =>
-                              setState(() => _rememberPassword = v ?? false),
-                          title: Text(text.loginRememberPasswordLabel,
-                              style: t.text.body),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: NbSpace.md),
-                          Text(_error!,
-                              style:
-                                  t.text.body.copyWith(color: t.color.reject)),
-                        ],
-                        const SizedBox(height: NbSpace.lg),
-                        NbButton(
-                          label: text.loginSignInButton,
-                          busy: _busy,
-                          onPressed: _busy ? null : _submit,
-                        ),
-                      ],
-                    ),
-                  ),
-                  _SavedLogins(
-                    onPick: (login) {
-                      setState(() {
-                        _username.text = login.username;
-                        _password.text = login.password ?? '';
-                        _rememberPassword = login.password != null;
-                        _error = null;
-                      });
-                      if (login.password != null) _submit();
-                    },
-                  ),
-                  TextButton.icon(
-                    icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: Text(text.switchCanteenButton),
-                    onPressed: _busy
-                        ? null
-                        : () =>
-                            ref.read(canteenBookProvider.notifier).deactivate(),
-                  ),
-                  if (isAdminPhone)
-                    TextButton.icon(
-                      icon: const Icon(Icons.lock_reset, size: 18),
-                      label: Text(text.loginForgotPasswordButton),
-                      onPressed: _busy ? null : _recoverPassword,
-                    ),
-                ],
-              ),
-            ),
-          ),
+    return AuthFrame(
+      title: greeting.asData?.value.appName ?? text.appTitle,
+      subtitle: text.loginSignInLabel,
+      canteenName: canteen,
+      onChangeCanteen: _busy
+          ? null
+          : () => ref.read(canteenBookProvider.notifier).deactivate(),
+      body: [
+        // Someone who has signed in here before is one tap away; the empty
+        // form is for everyone else.
+        _SavedLogins(
+          onPick: (login) {
+            setState(() {
+              _username.text = login.username;
+              _password.text = login.password ?? '';
+              _rememberPassword = login.password != null;
+              _error = null;
+            });
+            if (login.password != null) _submit();
+          },
         ),
+        if (hasSaved) ...[
+          const SizedBox(height: NbSpace.lg),
+          Text(text.loginOtherAccount,
+              style: t.text.label.copyWith(color: t.color.inkMuted)),
+          const SizedBox(height: NbSpace.sm),
+        ],
+        NbTextField(
+          label: text.loginUsernameLabel,
+          controller: _username,
+          autofocus: !hasSaved,
+        ),
+        const SizedBox(height: NbSpace.md),
+        NbTextField(
+          label: text.loginPasswordLabel,
+          controller: _password,
+          obscure: true,
+        ),
+        // Opt-in, and per account: these are shared canteen phones, so saving
+        // a password is a decision someone makes rather than a side effect.
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          controlAffinity: ListTileControlAffinity.leading,
+          value: _rememberPassword,
+          onChanged: (v) => setState(() => _rememberPassword = v ?? false),
+          title: Text(text.loginRememberPasswordLabel, style: t.text.body),
+        ),
+      ],
+      error: _error,
+      action: NbButton(
+        label: text.loginSignInButton,
+        busy: _busy,
+        onPressed: _busy ? null : _submit,
       ),
+      footer: [
+        if (isAdminPhone)
+          TextButton.icon(
+            icon: const Icon(Icons.lock_reset, size: 18),
+            label: Text(text.loginForgotPasswordButton),
+            onPressed: _busy ? null : _recoverPassword,
+          ),
+      ],
     );
   }
 }
@@ -233,44 +205,31 @@ class _SavedLogins extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = context.tokens;
     final text = AppText.of(context);
     final saved = ref.watch(savedLoginsForHostProvider).asData?.value;
     if (saved == null || saved.logins.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(top: NbSpace.md),
-      child: NbSurface(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(text.loginSavedLoginsHeader, style: t.text.label),
-            const SizedBox(height: NbSpace.xs),
-            for (final login in saved.logins)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                    login.password != null ? Icons.key : Icons.person_outline,
-                    color: t.color.ink),
-                title: Text(login.username, style: t.text.body),
-                subtitle: Text(
-                  login.password != null
-                      ? text.loginSavedLoginTapToSignIn
-                      : text.loginSavedLoginTapToFillUsername,
-                  style: t.text.body.copyWith(color: t.color.inkMuted),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: text.loginForgetAccountTooltip,
-                  onPressed: () => ref
-                      .read(sessionMemoryProvider)
-                      .forgetLogin(saved.hostId, login.username),
-                ),
-                onTap: () => onPick(login),
-              ),
-          ],
-        ),
-      ),
+    return NbGroup(
+      title: text.loginContinueAs,
+      children: [
+        for (final login in saved.logins)
+          NbListRow(
+            icon: login.password != null ? Icons.key : Icons.person_outline,
+            title: login.username,
+            subtitle: login.password != null
+                ? text.loginSavedLoginTapToSignIn
+                : text.loginSavedLoginTapToFillUsername,
+            onTap: () => onPick(login),
+            trailing: IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: text.loginForgetAccountTooltip,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              onPressed: () => ref
+                  .read(sessionMemoryProvider)
+                  .forgetLogin(saved.hostId, login.username),
+            ),
+          ),
+      ],
     );
   }
 }
