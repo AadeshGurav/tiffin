@@ -1,6 +1,6 @@
 # ADR 0005 — Firebase as the database, offline-first; the LAN host retired
 
-Status: accepted · 2026-10-17
+Status: accepted · 2026-10-17 · §3 (per-canteen project, imported config) superseded by ADR 0006
 
 Supersedes PRD §13 (one phone hosts a LAN server) and the "local-network
 first, no managed cloud" lines of PRD §7 and §13.3. PRD §15 is the new

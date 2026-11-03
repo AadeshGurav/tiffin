@@ -32,7 +32,7 @@ were rejected: [`docs/adr/`](docs/adr/). Day-to-day use:
 - **Android:** Android SDK + JDK 17. Android 6.0 (API 23) or newer on the
   phone.
 - **iOS:** a Mac with Xcode + CocoaPods, iOS 15+.
-- A **Firebase project** (the free Spark plan is enough).
+- The shared **Firebase project** (the free Spark plan is enough to start).
 
 ## Setup
 
@@ -50,30 +50,29 @@ template; every message with placeholders carries a description for
 translators, and `test/l10n_parity_test.dart` fails on missing, unused or
 untranslated keys.
 
-## Firebase setup (once per canteen)
+## Firebase setup (once, by the app owner)
 
-1. **Create a project** at <https://console.firebase.google.com>.
-2. **Authentication ▸ Sign-in method:** enable **Anonymous** (how phones
-   join) and, if you want online accounts, **Email/Password**.
-3. **Firestore Database ▸ Create database** (production mode; pick the region
-   nearest the canteen, e.g. `asia-south1`).
-4. **Deploy the rules and indexes** from this repo:
+Every canteen lives in **one shared Firebase project** that you run (ADR 0006).
+Its config is built into the app (`lib/app/shared_project.dart`); a canteen is
+created inside the app in one tap.
+
+1. **Authentication ▸ Sign-in method:** enable **Anonymous** (how phones join),
+   **Email/Password**, and the providers you offer: **Google**, **Microsoft**
+   (needs an Azure app registration) and optionally **Apple** (paid Apple
+   Developer account + the Sign in with Apple capability; build with
+   `--dart-define=APPLE_SIGN_IN=true`). Phone sign-in is not built yet.
+2. **Firestore Database ▸ Create database** with the ID **`(default)`**,
+   Standard edition (a database named `default` is not found by the app).
+3. **Deploy the rules and indexes:**
    ```bash
-   npm install -g firebase-tools   # or: npx firebase-tools …
-   firebase login
-   firebase deploy --only firestore --project <your-project-id>
+   firebase deploy --only firestore --project tiffin-dd7c6
    ```
-5. **Add the app** under Project settings ▸ Your apps and download its config
-   file:
-   - Android package name **`com.canteen.canteen_coupon`** →
-     `google-services.json`
-   - iOS bundle ID **`com.aadeshgurav.canteencoupon`** →
-     `GoogleService-Info.plist`
-6. Put that file on the phone (download, Drive, WhatsApp…) and pick it on the
-   app's **Connect to your Firebase project** screen. The first phone becomes
-   the canteen's first admin phone.
-
-Don't commit the config file; the app never needs it in source.
+4. **Apps:** the Android (`com.canteen.canteen_coupon`) and iOS
+   (`com.aadeshgurav.canteencoupon`) apps must exist in the project; their
+   values are in `lib/app/shared_project.dart`.
+5. **Before a public release:** turn on Firebase **App Check** (App Attest /
+   Play Integrity) and enforce it for Firestore and Auth, and watch usage —
+   everyone's canteen shares your quota. This is not wired in the app yet.
 
 **Without a real project**, run against the local emulators:
 
@@ -87,15 +86,15 @@ flutter run --dart-define=USE_EMULATOR=true --dart-define=EMULATOR_HOST=192.168.
 ## Moving an existing (v2, LAN-host) canteen across
 
 On the old app's host phone: **Settings ▸ Backup & restore ▸ Export**. On the
-new app's first phone, after starting the canteen: **Bring over existing
-records?** on the setup screen, and pick that `.tiffin` file. Members keep
+new app: **Start a new canteen**, tick **Start from a backup file**, and pick
+that `.tiffin` file on the screen that opens. Members keep
 their QR codes (printed cards keep working) and accounts keep their passwords.
 
 ## Project layout
 
 ```
 lib/
-  app/            bootstrap, the routing gate, providers, Firebase config import
+  app/            bootstrap, the routing gate, providers, shared project, canteen book
   core/           typed error codes, logging, roles, meal windows
   domain/         plain models shared by every layer
   data/

@@ -2,8 +2,8 @@
 ///
 /// CLAUDE.md §7 / PRD §6.8: anything an operator might reasonably change lives
 /// in the canteen's settings document (see `SettingsService`), and the one
-/// thing this build is configured with — which Firebase project — is imported
-/// at runtime (`FirebaseConfig`). Neither belongs here.
+/// thing this build is configured with — the shared Firebase project — lives in
+/// `SharedProject`. Neither belongs here.
 class AppConfig {
   const AppConfig._();
 
