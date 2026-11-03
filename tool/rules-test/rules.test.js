@@ -11,8 +11,10 @@ import {
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   runTransaction,
   setDoc,
   updateDoc,
@@ -41,111 +43,97 @@ async function seed(docs) {
 }
 
 const phone = (uid) => env.authenticatedContext(uid).firestore();
+// A person signed in with a real provider (Google, email), not a phone's anonymous identity.
+const person = (uid) =>
+  env.authenticatedContext(uid, { firebase: { sign_in_provider: 'password' } }).firestore();
+const anonymous = (uid) =>
+  env.authenticatedContext(uid, { firebase: { sign_in_provider: 'anonymous' } }).firestore();
 const approved = (role) => ({ name: role, status: 'approved', role });
 const member = { name: 'Asha', balances: { lunch: 2, breakfast: 0, brunch: 0 } };
 
 describe('joining', () => {
   test('a phone may ask to join as a pending scanner, as itself only', async () => {
     const db = phone('p1');
-    await assertSucceeds(setDoc(doc(db, 'devices/p1'),
+    await assertSucceeds(setDoc(doc(db, 'canteens/c1/devices/p1'),
         { name: 'Gate', status: 'pending', role: 'scanner' }));
-    await assertFails(setDoc(doc(db, 'devices/p2'),
+    await assertFails(setDoc(doc(db, 'canteens/c1/devices/p2'),
         { name: 'Gate', status: 'pending', role: 'scanner' }));
   });
 
   test('a phone cannot approve itself', async () => {
     const db = phone('p1');
-    await assertFails(setDoc(doc(db, 'devices/p1'),
+    await assertFails(setDoc(doc(db, 'canteens/c1/devices/p1'),
         { name: 'Gate', status: 'approved', role: 'admin' }));
-  });
-
-  test('the first phone claims a fresh project as its admin phone', async () => {
-    const db = phone('owner');
-    await assertSucceeds(runTransaction(db, async (tx) => {
-      const owner = await tx.get(doc(db, 'meta/owner'));
-      if (owner.exists()) throw new Error('taken');
-      tx.set(doc(db, 'meta/owner'), { uid: 'owner' });
-      tx.set(doc(db, 'devices/owner'), { name: 'Office', status: 'approved', role: 'admin' });
-    }));
-  });
-
-  test('nobody can claim a project that already has an owner', async () => {
-    await seed({ 'meta/owner': { uid: 'owner' } });
-    const db = phone('late');
-    const batch = writeBatch(db);
-    batch.set(doc(db, 'meta/owner'), { uid: 'late' });
-    batch.set(doc(db, 'devices/late'), { name: 'x', status: 'approved', role: 'admin' });
-    await assertFails(batch.commit());
   });
 
   test('only an admin phone approves others', async () => {
     await seed({
-      'devices/admin': approved('admin'),
-      'devices/counter': approved('counter'),
-      'devices/new': { name: 'New', status: 'pending', role: 'scanner' },
+      'canteens/c1/devices/admin': approved('admin'),
+      'canteens/c1/devices/counter': approved('counter'),
+      'canteens/c1/devices/new': { name: 'New', status: 'pending', role: 'scanner' },
     });
-    await assertFails(updateDoc(doc(phone('counter'), 'devices/new'),
+    await assertFails(updateDoc(doc(phone('counter'), 'canteens/c1/devices/new'),
         { status: 'approved', role: 'counter' }));
-    await assertSucceeds(updateDoc(doc(phone('admin'), 'devices/new'),
+    await assertSucceeds(updateDoc(doc(phone('admin'), 'canteens/c1/devices/new'),
         { status: 'approved', role: 'counter' }));
   });
 });
 
 describe('data access by phone role', () => {
   beforeEach(() => seed({
-    'devices/admin': approved('admin'),
-    'devices/counter': approved('counter'),
-    'devices/scanner': approved('scanner'),
-    'devices/pending': { name: 'P', status: 'pending', role: 'scanner' },
-    'devices/removed': { name: 'R', status: 'removed', role: 'admin' },
-    'members/m1': member,
+    'canteens/c1/devices/admin': approved('admin'),
+    'canteens/c1/devices/counter': approved('counter'),
+    'canteens/c1/devices/scanner': approved('scanner'),
+    'canteens/c1/devices/pending': { name: 'P', status: 'pending', role: 'scanner' },
+    'canteens/c1/devices/removed': { name: 'R', status: 'removed', role: 'admin' },
+    'canteens/c1/members/m1': member,
   }));
 
   test('pending and removed phones read nothing', async () => {
-    await assertFails(getDoc(doc(phone('pending'), 'members/m1')));
-    await assertFails(getDoc(doc(phone('removed'), 'members/m1')));
+    await assertFails(getDoc(doc(phone('pending'), 'canteens/c1/members/m1')));
+    await assertFails(getDoc(doc(phone('removed'), 'canteens/c1/members/m1')));
   });
 
   test('a scanner phone reads members but cannot edit them', async () => {
     const db = phone('scanner');
-    await assertSucceeds(getDoc(doc(db, 'members/m1')));
-    await assertFails(updateDoc(doc(db, 'members/m1'), { name: 'Changed' }));
+    await assertSucceeds(getDoc(doc(db, 'canteens/c1/members/m1')));
+    await assertFails(updateDoc(doc(db, 'canteens/c1/members/m1'), { name: 'Changed' }));
   });
 
   test('a scanner phone may only lower a balance (a scan), never raise it', async () => {
     const db = phone('scanner');
-    await assertSucceeds(updateDoc(doc(db, 'members/m1'),
+    await assertSucceeds(updateDoc(doc(db, 'canteens/c1/members/m1'),
         { balances: { lunch: 1, breakfast: 0, brunch: 0 } }));
-    await assertFails(updateDoc(doc(db, 'members/m1'),
+    await assertFails(updateDoc(doc(db, 'canteens/c1/members/m1'),
         { balances: { lunch: 9, breakfast: 0, brunch: 0 } }));
   });
 
   test('a counter phone can top up but not refund', async () => {
     const db = phone('counter');
-    await assertSucceeds(setDoc(doc(db, 'topups/t1'), { memberId: 'm1', amount: 40 }));
-    await assertFails(setDoc(doc(db, 'refunds/r1'), { memberId: 'm1' }));
+    await assertSucceeds(setDoc(doc(db, 'canteens/c1/topups/t1'), { memberId: 'm1', amount: 40 }));
+    await assertFails(setDoc(doc(db, 'canteens/c1/refunds/r1'), { memberId: 'm1' }));
   });
 
   test('every approved phone reads offline accounts; only admins edit them', async () => {
-    await seed({ 'users/u1': { username: 'a', passwordHash: 'x' } });
+    await seed({ 'canteens/c1/users/u1': { username: 'a', passwordHash: 'x' } });
     // Every approved phone needs them to check a sign-in offline.
-    await assertSucceeds(getDoc(doc(phone('scanner'), 'users/u1')));
-    await assertFails(updateDoc(doc(phone('counter'), 'users/u1'), { role: 'admin' }));
+    await assertSucceeds(getDoc(doc(phone('scanner'), 'canteens/c1/users/u1')));
+    await assertFails(updateDoc(doc(phone('counter'), 'canteens/c1/users/u1'), { role: 'admin' }));
   });
 });
 
 describe('the one-scan-per-meal lock', () => {
   beforeEach(() => seed({
-    'devices/a': approved('scanner'),
-    'devices/b': approved('scanner'),
-    'members/m1': member,
+    'canteens/c1/devices/a': approved('scanner'),
+    'canteens/c1/devices/b': approved('scanner'),
+    'canteens/c1/members/m1': member,
   }));
 
   const scan = (db) => {
     const batch = writeBatch(db);
-    batch.set(doc(db, 'scans/m1_2026-10-17_lunch'),
+    batch.set(doc(db, 'canteens/c1/scans/m1_2026-10-17_lunch'),
         { memberId: 'm1', reversed: false, mealType: 'lunch' });
-    batch.update(doc(db, 'members/m1'),
+    batch.update(doc(db, 'canteens/c1/members/m1'),
         { balances: { lunch: 1, breakfast: 0, brunch: 0 } });
     return batch.commit();
   };
@@ -155,34 +143,85 @@ describe('the one-scan-per-meal lock', () => {
     await assertFails(scan(phone('b')));
     let lunch;
     await env.withSecurityRulesDisabled(async (ctx) => {
-      lunch = (await getDoc(doc(ctx.firestore(), 'members/m1'))).data().balances.lunch;
+      lunch = (await getDoc(doc(ctx.firestore(), 'canteens/c1/members/m1'))).data().balances.lunch;
     });
     // Only the first batch landed.
     if (lunch !== 1) throw new Error(`balance is ${lunch}, expected 1`);
   });
 
   test('a staff phone cannot write a scan already marked reversed', async () => {
-    await assertFails(setDoc(doc(phone('a'), 'scans/x_r1'), { reversed: true }));
+    await assertFails(setDoc(doc(phone('a'), 'canteens/c1/scans/x_r1'), { reversed: true }));
   });
 });
 
 describe('online accounts', () => {
   beforeEach(() => seed({
-    'onlineUsers/on': { email: 'a@b.c', role: 'counter', status: 'active' },
-    'onlineUsers/off': { email: 'd@e.f', role: 'admin', status: 'inactive' },
-    'members/m1': member,
+    'canteens/c1/onlineUsers/on': { email: 'a@b.c', role: 'counter', status: 'active' },
+    'canteens/c1/onlineUsers/off': { email: 'd@e.f', role: 'admin', status: 'inactive' },
+    'canteens/c1/members/m1': member,
   }));
 
   test('an active online account gets its role', async () => {
-    await assertSucceeds(getDoc(doc(phone('on'), 'members/m1')));
-    await assertFails(setDoc(doc(phone('on'), 'refunds/r1'), {}));
+    await assertSucceeds(getDoc(doc(phone('on'), 'canteens/c1/members/m1')));
+    await assertFails(setDoc(doc(phone('on'), 'canteens/c1/refunds/r1'), {}));
   });
 
   test('a turned-off online account gets nothing', async () => {
-    await assertFails(getDoc(doc(phone('off'), 'members/m1')));
+    await assertFails(getDoc(doc(phone('off'), 'canteens/c1/members/m1')));
   });
 
   test('an online account cannot promote itself', async () => {
-    await assertFails(updateDoc(doc(phone('on'), 'onlineUsers/on'), { role: 'admin' }));
+    await assertFails(updateDoc(doc(phone('on'), 'canteens/c1/onlineUsers/on'), { role: 'admin' }));
+  });
+});
+
+describe('canteens', () => {
+  const create = (db, uid, code = 'ABCD2345') => runTransaction(db, async (tx) => {
+    const root = doc(db, `canteens/${code}`);
+    if ((await tx.get(root)).exists()) throw new Error('taken');
+    tx.set(root, { name: 'Gate canteen', ownerUid: uid });
+    tx.set(doc(db, `canteens/${code}/onlineUsers/${uid}`),
+        { email: 'a@b.c', role: 'admin', status: 'active' });
+  });
+
+  test('a real identity creates a canteen and becomes its admin', async () => {
+    await assertSucceeds(create(person('owner'), 'owner'));
+    await assertSucceeds(getDoc(doc(person('owner'), 'canteens/ABCD2345/members/none')));
+  });
+
+  test('an anonymous phone cannot create a canteen', async () => {
+    await assertFails(create(anonymous('p'), 'p'));
+  });
+
+  test('nobody can overwrite or take over an existing canteen code', async () => {
+    await seed({ 'canteens/ABCD2345': { name: 'x', ownerUid: 'owner' } });
+    await assertFails(setDoc(doc(person('late'), 'canteens/ABCD2345'),
+        { name: 'mine', ownerUid: 'late' }));
+    await assertFails(setDoc(doc(person('late'), 'canteens/ABCD2345/onlineUsers/late'),
+        { email: 'x@y.z', role: 'admin', status: 'active' }));
+  });
+
+  test('a canteen can be read by its code but never listed', async () => {
+    await seed({ 'canteens/ABCD2345': { name: 'x', ownerUid: 'owner' } });
+    await assertSucceeds(getDoc(doc(anonymous('p'), 'canteens/ABCD2345')));
+    await assertFails(getDocs(collection(anonymous('p'), 'canteens')));
+  });
+
+  test('a role in one canteen grants nothing in another', async () => {
+    await seed({
+      'canteens/c1/devices/admin': approved('admin'),
+      'canteens/c2/members/m1': member,
+    });
+    await assertFails(getDoc(doc(phone('admin'), 'canteens/c2/members/m1')));
+  });
+
+  test('a real identity asks to join as a pending scanner, not as admin', async () => {
+    await seed({ 'canteens/c1/members/m1': member });
+    const db = person('new');
+    await assertSucceeds(setDoc(doc(db, 'canteens/c1/onlineUsers/new'),
+        { email: 'n@b.c', role: 'scanner', status: 'pending' }));
+    await assertFails(setDoc(doc(db, 'canteens/c1/onlineUsers/new'),
+        { email: 'n@b.c', role: 'admin', status: 'active' }));
+    await assertFails(getDoc(doc(db, 'canteens/c1/members/m1')));
   });
 });
