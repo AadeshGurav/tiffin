@@ -7,7 +7,7 @@ import '../../domain/ledger.dart';
 import '../../domain/member.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
@@ -50,13 +50,13 @@ class TopupHistoryTab extends ConsumerWidget {
       builder: (data) => ListView.separated(
         padding: const EdgeInsets.all(NbSpace.md),
         itemCount: data.topups.length,
-        separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+        separatorBuilder: nbRowSeparator,
         itemBuilder: (_, i) {
           final tp = data.topups[i];
           final name = data.membersById[tp.memberId]?.name ??
               AppText.of(context)
                   .topupHistoryUnknownMember(shortCode(tp.memberId));
-          return NbSurface(
+          return NbRow(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -5,7 +5,7 @@ import '../../app/providers.dart';
 import '../../domain/inventory.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../shared_widgets/unit_field.dart';
 import '../theme/tokens.dart';
@@ -42,10 +42,10 @@ class IngredientsTab extends ConsumerWidget {
       builder: (list) => ListView.separated(
         padding: const EdgeInsets.all(NbSpace.md),
         itemCount: list.length,
-        separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+        separatorBuilder: nbRowSeparator,
         itemBuilder: (_, i) {
           final ing = list[i];
-          return NbSurface(
+          return NbRow(
             onTap: () => openIngredientForm(context, ref, ing),
             child: Row(
               children: [

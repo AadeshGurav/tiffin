@@ -5,7 +5,7 @@ import '../../app/providers.dart';
 import '../../domain/menu.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
@@ -43,12 +43,11 @@ class MenuCategoriesScreen extends ConsumerWidget {
           onAction: () => _form(context, ref, null),
         ),
         builder: (list) => ListView.separated(
-          padding: const EdgeInsets.all(NbSpace.md),
           itemCount: list.length,
-          separatorBuilder: (_, __) => const SizedBox(height: NbSpace.sm),
+          separatorBuilder: nbRowSeparator,
           itemBuilder: (_, i) {
             final c = list[i];
-            return NbSurface(
+            return NbRow(
               onTap: () => _form(context, ref, c),
               child: Row(
                 children: [

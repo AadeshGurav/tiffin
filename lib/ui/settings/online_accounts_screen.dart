@@ -8,7 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../l10n/labels.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
-import '../shared_widgets/nb_surface.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 
@@ -99,7 +99,7 @@ class _AccountRow extends ConsumerWidget {
     final t = context.tokens;
     final text = AppText.of(context);
     final access = ref.read(accessServiceProvider);
-    return NbSurface(
+    return NbRow(
       child: Row(
         children: [
           Expanded(
