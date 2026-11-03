@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
@@ -10,19 +11,10 @@ import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 
-/// This phone isn't part of the canteen yet. Either it asks to join (and the
-/// admin approves it), it starts a brand-new canteen in an unclaimed project,
-/// or someone signs in with an online account instead.
+/// This phone isn't part of the active canteen yet. Either it asks to join
+/// (and the admin approves it), or someone signs in with an online account.
 class DeviceSetupScreen extends ConsumerStatefulWidget {
-  const DeviceSetupScreen(
-      {super.key, required this.newCanteen, required this.signedIn});
-
-  /// The project has no owner yet — offer to start the canteen here.
-  final bool newCanteen;
-
-  /// This phone already has a Firebase identity (it joined before and was
-  /// reset, or is part-way through joining).
-  final bool signedIn;
+  const DeviceSetupScreen({super.key});
 
   @override
   ConsumerState<DeviceSetupScreen> createState() => _DeviceSetupScreenState();
@@ -66,14 +58,8 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
   Future<void> _join() => _run(() async {
         final access = ref.read(accessServiceProvider);
         await access.ensureIdentity();
-        // A fresh project flips this screen to the "start a new canteen"
-        // confirmation (the access stream reports NotJoined(newCanteen)).
-        if (!await access.canteenExists()) return;
         await access.requestApproval(_phoneName);
       });
-
-  Future<void> _claim() =>
-      _run(() => ref.read(accessServiceProvider).claimNewCanteen(_phoneName));
 
   Future<void> _signInOnline() => _run(() async {
         await ref
@@ -93,7 +79,7 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final text = AppText.of(context);
-    final project = ref.watch(firebaseConfigProvider)?.projectId ?? '';
+    final canteen = ref.watch(canteenBookProvider).active?.name ?? '';
 
     final card = _online
         ? [
@@ -121,44 +107,25 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
               child: Text(text.onlineForgotButton),
             ),
           ]
-        : widget.newCanteen
-            ? [
-                Text(text.newCanteenTitle, style: t.text.heading),
-                const SizedBox(height: NbSpace.xs),
-                Text(text.newCanteenBody, style: t.text.body),
-                const SizedBox(height: NbSpace.lg),
-                NbTextField(
-                  label: text.deviceSetupNameLabel,
-                  hint: text.deviceSetupNameHint,
-                  controller: _name,
-                ),
-                const SizedBox(height: NbSpace.lg),
-                NbButton(
-                  label: text.newCanteenButton,
-                  icon: Icons.storefront_outlined,
-                  busy: _busy,
-                  onPressed: _busy ? null : _claim,
-                ),
-              ]
-            : [
-                Text(text.deviceSetupTitle, style: t.text.heading),
-                const SizedBox(height: NbSpace.xs),
-                Text(text.deviceSetupBody, style: t.text.body),
-                const SizedBox(height: NbSpace.lg),
-                NbTextField(
-                  label: text.deviceSetupNameLabel,
-                  hint: text.deviceSetupNameHint,
-                  controller: _name,
-                  autofocus: true,
-                ),
-                const SizedBox(height: NbSpace.lg),
-                NbButton(
-                  label: text.deviceSetupJoinButton,
-                  icon: Icons.login,
-                  busy: _busy,
-                  onPressed: _busy ? null : _join,
-                ),
-              ];
+        : [
+            Text(text.deviceSetupTitle, style: t.text.heading),
+            const SizedBox(height: NbSpace.xs),
+            Text(text.deviceSetupBody, style: t.text.body),
+            const SizedBox(height: NbSpace.lg),
+            NbTextField(
+              label: text.deviceSetupNameLabel,
+              hint: text.deviceSetupNameHint,
+              controller: _name,
+              autofocus: true,
+            ),
+            const SizedBox(height: NbSpace.lg),
+            NbButton(
+              label: text.deviceSetupJoinButton,
+              icon: Icons.login,
+              busy: _busy,
+              onPressed: _busy ? null : _join,
+            ),
+          ];
 
     return Scaffold(
       body: SafeArea(
@@ -204,15 +171,15 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
                               _error = null;
                             }),
                   ),
-                  Text(text.deviceSetupProject(project),
+                  Text(text.deviceSetupCanteen(canteen),
                       textAlign: TextAlign.center,
                       style: t.text.body.copyWith(color: t.color.inkMuted)),
                   TextButton(
                     onPressed: _busy
                         ? null
                         : () =>
-                            ref.read(firebaseConfigProvider.notifier).forget(),
-                    child: Text(text.deviceSetupChangeProject),
+                            ref.read(canteenBookProvider.notifier).deactivate(),
+                    child: Text(text.switchCanteenButton),
                   ),
                 ],
               ),

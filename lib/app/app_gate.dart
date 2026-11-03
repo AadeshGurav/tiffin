@@ -5,21 +5,22 @@ import '../core/role.dart';
 import '../data/access.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/admin/admin_dashboard.dart';
-import '../ui/auth/connect_firebase_screen.dart';
 import '../ui/auth/device_setup_screen.dart';
 import '../ui/auth/host_setup_screen.dart';
 import '../ui/auth/login_screen.dart';
 import '../ui/auth/waiting_screen.dart';
+import '../ui/auth/welcome_screen.dart';
 import '../ui/counter/counter_home.dart';
 import '../ui/scanner/scanner_screen.dart';
 import '../ui/shared_widgets/brand_splash.dart';
 import '../ui/shared_widgets/nb_feedback.dart';
 import '../ui/shared_widgets/notice_screen.dart';
+import 'canteen_book.dart';
 import 'providers.dart';
 
 /// The single routing decision, kept flat (CLAUDE.md §3):
 ///
-///  1. no Firebase project imported   → connect screen
+///  1. no active canteen               → welcome (create / join / switch)
 ///  2. this phone not part of it yet   → set up / waiting for approval
 ///  3. approved, cache warming         → splash
 ///  4. no accounts exist yet           → first-run setup (admin phones)
@@ -31,16 +32,6 @@ class AppGate extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = AppText.of(context);
-    if (ref.watch(firebaseConfigProvider) == null) {
-      return const ConnectFirebaseScreen();
-    }
-    if (ref.watch(needsRestartProvider)) {
-      return NoticeScreen(
-          icon: Icons.restart_alt,
-          title: text.restartTitle,
-          body: text.restartBody);
-    }
-
     final app = ref.watch(firebaseAppProvider);
     if (app.hasError) {
       return _Failed(
@@ -48,6 +39,7 @@ class AppGate extends ConsumerWidget {
           onRetry: () => ref.invalidate(firebaseAppProvider));
     }
     if (!app.hasValue) return BrandSplash(message: text.splashPreparing);
+    if (ref.watch(activeCanteenProvider) == null) return const WelcomeScreen();
 
     final access = ref.watch(accessProvider);
     if (access.hasError) {
@@ -56,13 +48,11 @@ class AppGate extends ConsumerWidget {
     }
     return switch (access.asData?.value) {
       null => BrandSplash(message: text.splashPreparing),
-      SignedOut() =>
-        const DeviceSetupScreen(newCanteen: false, signedIn: false),
-      NotJoined(:final newCanteen) =>
-        DeviceSetupScreen(newCanteen: newCanteen, signedIn: true),
+      SignedOut() || NotJoined() => const DeviceSetupScreen(),
       PendingApproval(:final device) => WaitingScreen(device: device),
       Removed(:final device) => WaitingScreen(device: device, removed: true),
-      OnlineRefused(:final email) => WaitingScreen.onlineRefused(email: email),
+      OnlineRefused(:final email, :final pending) =>
+        WaitingScreen.onlineRefused(email: email, pending: pending),
       ApprovedDevice() || OnlineAccess() => const _SignedInGate(),
     };
   }

@@ -12,16 +12,18 @@ import '../core/role.dart';
 import '../data/access.dart';
 import '../data/backend.dart';
 import '../data/cache_warmer.dart';
+import '../data/canteens.dart';
 import '../data/store.dart';
 import '../domain/menu.dart';
 import '../domain/ops.dart';
 import 'bootstrap.dart';
-import 'firebase_config.dart';
+import 'canteen_book.dart';
+import 'shared_project.dart';
 
 export 'bootstrap.dart' show sharedPreferencesProvider;
 
 // ===========================================================================
-// Firebase project — the only thing this build is configured with
+// Firebase — one shared project, built in (ADR 0006)
 // ===========================================================================
 
 /// Development switch: run against the local Firebase emulators
@@ -32,63 +34,10 @@ const _useEmulator = bool.fromEnvironment('USE_EMULATOR');
 const _emulatorHost =
     String.fromEnvironment('EMULATOR_HOST', defaultValue: '10.0.2.2');
 
-final firebaseConfigStoreProvider = Provider<FirebaseConfigStore>(
-    (ref) => FirebaseConfigStore(ref.read(sharedPreferencesProvider)));
-
-/// The imported config. Null → the "Connect to Firebase" screen.
-class FirebaseConfigController extends Notifier<FirebaseConfig?> {
-  @override
-  FirebaseConfig? build() => _useEmulator
-      ? FirebaseConfig.demo
-      : ref.read(firebaseConfigStoreProvider).read();
-
-  /// Parses and stores a console config file. Throws a coded
-  /// ValidationException for the wrong file, before anything is saved.
-  Future<void> import(String content) async {
-    final config = FirebaseConfig.parse(content);
-    await ref.read(firebaseConfigStoreProvider).write(config);
-    state = config;
-  }
-
-  /// Forget the project on this phone: sign out, drop the local copy of its
-  /// data, and go back to the connect screen. Nothing is deleted in Firebase.
-  Future<void> forget() async {
-    if (Firebase.apps.isNotEmpty) {
-      _firestoreTerminated = true;
-      await FirebaseAuth.instance.signOut();
-      final db = FirebaseFirestore.instance;
-      await db.terminate();
-      await db.clearPersistence();
-    }
-    await ref.read(firebaseConfigStoreProvider).clear();
-    state = null;
-  }
-}
-
-final firebaseConfigProvider =
-    NotifierProvider<FirebaseConfigController, FirebaseConfig?>(
-        FirebaseConfigController.new);
-
-/// Set once this process has shut its Firestore instance down; a terminated
-/// instance can't be used again, even for the same project.
-bool _firestoreTerminated = false;
-
-/// True when a project is imported but this process can't serve it: it was
-/// started against a different project, or its Firestore was shut down by
-/// [FirebaseConfigController.forget]. Firebase's default app can't be
-/// re-pointed in place, so the UI asks for a restart instead of half-switching.
-final needsRestartProvider = Provider<bool>((ref) {
-  final config = ref.watch(firebaseConfigProvider);
-  if (config == null || Firebase.apps.isEmpty) return false;
-  return _firestoreTerminated ||
-      Firebase.app().options.projectId != config.projectId;
-});
-
 final firebaseAppProvider = FutureProvider<FirebaseApp>((ref) async {
-  final config = ref.watch(firebaseConfigProvider);
-  if (config == null) throw StateError('No Firebase project imported');
   if (Firebase.apps.isNotEmpty) return Firebase.app();
-  final app = await Firebase.initializeApp(options: config.options);
+  final app = await Firebase.initializeApp(
+      options: _useEmulator ? SharedProject.demo : SharedProject.options);
   // Persistence is what lets a scanner work with no internet (FlutterFire
   // docs: on by default on mobile; set explicitly so it is a decision).
   final db = FirebaseFirestore.instanceFor(app: app)
@@ -101,9 +50,25 @@ final firebaseAppProvider = FutureProvider<FirebaseApp>((ref) async {
   return app;
 });
 
+/// Who is signed in, independent of any canteen.
+final identityProvider = Provider<FirebaseAuth>((ref) =>
+    FirebaseAuth.instanceFor(app: ref.watch(firebaseAppProvider).requireValue));
+
+final identityChangesProvider =
+    StreamProvider<User?>((ref) => ref.watch(identityProvider).userChanges());
+
+/// Creating and finding canteens — works before one is active.
+final canteenServiceProvider = Provider<CanteenService>((ref) {
+  final app = ref.watch(firebaseAppProvider).requireValue;
+  return CanteenService(
+      FirebaseFirestore.instanceFor(app: app), ref.watch(identityProvider));
+});
+
 final storeProvider = Provider<Store>((ref) {
   final app = ref.watch(firebaseAppProvider).requireValue;
-  return Store(FirebaseFirestore.instanceFor(app: app));
+  final canteen = ref.watch(activeCanteenProvider);
+  if (canteen == null) throw StateError('No active canteen');
+  return Store(FirebaseFirestore.instanceFor(app: app), canteen);
 });
 
 final accessServiceProvider = Provider<AccessService>((ref) {

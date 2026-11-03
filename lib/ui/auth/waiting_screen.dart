@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../data/access.dart';
 import '../../l10n/app_localizations.dart';
@@ -14,15 +15,20 @@ import '../shared_widgets/notice_screen.dart';
 class WaitingScreen extends ConsumerWidget {
   const WaitingScreen(
       {super.key, required Device this.device, this.removed = false})
-      : email = null;
+      : email = null,
+        pending = false;
 
-  const WaitingScreen.onlineRefused({super.key, required String this.email})
+  const WaitingScreen.onlineRefused(
+      {super.key, required String this.email, this.pending = false})
       : device = null,
         removed = false;
 
   final Device? device;
   final bool removed;
   final String? email;
+
+  /// Online account that asked to join and awaits approval (vs turned off).
+  final bool pending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,12 +39,19 @@ class WaitingScreen extends ConsumerWidget {
       onPressed: () => ref.read(accessServiceProvider).startOver(),
     );
 
+    // Always offered: a phone waiting on the wrong canteen is otherwise stuck.
+    final switchCanteen = NbButton.secondary(
+      label: text.switchCanteenButton,
+      icon: Icons.swap_horiz,
+      onPressed: () => ref.read(canteenBookProvider.notifier).deactivate(),
+    );
+
     if (email != null) {
       return NoticeScreen(
-        icon: Icons.no_accounts_outlined,
+        icon: pending ? Icons.hourglass_top : Icons.no_accounts_outlined,
         title: email!,
-        body: text.onlineInactive,
-        actions: [startOver],
+        body: pending ? text.onlinePendingBody : text.onlineInactive,
+        actions: [switchCanteen, startOver],
       );
     }
     final d = device!;
@@ -54,6 +67,7 @@ class WaitingScreen extends ConsumerWidget {
             onPressed: () => runGuarded(context,
                 () => ref.read(accessServiceProvider).requestApproval(d.name)),
           ),
+          switchCanteen,
           startOver,
         ],
       );
@@ -62,7 +76,7 @@ class WaitingScreen extends ConsumerWidget {
       icon: Icons.hourglass_top,
       title: text.waitingTitle,
       body: '${text.waitingBody(d.name)}\n\n${text.waitingCode(d.code)}',
-      actions: [startOver],
+      actions: [switchCanteen, startOver],
     );
   }
 }

@@ -59,9 +59,14 @@ abstract final class Col {
 ///    permission or conflict error reaches the screen that caused it; offline
 ///    it returns at once and the batch syncs when the network comes back.
 class Store {
-  Store(this.db, {this.serverWait = const Duration(seconds: 4)});
+  Store(this.db, this.canteenId,
+      {this.serverWait = const Duration(seconds: 4)});
 
   final FirebaseFirestore db;
+
+  /// Which canteen this store reads and writes (ADR 0006). Every path below is
+  /// under `canteens/{canteenId}`, so no service ever names it.
+  final String canteenId;
   final Duration serverWait;
   final _log = log('store');
 
@@ -69,10 +74,15 @@ class Store {
   /// the first server answer or cache fallback corrects it within a second.
   bool online = true;
 
-  CollectionReference<Json> col(String name) => db.collection(name);
+  DocumentReference<Json> get canteenDoc => rootDoc(db, canteenId);
+  CollectionReference<Json> col(String name) => canteenDoc.collection(name);
   DocumentReference<Json> doc(String col, String id) =>
-      db.collection(col).doc(id);
-  String newId(String col) => db.collection(col).doc().id;
+      canteenDoc.collection(col).doc(id);
+  String newId(String col) => canteenDoc.collection(col).doc().id;
+
+  /// The canteen's own document: its name and owner, and the join-code lookup.
+  static DocumentReference<Json> rootDoc(FirebaseFirestore db, String code) =>
+      db.collection('canteens').doc(code);
 
   WriteBatch batch() => db.batch();
 

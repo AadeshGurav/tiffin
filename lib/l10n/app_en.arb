@@ -1151,16 +1151,6 @@
   "errDeviceNotApproved": "This phone isn't approved yet. Ask the admin to approve it in Settings ▸ Devices.",
   "errNeedsInternet": "This needs an internet connection. Connect and try again.",
   "errPermissionDenied": "This phone isn't allowed to do that. Ask the admin to check its role in Settings ▸ Devices.",
-  "errFirebaseConfigUnreadable": "That isn't a Firebase config file. Download google-services.json (Android) or GoogleService-Info.plist (iPhone) from the Firebase console.",
-  "errFirebaseConfigWrongApp": "That file is for a different app. In the Firebase console, add an app with the ID {appId} and download its file.",
-  "@errFirebaseConfigWrongApp": {
-    "description": "appId is a package name like com.canteen.canteen_coupon; keep it as is.",
-    "placeholders": {
-      "appId": {
-        "type": "String"
-      }
-    }
-  },
   "errMemberNotFound": "That member no longer exists.",
   "errMemberStudentHasStaffId": "A student can't have a staff ID.",
   "errMemberStaffHasClass": "Staff members don't have a class or roll number.",
@@ -1434,38 +1424,12 @@
   "@notifUnknown": {
     "description": "Title for a notification type this app version does not know."
   },
-  "connectTitle": "Connect to your Firebase project",
-  "connectBody": "Tiffin keeps the canteen's records in your own Firebase project. Pick the config file you downloaded from the Firebase console — google-services.json on Android, GoogleService-Info.plist on iPhone.",
-  "connectPickButton": "Choose config file",
-  "connectHelp": "Where is it? Firebase console ▸ Project settings ▸ Your apps ▸ the app with ID {appId} ▸ download the config file.",
-  "@connectHelp": {
-    "description": "appId is a package name; keep it as is.",
-    "placeholders": {
-      "appId": {
-        "type": "String"
-      }
-    }
-  },
-  "connectConnecting": "Connecting…",
   "deviceSetupTitle": "Set up this phone",
   "deviceSetupBody": "Give this phone a name the admin will recognise, then join. This needs internet once; after that the phone works offline too.",
   "deviceSetupNameLabel": "Phone name",
   "deviceSetupNameHint": "e.g. Counter 1",
   "deviceSetupJoinButton": "Join this canteen",
   "deviceSetupOnlineButton": "Sign in with an online account instead",
-  "deviceSetupProject": "Firebase project: {projectId}",
-  "@deviceSetupProject": {
-    "description": "On phone setup screen. projectId = a Firebase project id, keep as is.",
-    "placeholders": {
-      "projectId": {
-        "type": "String"
-      }
-    }
-  },
-  "deviceSetupChangeProject": "Use a different Firebase project",
-  "newCanteenTitle": "Start a new canteen?",
-  "newCanteenBody": "Nobody has set up this Firebase project yet. This phone will become the first admin phone.",
-  "newCanteenButton": "Start the canteen on this phone",
   "waitingTitle": "Waiting for approval",
   "waitingBody": "Ask the admin to open Settings ▸ Devices on their phone and approve {name}. This screen moves on by itself once they do.",
   "@waitingBody": {
@@ -1547,19 +1511,6 @@
   "devicesEmpty": "No other phones yet.",
   "devicesRoleExplainer": "A phone's role limits who can sign in on it: an admin phone allows everyone, a counter phone allows counter and scanner accounts, a scanner phone allows scanner accounts only.",
   "settingsScreenGroupAccess": "Access",
-  "settingsScreenFirebaseTitle": "Firebase project",
-  "settingsScreenFirebaseSubtitle": "Connected to {projectId}",
-  "@settingsScreenFirebaseSubtitle": {
-    "description": "On Settings. projectId = a Firebase project id, keep as is.",
-    "placeholders": {
-      "projectId": {
-        "type": "String"
-      }
-    }
-  },
-  "settingsScreenChangeFirebaseDialogTitle": "Use a different Firebase project?",
-  "settingsScreenChangeFirebaseDialogBody": "This phone signs out and forgets its copy of this canteen's records. Nothing is deleted from Firebase. Changes not yet synced from this phone will be lost.",
-  "settingsScreenChangeButton": "Change",
   "importTitle": "Bring over existing records?",
   "importBody": "If this canteen used the earlier version of Tiffin, make a backup there (Settings ▸ Backup & restore) and pick that .tiffin file here.",
   "importPickButton": "Pick a .tiffin backup",
@@ -1597,9 +1548,63 @@
   "tooltipPreviousMonth": "Previous month",
   "tooltipNextMonth": "Next month",
   "errEmailInUse": "An online account with that email already exists.",
-  "restartTitle": "Close and reopen Tiffin",
-  "restartBody": "The new Firebase project is saved. It takes effect the next time the app starts.",
   "topupScreenShareBill": "Share bill",
   "tooltipLess": "One less",
-  "tooltipMore": "One more"
+  "tooltipMore": "One more",
+  "welcomeTitle": "Welcome",
+  "welcomeBody": "Join your canteen with its code, or start a new one.",
+  "welcomeJoinButton": "Join a canteen",
+  "welcomeCreateButton": "Start a new canteen",
+  "welcomeYourCanteens": "Your canteens",
+  "welcomeLeaveTooltip": "Forget this canteen on this phone",
+  "joinTitle": "Join a canteen",
+  "joinBody": "Ask the canteen admin for its 8-character code.",
+  "joinCodeLabel": "Canteen code",
+  "joinContinueButton": "Find canteen",
+  "createTitle": "Start a new canteen",
+  "createBody": "You become its admin. You will get a code for others to join with.",
+  "createNameLabel": "Canteen name",
+  "createNameHint": "e.g. Main Gate Canteen",
+  "createSignedInAs": "Signed in as {email}",
+  "@createSignedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "createUseExisting": "I already have an account",
+  "createUseNew": "Create a new account",
+  "createButton": "Create canteen",
+  "switchCanteenButton": "Switch or join another canteen",
+  "deviceSetupCanteen": "Canteen: {name}",
+  "@deviceSetupCanteen": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "onlinePendingBody": "You asked to join this canteen. An admin needs to approve you; this screen updates by itself.",
+  "settingsScreenSwitchTitle": "Switch canteen",
+  "settingsScreenSwitchSubtitle": "Now in {name}. Your logins here are kept.",
+  "@settingsScreenSwitchSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenCanteenCodeTitle": "Canteen code",
+  "settingsScreenCanteenCodeSubtitle": "{code} · tap to copy",
+  "@settingsScreenCanteenCodeSubtitle": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "canteenCodeCopied": "Code copied",
+  "errCanteenNotFound": "No canteen has that code. Check it with the admin and try again.",
+  "errSignInRequired": "Sign in with an account first to start a canteen."
 }

@@ -158,7 +158,7 @@ class Backend {
   Future<HostGreeting> greeting() async {
     final s = await settings.read();
     return HostGreeting.fromWire(
-        {...s.toAppearanceJson(), 'hostId': store.db.app.options.projectId});
+        {...s.toAppearanceJson(), 'hostId': store.canteenId});
   }
 
   Future<SettingsSnapshot> getSettings() => settings.read();
