@@ -391,14 +391,22 @@ Before UI build begins: a small theme spec (color tokens, border-width tokens, s
 in §5, §6 and §8 are unchanged. The reasoning and the rejected alternatives
 are in `docs/adr/0005-firebase-offline-first.md`.
 
+### 15.0 Amendment — many canteens in one shared project (2026-11-03)
+
+Supersedes the "own Firebase project, imported config file" parts of §15.1 and
+§15.2. A canteen is a document `canteens/{code}` in **one shared project run by
+the app owner** (config built in); a phone keeps a list of joined canteens and
+one active; people sign in with Google, Microsoft, Apple (build flag) or
+email, and their role is per canteen. Taking over = backup import into a new
+canteen. Reasoning and rejected alternatives: `docs/adr/0006-multi-canteen-shared-project.md`.
+
 ### 15.1 Shape
 
 - One Flutter app on every phone. Each phone reads and writes the canteen's
   own **Cloud Firestore** project directly — no host phone, no LAN server, no
   discovery, no web admin.
-- The **only configuration** is the Firebase console's config file for this
-  app (`google-services.json` / `GoogleService-Info.plist`), imported on first
-  launch. Everything an operator changes lives in the canteen's settings
+- The **only build configuration** is the shared project (see §15.0).
+  Everything an operator changes lives in the canteen's settings
   document, as before (§6.8).
 
 ### 15.2 Who can do what
@@ -411,7 +419,7 @@ are in `docs/adr/0005-firebase-offline-first.md`.
 - **Online accounts** (email + password) are optional, switched on in
   Settings, and work on any phone without approval; they need internet to
   sign in.
-- The first phone on a fresh project becomes the first admin phone.
+- Whoever creates a canteen (signed in with a real account) becomes its admin.
 
 ### 15.3 Offline behaviour
 

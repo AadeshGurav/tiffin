@@ -33,41 +33,54 @@ needs — the gate phone as a scanner phone.
 
 ## 2. First-time setup
 
-### 2.1 The Firebase project (once, by whoever sets the canteen up)
+### 2.1 The shared project (the app owner, once)
 
-Follow **Firebase setup** in the README: create the project, turn on the
-sign-in methods, create the database, deploy the rules, and download the
-**config file** for the app. That file is the only thing the app is ever
-configured with.
+All canteens live in one Firebase project that the app owner runs. Follow
+**Firebase setup** in the README once. Canteen managers never touch it.
 
-### 2.2 The first phone
+### 2.2 Starting a canteen (the manager, day one)
 
-1. Install and open the app. It asks you to **connect to your Firebase
-   project** — tap **Choose config file** and pick the file you downloaded.
-2. **Set up this phone**: give it a name you'll recognise (e.g. "Office") and
-   tap **Join this canteen**. This needs internet once.
-3. Nobody has used the project yet, so it offers **Start the canteen on this
-   phone**. This phone becomes the first **admin phone**.
-4. **Create the admin account**: choose a username and password. **Suggest a
-   strong one** fills both boxes and shows the password so you can write it
-   down — it's stored only as a one-way hash.
-   - *Moving from the earlier version of Tiffin?* Instead of creating an
-     account, tap **Bring over existing records?** and pick the `.tiffin`
-     backup you made on the old host phone. Members keep their QR codes and
-     everyone keeps their old password.
+1. Install and open the app. The **Welcome** screen offers **Join a canteen**
+   and **Start a new canteen**.
+2. Tap **Start a new canteen**, name it, and sign in with **Google**,
+   **Microsoft**, or an **email and password** (**Create a new account** if you
+   have none). This needs internet once. You become the canteen's **admin**.
+   There is no generated password to lose: you sign in as yourself.
+   - *Taking over from another admin?* Tick **Start from a backup file**; the
+     backup screen opens once the canteen exists. *Moving from the earlier
+     LAN-host version?* The same backup import accepts its `.tiffin` file.
+3. **Settings ▸ Canteen code** shows the 8-character code. Tap it to copy and
+   share it with the people who will join.
+4. Under **Settings ▸ Users**, create the scanner and counter logins that work
+   offline on shared phones.
 
-### 2.3 Every other phone
+### 2.3 Every other phone (day one)
 
-1. Install the app and pick the **same config file**.
-2. Name the phone ("Counter 1", "Gate") and tap **Join this canteen**. It
-   shows **Waiting for approval** with a short **phone code**.
-3. On the admin phone: **Settings ▸ Devices**, find the phone (match the
-   code), tap **Approve**, and pick its role. The waiting phone moves on by
+1. Install the app, tap **Join a canteen**, and type the code (case, spaces and
+   dashes don't matter).
+2. Either name the phone and tap **Join this canteen** (it then shows
+   **Waiting for approval** with a short **phone code**), or sign in with
+   Google / Microsoft / email, which sends a join request as that person.
+3. On an admin phone: **Settings ▸ Devices** (phones) or **Settings ▸ Online
+   accounts** (people); approve and pick a role. The waiting phone moves on by
    itself.
-4. Sign in with an account. Accounts are made under **Settings ▸ Users**.
+4. Sign in with an account made under **Settings ▸ Users**.
 
-A phone that's lost or replaced: **Settings ▸ Devices ▸ Remove**. It can ask
-again later, and has to be approved again.
+A lost or replaced phone: **Settings ▸ Devices ▸ Remove**.
+
+### 2.3a Many canteens, one phone
+
+A phone can belong to several canteens and is active in one at a time. Open
+**Settings ▸ Switch canteen** (also on the sign-in and waiting screens) to
+reach the Welcome list; tap a canteen to make it active again, **×** to forget
+it on this phone. Saved logins are kept per canteen. Switching signs out of the
+current canteen but never deletes anything.
+
+**Who is on the phone:** the person who signs in decides the role, so the same
+phone can be a manager's in the morning and a scanner's at lunch. Offline
+accounts are still capped by the role the admin gave the *phone*; an admin on a
+shared phone should sign in with an online account (Google, Microsoft or email).
+**Settings ▸ Add a sign-in method** links another method to the same account.
 
 ### 2.4 Online accounts (optional)
 
@@ -214,15 +227,16 @@ Settings is a short menu of rows, not one long form. Each opens its own screen:
 - **Reports** — see 3.11.
 - **Backup & restore** — see 3.11.
 - **Sign out** — ends this session on this phone.
-- **Firebase project** — which project this phone uses. *Change* signs out
-  and forgets this phone's copy of the data (nothing is deleted in Firebase);
-  changes not yet synced from this phone are lost, so do it online.
+- **Switch canteen** — back to the Welcome list to open, join or start another
+  canteen (2.3a). Nothing is deleted.
+- **Canteen code** *(admin)* — tap to copy the join code.
+- **Add a sign-in method** — link Google or Microsoft to your account.
 - **Reset all data** — deletes every record in the project (accounts too),
   then asks for a new admin. Needs internet. No undo — take a backup first.
 
 **Counter and scanner** open the same Settings screen from the **⚙ gear** in
-the top bar. Their version shows **Appearance**, **Sign out** and **Firebase
-project** — same layout, fewer rows.
+the top bar. Their version shows **Appearance**, **Sign out** and **Switch
+canteen** — same layout, fewer rows.
 
 ### 3.9 Users & access (admin — inside Settings)
 
@@ -258,7 +272,7 @@ that is what **Backup & restore** is for.
 **Backup** — a complete copy of the canteen in one `.tiffin` file: members,
 balances, history, settings and accounts. The data already lives safely in
 Firebase; this is *your* copy, outside Google's, and the way to move to a new
-Firebase project.
+canteen (**Start a new canteen ▸ Start from a backup file**).
 
 - Leave **Protect with a password** on unless you have a reason not to. The
   file holds member names and account details. Write the password down —

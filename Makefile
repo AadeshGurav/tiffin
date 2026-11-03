@@ -1,8 +1,8 @@
 .PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons
 
 # Zero-touch setup (CLAUDE.md §9): one command from a fresh checkout to a
-# runnable app. The Firebase project is not configured here — the app asks
-# for its config file on first launch (README "Firebase setup").
+# runnable app. The shared Firebase project is built in
+# (lib/app/shared_project.dart); see README "Firebase setup".
 setup:
 	flutter pub get
 	flutter gen-l10n
