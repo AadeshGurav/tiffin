@@ -1126,6 +1126,8 @@
       }
     }
   },
+  "createPasswordHint": "New or existing account: at least 6 characters",
+  "@createPasswordHint": {"description": "Hint inside the password field when starting a canteen."},
   "errPasswordTooShort": "Use at least {min} characters.",
   "@errPasswordTooShort": {
     "description": "On an error message. min = a number of characters.",

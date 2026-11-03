@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
+import '../../core/errors.dart';
 import '../../data/canteens.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
@@ -81,6 +82,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         final service = ref.read(canteenServiceProvider);
         final user = ref.read(identityProvider).currentUser;
         if (user == null || user.isAnonymous) {
+          if (_password.text.length < 6) {
+            throw const ValidationException(
+                ErrorCode.passwordTooShort, {'min': 6});
+          }
           await service.signInWithEmail(_email.text, _password.text);
         }
         final made = await service.create(_name.text);
@@ -166,6 +171,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             const SizedBox(height: NbSpace.md),
             NbTextField(
                 label: text.onlinePasswordLabel,
+                hint: text.createPasswordHint,
                 controller: _password,
                 obscure: true),
           ],

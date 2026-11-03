@@ -82,6 +82,11 @@ class CanteenService {
       }
     } on FirebaseAuthException catch (e) {
       if (_wasCancelled(e.code)) return;
+      // Google/Microsoft with an address that already has a password account.
+      if (e.code == 'email-already-in-use') {
+        throw FirebaseAuthException(
+            code: 'account-exists-with-different-credential');
+      }
       // This provider account already exists (maybe from another phone):
       // sign in as it, rather than failing.
       if (e.code == 'credential-already-in-use') {
