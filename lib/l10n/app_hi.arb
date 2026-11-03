@@ -715,5 +715,18 @@
   "settingsScreenCanteenCodeSubtitle": "{code} · कॉपी करने के लिए टैप करें",
   "canteenCodeCopied": "कोड कॉपी हो गया",
   "errCanteenNotFound": "इस कोड की कोई कैंटीन नहीं मिली। एडमिन से जाँचकर फिर कोशिश करें।",
-  "errSignInRequired": "कैंटीन शुरू करने के लिए पहले खाते से साइन इन करें।"
+  "errSignInRequired": "कैंटीन शुरू करने के लिए पहले खाते से साइन इन करें।",
+  "signInGoogle": "Google से जारी रखें",
+  "signInMicrosoft": "Microsoft से जारी रखें",
+  "signInApple": "Apple से जारी रखें",
+  "signInOr": "या ईमेल से",
+  "errAccountOtherMethod": "यह खाता पहले से किसी दूसरे साइन-इन तरीके से मौजूद है। पहले की तरह साइन इन करें, फिर सेटिंग्स में यह तरीका जोड़ें।",
+  "errSignInMethodOff": "साइन इन का यह तरीका अभी चालू नहीं है। ऐप के मालिक से कहें, या ईमेल इस्तेमाल करें।",
+  "errMethodAlreadyAdded": "यह साइन-इन तरीका इस खाते में पहले से जुड़ा है।",
+  "settingsScreenAddMethodTitle": "साइन-इन का तरीका जोड़ें",
+  "settingsScreenAddMethodSubtitle": "आसान साइन-इन के लिए अपने खाते से Google या Microsoft जोड़ें",
+  "addMethodGoogle": "Google जोड़ें",
+  "addMethodMicrosoft": "Microsoft जोड़ें",
+  "addMethodDone": "साइन-इन का तरीका जुड़ गया",
+  "createFromBackup": "बैकअप फ़ाइल से शुरू करें (दूसरे एडमिन से कार्यभार लेने के लिए)"
 }

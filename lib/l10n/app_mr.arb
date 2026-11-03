@@ -715,5 +715,18 @@
   "settingsScreenCanteenCodeSubtitle": "{code} · कॉपी करण्यासाठी टॅप करा",
   "canteenCodeCopied": "कोड कॉपी झाला",
   "errCanteenNotFound": "या कोडची कॅन्टीन सापडली नाही. अ‍ॅडमिनकडे तपासून पुन्हा प्रयत्न करा.",
-  "errSignInRequired": "कॅन्टीन सुरू करण्यासाठी आधी खात्याने साइन इन करा."
+  "errSignInRequired": "कॅन्टीन सुरू करण्यासाठी आधी खात्याने साइन इन करा.",
+  "signInGoogle": "Google ने सुरू ठेवा",
+  "signInMicrosoft": "Microsoft ने सुरू ठेवा",
+  "signInApple": "Apple ने सुरू ठेवा",
+  "signInOr": "किंवा ईमेलने",
+  "errAccountOtherMethod": "हे खाते आधीच दुसऱ्या साइन-इन पद्धतीने अस्तित्वात आहे. आधीप्रमाणे साइन इन करा, मग सेटिंग्जमध्ये ही पद्धत जोडा.",
+  "errSignInMethodOff": "साइन इनची ही पद्धत अजून सुरू नाही. अ‍ॅपच्या मालकाला सांगा, किंवा ईमेल वापरा.",
+  "errMethodAlreadyAdded": "ही साइन-इन पद्धत या खात्याला आधीच जोडलेली आहे.",
+  "settingsScreenAddMethodTitle": "साइन-इन पद्धत जोडा",
+  "settingsScreenAddMethodSubtitle": "सोप्या साइन-इनसाठी तुमच्या खात्याला Google किंवा Microsoft जोडा",
+  "addMethodGoogle": "Google जोडा",
+  "addMethodMicrosoft": "Microsoft जोडा",
+  "addMethodDone": "साइन-इन पद्धत जोडली",
+  "createFromBackup": "बॅकअप फाइलमधून सुरू करा (दुसऱ्या अ‍ॅडमिनकडून कार्यभार घेण्यासाठी)"
 }

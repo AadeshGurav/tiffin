@@ -1606,5 +1606,18 @@
   },
   "canteenCodeCopied": "Code copied",
   "errCanteenNotFound": "No canteen has that code. Check it with the admin and try again.",
-  "errSignInRequired": "Sign in with an account first to start a canteen."
+  "errSignInRequired": "Sign in with an account first to start a canteen.",
+  "signInGoogle": "Continue with Google",
+  "signInMicrosoft": "Continue with Microsoft",
+  "signInApple": "Continue with Apple",
+  "signInOr": "or with email",
+  "errAccountOtherMethod": "That account already exists with a different sign-in method. Sign in the way you did before, then add this one in Settings.",
+  "errSignInMethodOff": "This way of signing in is not turned on yet. Ask the app owner, or use email.",
+  "errMethodAlreadyAdded": "That sign-in method is already added to this account.",
+  "settingsScreenAddMethodTitle": "Add a sign-in method",
+  "settingsScreenAddMethodSubtitle": "Link Google or Microsoft to your account for easier sign-in",
+  "addMethodGoogle": "Add Google",
+  "addMethodMicrosoft": "Add Microsoft",
+  "addMethodDone": "Sign-in method added",
+  "createFromBackup": "Start from a backup file (taking over from another admin)"
 }

@@ -10,6 +10,7 @@ import '../shared_widgets/app_logo.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
+import 'provider_buttons.dart';
 import '../theme/tokens.dart';
 
 enum _Step { home, join, create }
@@ -31,6 +32,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final _password = TextEditingController();
   _Step _step = _Step.home;
   bool _registering = true;
+  bool _fromBackup = false;
   bool _busy = false;
   String? _error;
 
@@ -84,6 +86,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               register: _registering);
         }
         final made = await service.create(_name.text);
+        ref.read(startFromBackupProvider.notifier).set(_fromBackup);
         await ref
             .read(canteenBookProvider.notifier)
             .activate(made.code, made.name);
@@ -125,6 +128,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             controller: _code,
             autofocus: true,
           ),
+          const SizedBox(height: NbSpace.md),
+          if (signedIn)
+            Text(text.createSignedInAs(user.email ?? ''), style: t.text.body)
+          else
+            ProviderButtons(onSignedIn: () async {}),
           const SizedBox(height: NbSpace.lg),
           NbButton(
             label: text.joinContinueButton,
@@ -148,6 +156,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           if (signedIn)
             Text(text.createSignedInAs(user.email ?? ''), style: t.text.body)
           else ...[
+            ProviderButtons(onSignedIn: () async {}),
+            const SizedBox(height: NbSpace.md),
+            Text(text.signInOr, style: t.text.label),
+            const SizedBox(height: NbSpace.sm),
             NbTextField(
               label: text.onlineEmailLabel,
               controller: _email,
@@ -166,7 +178,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   _registering ? text.createUseExisting : text.createUseNew),
             ),
           ],
-          const SizedBox(height: NbSpace.lg),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: _fromBackup,
+            onChanged:
+                _busy ? null : (v) => setState(() => _fromBackup = v ?? false),
+            title: Text(text.createFromBackup, style: t.text.body),
+          ),
+          const SizedBox(height: NbSpace.md),
           NbButton(
             label: text.createButton,
             icon: Icons.storefront_outlined,

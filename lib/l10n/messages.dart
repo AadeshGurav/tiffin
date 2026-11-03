@@ -35,6 +35,12 @@ extension AppTextMessages on AppText {
         'invalid-email' =>
           errBadCredentials,
         'network-request-failed' => errNeedsInternet,
+        'account-exists-with-different-credential' => errAccountOtherMethod,
+        'credential-already-in-use' => errAccountOtherMethod,
+        'operation-not-allowed' ||
+        'admin-restricted-operation' =>
+          errSignInMethodOff,
+        'provider-already-linked' => errMethodAlreadyAdded,
         'email-already-in-use' => errEmailInUse,
         'weak-password' => errPasswordTooShort(6),
         _ => errUnexpected,

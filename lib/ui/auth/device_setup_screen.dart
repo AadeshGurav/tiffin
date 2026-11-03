@@ -9,6 +9,7 @@ import '../shared_widgets/app_logo.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
+import 'provider_buttons.dart';
 import '../theme/tokens.dart';
 
 /// This phone isn't part of the active canteen yet. Either it asks to join
@@ -85,6 +86,15 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
         ? [
             Text(text.onlineSignInTitle, style: t.text.heading),
             const SizedBox(height: NbSpace.lg),
+            ProviderButtons(
+              onSignedIn: () async {
+                final user = ref.read(identityProvider).currentUser!;
+                await ref.read(accessServiceProvider).requestOnlineAccess(user);
+              },
+            ),
+            const SizedBox(height: NbSpace.md),
+            Text(text.signInOr, style: t.text.label),
+            const SizedBox(height: NbSpace.sm),
             NbTextField(
               label: text.onlineEmailLabel,
               controller: _email,
