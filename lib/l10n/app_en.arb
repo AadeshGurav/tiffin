@@ -750,7 +750,6 @@
   "loginRememberPasswordLabel": "Remember password on this device",
   "loginSignInButton": "Sign in",
   "loginForgotPasswordButton": "Forgot the password?",
-  "loginSavedLoginsHeader": "SAVED ON THIS DEVICE",
   "loginSavedLoginTapToSignIn": "Tap to sign in",
   "loginSavedLoginTapToFillUsername": "Tap to fill the username",
   "loginForgetAccountTooltip": "Forget this account",
@@ -1127,7 +1126,9 @@
     }
   },
   "createPasswordHint": "New or existing account: at least 6 characters",
-  "@createPasswordHint": {"description": "Hint inside the password field when starting a canteen."},
+  "@createPasswordHint": {
+    "description": "Hint inside the password field when starting a canteen."
+  },
   "errPasswordTooShort": "Use at least {min} characters.",
   "@errPasswordTooShort": {
     "description": "On an error message. min = a number of characters.",
@@ -1431,7 +1432,6 @@
   "deviceSetupNameLabel": "Phone name",
   "deviceSetupNameHint": "e.g. Counter 1",
   "deviceSetupJoinButton": "Join this canteen",
-  "deviceSetupOnlineButton": "Sign in with an online account instead",
   "waitingTitle": "Waiting for approval",
   "waitingBody": "Ask the admin to open Settings ▸ Devices on their phone and approve {name}. This screen moves on by itself once they do.",
   "@waitingBody": {
@@ -1454,7 +1454,6 @@
   "waitingRevoked": "The admin removed this phone. Ask them to approve it again.",
   "waitingRequestAgain": "Ask for approval again",
   "waitingStartOver": "Start over",
-  "onlineSignInTitle": "Online account",
   "onlineEmailLabel": "Email",
   "onlinePasswordLabel": "Password",
   "onlineSignInButton": "Sign in",
@@ -1577,14 +1576,6 @@
   },
   "createButton": "Create canteen",
   "switchCanteenButton": "Switch or join another canteen",
-  "deviceSetupCanteen": "Canteen: {name}",
-  "@deviceSetupCanteen": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "onlinePendingBody": "You asked to join this canteen. An admin needs to approve you; this screen updates by itself.",
   "settingsScreenSwitchTitle": "Switch canteen",
   "settingsScreenSwitchSubtitle": "Now in {name}. Your logins here are kept.",
@@ -1619,5 +1610,14 @@
   "addMethodGoogle": "Add Google",
   "addMethodMicrosoft": "Add Microsoft",
   "addMethodDone": "Sign-in method added",
-  "createFromBackup": "Start from a backup file (taking over from another admin)"
+  "createFromBackup": "Start from a backup file (taking over from another admin)",
+  "setupModeOnline": "Online account",
+  "setupModeSharedPhone": "Shared phone",
+  "setupOnlineHint": "For managers and admins. Works on any phone.",
+  "loginContinueAs": "Continue as",
+  "loginOtherAccount": "Use a different account",
+  "canteenChange": "Change",
+  "adminGroupPeople": "People",
+  "adminGroupMoney": "Money",
+  "adminGroupKitchen": "Kitchen"
 }

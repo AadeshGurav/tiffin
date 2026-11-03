@@ -5,12 +5,11 @@ import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
-import '../shared_widgets/app_logo.dart';
 import '../shared_widgets/nb_button.dart';
-import '../shared_widgets/nb_surface.dart';
 import '../shared_widgets/nb_text_field.dart';
 import 'provider_buttons.dart';
 import '../theme/tokens.dart';
+import 'auth_frame.dart';
 
 /// This phone isn't part of the active canteen yet. Either it asks to join
 /// (and the admin approves it), or someone signs in with an online account.
@@ -84,10 +83,29 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
     final text = AppText.of(context);
     final canteen = ref.watch(canteenBookProvider).active?.name ?? '';
 
-    final card = _online
+    // Both ways in are always visible: "who are you signing in as" is the one
+    // question on this screen, and hiding half the answer behind a text link
+    // left people guessing which path they were on.
+    final mode = SegmentedButton<bool>(
+      showSelectedIcon: false,
+      segments: [
+        ButtonSegment(value: true, label: Text(text.setupModeOnline)),
+        ButtonSegment(value: false, label: Text(text.setupModeSharedPhone)),
+      ],
+      selected: {_online},
+      onSelectionChanged: _busy
+          ? null
+          : (v) => setState(() {
+                _online = v.first;
+                _error = null;
+              }),
+    );
+
+    final fields = _online
         ? [
-            Text(text.onlineSignInTitle, style: t.text.heading),
-            const SizedBox(height: NbSpace.lg),
+            Text(text.setupOnlineHint,
+                style: t.text.body.copyWith(color: t.color.inkMuted)),
+            const SizedBox(height: NbSpace.md),
             ProviderButtons(
               onSignedIn: () async {
                 final user = ref.read(identityProvider).currentUser!;
@@ -95,110 +113,58 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
               },
             ),
             const SizedBox(height: NbSpace.md),
-            Text(text.signInOr, style: t.text.label),
+            Text(text.signInOr,
+                style: t.text.label.copyWith(color: t.color.inkMuted)),
             const SizedBox(height: NbSpace.sm),
             NbTextField(
               label: text.onlineEmailLabel,
               controller: _email,
               keyboardType: TextInputType.emailAddress,
-              autofocus: true,
             ),
             const SizedBox(height: NbSpace.md),
             NbTextField(
                 label: text.onlinePasswordLabel,
                 controller: _password,
                 obscure: true),
-            const SizedBox(height: NbSpace.lg),
-            NbButton(
-              label: text.onlineSignInButton,
-              busy: _busy,
-              onPressed: _busy ? null : _signInOnline,
-            ),
-            TextButton(
-              onPressed: _busy ? null : _sendReset,
-              child: Text(text.onlineForgotButton),
-            ),
           ]
         : [
-            Text(text.deviceSetupTitle, style: t.text.heading),
-            const SizedBox(height: NbSpace.xs),
-            Text(text.deviceSetupBody, style: t.text.body),
-            const SizedBox(height: NbSpace.lg),
+            Text(text.deviceSetupBody,
+                style: t.text.body.copyWith(color: t.color.inkMuted)),
+            const SizedBox(height: NbSpace.md),
             NbTextField(
               label: text.deviceSetupNameLabel,
               hint: text.deviceSetupNameHint,
               controller: _name,
-              autofocus: true,
             ),
-            const SizedBox(height: NbSpace.lg),
-            NbButton(
+          ];
+
+    return AuthFrame(
+      title: text.deviceSetupTitle,
+      canteenName: canteen,
+      onChangeCanteen: _busy
+          ? null
+          : () => ref.read(canteenBookProvider.notifier).deactivate(),
+      body: [mode, const SizedBox(height: NbSpace.lg), ...fields],
+      error: _error,
+      action: _online
+          ? NbButton(
+              label: text.onlineSignInButton,
+              busy: _busy,
+              onPressed: _busy ? null : _signInOnline,
+            )
+          : NbButton(
               label: text.deviceSetupJoinButton,
               icon: Icons.login,
               busy: _busy,
               onPressed: _busy ? null : _join,
             ),
-          ];
-
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(NbSpace.lg),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(child: AppWordmark()),
-                  const SizedBox(height: NbSpace.lg),
-                  NbSurface(
-                    intensity: NbIntensity.full,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ...card,
-                        if (_error != null) ...[
-                          const SizedBox(height: NbSpace.md),
-                          Text(_error!,
-                              style:
-                                  t.text.body.copyWith(color: t.color.reject)),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: NbSpace.md),
-                  TextButton.icon(
-                    icon: Icon(
-                        _online ? Icons.arrow_back : Icons.alternate_email,
-                        size: 18),
-                    label: Text(_online
-                        ? text.deviceSetupTitle
-                        : text.deviceSetupOnlineButton),
-                    onPressed: _busy
-                        ? null
-                        : () => setState(() {
-                              _online = !_online;
-                              _error = null;
-                            }),
-                  ),
-                  Text(text.deviceSetupCanteen(canteen),
-                      textAlign: TextAlign.center,
-                      style: t.text.body.copyWith(color: t.color.inkMuted)),
-                  TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () =>
-                            ref.read(canteenBookProvider.notifier).deactivate(),
-                    child: Text(text.switchCanteenButton),
-                  ),
-                ],
-              ),
-            ),
+      footer: [
+        if (_online)
+          TextButton(
+            onPressed: _busy ? null : _sendReset,
+            child: Text(text.onlineForgotButton),
           ),
-        ),
-      ),
+      ],
     );
   }
 }
