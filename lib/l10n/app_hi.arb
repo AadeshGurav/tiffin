@@ -541,6 +541,7 @@
   "errUsernameLength": "उपयोगकर्ता नाम 3 से 50 अक्षरों का होता है।",
   "errUsernameChars": "उपयोगकर्ता नाम में केवल अक्षर, अंक और _ . - हो सकते हैं।",
   "errUsernameTaken": "उपयोगकर्ता नाम {name} पहले से लिया जा चुका है।",
+  "createPasswordHint": "नया या मौजूदा खाता: कम से कम 6 अक्षर",
   "errPasswordTooShort": "कम से कम {min} अक्षर रखें।",
   "errCannotDeactivateSelf": "आप अपना खाता निष्क्रिय नहीं कर सकते।",
   "errCannotDeleteSelf": "आप अपना खाता हटा नहीं सकते।",

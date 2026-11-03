@@ -541,6 +541,7 @@
   "errUsernameLength": "वापरकर्तानाव 3 ते 50 अक्षरांचे असते.",
   "errUsernameChars": "वापरकर्तानावात फक्त अक्षरे, अंक आणि _ . - चालतात.",
   "errUsernameTaken": "{name} हे वापरकर्तानाव आधीच घेतले आहे.",
+  "createPasswordHint": "नवीन किंवा आधीचे खाते: किमान 6 अक्षरे",
   "errPasswordTooShort": "किमान {min} अक्षरे वापरा.",
   "errCannotDeactivateSelf": "तुम्ही तुमचे स्वतःचे खाते निष्क्रिय करू शकत नाही.",
   "errCannotDeleteSelf": "तुम्ही तुमचे स्वतःचे खाते हटवू शकत नाही.",
