@@ -75,7 +75,7 @@ class PurchaseScheduleScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(
                       top: NbSpace.md, bottom: NbSpace.xs),
-                  child: Text(day.key.toUpperCase(), style: t.text.label),
+                  child: Text(day.key, style: t.text.label),
                 ),
                 for (final it in day.value)
                   NbSurface(

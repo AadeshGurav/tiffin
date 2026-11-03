@@ -38,7 +38,7 @@ class NbTextField extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: NbSpace.xs),
-          child: Text(label.toUpperCase(), style: t.text.label),
+          child: Text(label, style: t.text.label),
         ),
         TextField(
           controller: controller,

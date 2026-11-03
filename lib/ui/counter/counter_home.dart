@@ -6,13 +6,14 @@ import '../admin/purchase_schedule_screen.dart';
 import '../admin/topup_screen.dart';
 import '../scanner/scanner_screen.dart';
 import '../shared_widgets/app_shell.dart';
+import '../shared_widgets/nb_group.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../shared_widgets/motion.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Counter-role home (PRD §4): scan, top-ups & billing, and the shared
-/// purchase schedule — nothing else.
+/// Counter-role home (PRD §4): scan and top-ups are the daily work, so they
+/// are the big tiles; the shared purchase schedule is a quieter row below.
 class CounterHome extends ConsumerWidget {
   const CounterHome({super.key});
 
@@ -21,41 +22,47 @@ class CounterHome extends ConsumerWidget {
     final t = context.tokens;
     final text = AppText.of(context);
     final username = ref.watch(sessionProvider)?.username ?? '';
-    final items = <(String, IconData, Widget Function())>[
-      (
-        text.counterHomeScanItem,
-        Icons.qr_code_scanner,
-        () => const ScannerScreen()
-      ),
-      (text.counterHomeTopUpItem, Icons.payments, () => const TopUpScreen()),
-      (
-        text.counterHomePurchaseScheduleItem,
-        Icons.shopping_cart,
-        () => const PurchaseScheduleScreen()
-      ),
-    ];
+
+    void open(Widget Function() screen) =>
+        Navigator.of(context).push(tiffinRoute<void>(context, () => screen()));
+
+    Widget tile(String label, IconData icon, Widget Function() screen) =>
+        NbSurface(
+          intensity: NbIntensity.full,
+          background: t.color.accent,
+          padding: const EdgeInsets.all(NbSpace.lg),
+          onTap: () => open(screen),
+          child: Row(
+            children: [
+              Icon(icon, size: 36, color: t.color.onAccent),
+              const SizedBox(width: NbSpace.md),
+              Expanded(
+                child: Text(label,
+                    style: t.text.heading.copyWith(color: t.color.onAccent)),
+              ),
+            ],
+          ),
+        );
 
     return Scaffold(
       appBar: NbAppBar(title: text.counterHomeAppBarTitle(username)),
       body: ListView(
         padding: const EdgeInsets.all(NbSpace.md),
         children: [
-          for (final (label, icon, build) in items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: NbSpace.md),
-              child: NbSurface(
-                intensity: NbIntensity.full,
-                onTap: () => Navigator.of(context)
-                    .push(tiffinRoute<void>(context, () => build())),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 32, color: t.color.ink),
-                    const SizedBox(width: NbSpace.md),
-                    Text(label, style: t.text.heading),
-                  ],
-                ),
-              ),
+          tile(text.counterHomeScanItem, Icons.qr_code_scanner,
+              () => const ScannerScreen()),
+          const SizedBox(height: NbSpace.md),
+          tile(text.counterHomeTopUpItem, Icons.payments,
+              () => const TopUpScreen()),
+          const SizedBox(height: NbSpace.lg),
+          NbGroup(children: [
+            NbListRow(
+              icon: Icons.shopping_cart,
+              title: text.counterHomePurchaseScheduleItem,
+              tone: NbTone.kitchen,
+              onTap: () => open(() => const PurchaseScheduleScreen()),
             ),
+          ]),
         ],
       ),
     );

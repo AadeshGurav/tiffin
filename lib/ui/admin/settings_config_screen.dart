@@ -219,6 +219,7 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
 
   Widget _section(TiffinTokens t, String label) => Padding(
         padding: const EdgeInsets.only(top: NbSpace.lg, bottom: NbSpace.sm),
-        child: Text(label.toUpperCase(), style: t.text.heading),
+        child:
+            Text(label, style: t.text.label.copyWith(color: t.color.inkMuted)),
       );
 }
