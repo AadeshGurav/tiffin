@@ -35,7 +35,20 @@
 		</dict>
 		<key>NSCameraUsageDescription</key>
 		<string>Used to scan member QR codes at the counter.</string>
-		<key>UIApplicationSceneManifest</key>
+		<!-- Firebase Auth's provider sign-in (Google, Microsoft) returns to the app
+	     through this scheme: the encoded Firebase app id of the iOS app. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-534390191839-ios-e409cf33ab5365c5499b6a</string>
+			</array>
+		</dict>
+	</array>
+	<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>
 			<false/>
