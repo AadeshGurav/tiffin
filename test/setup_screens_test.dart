@@ -7,9 +7,9 @@ import 'package:tiffin/app/bootstrap.dart';
 import 'package:tiffin/core/role.dart';
 import 'package:tiffin/data/access.dart';
 import 'package:tiffin/l10n/app_localizations.dart';
-import 'package:tiffin/ui/auth/connect_firebase_screen.dart';
 import 'package:tiffin/ui/auth/device_setup_screen.dart';
 import 'package:tiffin/ui/auth/waiting_screen.dart';
+import 'package:tiffin/ui/auth/welcome_screen.dart';
 import 'package:tiffin/ui/theme/app_theme.dart';
 import 'package:tiffin/ui/theme/theme_catalog.dart';
 
@@ -25,12 +25,13 @@ void main() {
       role: Role.scanner);
 
   final screens = <String, Widget>{
-    'connect': const ConnectFirebaseScreen(),
-    'join': const DeviceSetupScreen(newCanteen: false, signedIn: false),
-    'new canteen': const DeviceSetupScreen(newCanteen: true, signedIn: true),
+    'welcome': const WelcomeScreen(),
+    'join': const DeviceSetupScreen(),
     'waiting': const WaitingScreen(device: device),
     'removed': const WaitingScreen(device: device, removed: true),
     'online refused': const WaitingScreen.onlineRefused(email: 'a@b.c'),
+    'online pending':
+        const WaitingScreen.onlineRefused(email: 'a@b.c', pending: true),
   };
 
   for (final locale in AppText.supportedLocales) {

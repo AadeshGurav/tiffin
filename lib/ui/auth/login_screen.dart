@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/appearance_providers.dart';
 import '../../app/credential_store.dart';
+import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
 import '../../core/role.dart';
@@ -198,6 +199,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       });
                       if (login.password != null) _submit();
                     },
+                  ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.swap_horiz, size: 18),
+                    label: Text(text.switchCanteenButton),
+                    onPressed: _busy
+                        ? null
+                        : () =>
+                            ref.read(canteenBookProvider.notifier).deactivate(),
                   ),
                   if (isAdminPhone)
                     TextButton.icon(

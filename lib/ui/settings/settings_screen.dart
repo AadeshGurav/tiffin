@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../app/session_memory.dart';
 import '../../l10n/messages.dart';
@@ -32,7 +34,7 @@ class SettingsScreen extends ConsumerWidget {
     final t = context.tokens;
     final text = AppText.of(context);
     final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
-    final project = ref.watch(firebaseConfigProvider)?.projectId ?? '';
+    final canteen = ref.watch(canteenBookProvider).active;
 
     void go(Widget screen) =>
         Navigator.of(context).push(tiffinRoute<void>(context, () => screen));
@@ -111,11 +113,25 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: NbSpace.sm),
           SettingsRow(
-            icon: Icons.cloud_outlined,
-            title: text.settingsScreenFirebaseTitle,
-            subtitle: text.settingsScreenFirebaseSubtitle(project),
-            onTap: () => _confirmChangeProject(context, ref),
+            icon: Icons.swap_horiz,
+            title: text.settingsScreenSwitchTitle,
+            subtitle: text.settingsScreenSwitchSubtitle(canteen?.name ?? ''),
+            onTap: () => _switchCanteen(context, ref),
           ),
+          if (isAdmin && canteen != null) ...[
+            const SizedBox(height: NbSpace.sm),
+            SettingsRow(
+              icon: Icons.key_outlined,
+              title: text.settingsScreenCanteenCodeTitle,
+              subtitle: text.settingsScreenCanteenCodeSubtitle(canteen.code),
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: canteen.code));
+                if (context.mounted) {
+                  showNbSnack(context, text.canteenCodeCopied);
+                }
+              },
+            ),
+          ],
           if (isAdmin) ...[
             const SizedBox(height: NbSpace.sm),
             SettingsRow(
@@ -163,27 +179,11 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmChangeProject(
-      BuildContext context, WidgetRef ref) async {
-    final text = AppText.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(text.settingsScreenChangeFirebaseDialogTitle),
-        content: Text(text.settingsScreenChangeFirebaseDialogBody),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(text.settingsScreenCancelButton)),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(text.settingsScreenChangeButton)),
-        ],
-      ),
-    );
-    if (ok != true) return;
+  /// Nothing is lost by leaving a canteen's screen: the phone keeps its
+  /// copy and saved logins and the canteen is one tap away on the Welcome list.
+  Future<void> _switchCanteen(BuildContext context, WidgetRef ref) async {
     await ref.read(sessionMemoryProvider).signOut();
-    await ref.read(firebaseConfigProvider.notifier).forget();
+    await ref.read(canteenBookProvider.notifier).deactivate();
     if (context.mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }

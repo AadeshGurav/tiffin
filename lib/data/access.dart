@@ -21,13 +21,9 @@ class SignedOut extends Access {
   const SignedOut();
 }
 
-/// Has an identity but no device record — first join, or after starting over.
+/// Has an identity but no device record in this canteen — first join, or after starting over.
 class NotJoined extends Access {
-  const NotJoined({required this.newCanteen});
-
-  /// Nobody owns this Firebase project yet: joining makes this phone the
-  /// first admin phone.
-  final bool newCanteen;
+  const NotJoined();
 }
 
 class PendingApproval extends Access {
@@ -52,10 +48,13 @@ class OnlineAccess extends Access {
   final OnlineAccount account;
 }
 
-/// Signed in with an online account the admin has turned off or removed.
+/// Signed in with an online account the admin has not approved, or has turned off.
 class OnlineRefused extends Access {
-  const OnlineRefused(this.email);
+  const OnlineRefused(this.email, {this.pending = false});
   final String email;
+
+  /// Asked to join and not yet approved, as opposed to turned off.
+  final bool pending;
 }
 
 class Device {
@@ -124,7 +123,6 @@ class AccessService {
   final _log = log('access');
 
   DocumentReference<Json> _device(String uid) => _store.doc(Col.devices, uid);
-  DocumentReference<Json> get _owner => _store.doc(Col.meta, 'owner');
 
   User? get user => _auth.currentUser;
 
@@ -134,46 +132,16 @@ class AccessService {
         return _watchOnline(u);
       });
 
-  Stream<Access> _watchDevice(String uid) {
-    late final StreamController<Access> out;
-    DocumentSnapshot<Json>? device;
-    DocumentSnapshot<Json>? owner;
-    final subs = <StreamSubscription<Object>>[];
-
-    void emit() {
-      if (device == null || owner == null) return;
-      if (!device!.exists) {
-        out.add(NotJoined(newCanteen: !owner!.exists));
-        return;
-      }
-      final d = Device.fromJson(Store.withId(device!));
-      out.add(switch (d.status) {
-        'approved' => ApprovedDevice(d),
-        'removed' => Removed(d),
-        _ => PendingApproval(d),
+  Stream<Access> _watchDevice(String uid) =>
+      _device(uid).snapshots().map((device) {
+        if (!device.exists) return const NotJoined();
+        final d = Device.fromJson(Store.withId(device));
+        return switch (d.status) {
+          'approved' => ApprovedDevice(d),
+          'removed' => Removed(d),
+          _ => PendingApproval(d),
+        };
       });
-    }
-
-    out = StreamController<Access>(
-      onListen: () {
-        subs
-          ..add(_device(uid).snapshots().listen((s) {
-            device = s;
-            emit();
-          }, onError: out.addError))
-          ..add(_owner.snapshots().listen((s) {
-            owner = s;
-            emit();
-          }, onError: out.addError));
-      },
-      onCancel: () async {
-        for (final s in subs) {
-          await s.cancel();
-        }
-      },
-    );
-    return out.stream;
-  }
 
   Stream<Access> _watchOnline(User u) =>
       _store.doc(Col.onlineUsers, u.uid).snapshots().map((s) {
@@ -181,7 +149,8 @@ class AccessService {
             s.exists ? OnlineAccount.fromJson(Store.withId(s)) : null;
         return account != null && account.isActive
             ? OnlineAccess(account)
-            : OnlineRefused(u.email ?? '');
+            : OnlineRefused(u.email ?? '',
+                pending: account == null || account.status == 'pending');
       });
 
   // ---- this phone ------------------------------------------------------
@@ -194,18 +163,12 @@ class AccessService {
       await _auth.signInAnonymously();
     } on FirebaseAuthException catch (e) {
       _log.warning('anonymous sign-in failed', e);
-      throw const ValidationException(ErrorCode.needsInternet);
-    }
-  }
-
-  /// Whether someone has already started a canteen in this project. Asks the
-  /// server: joining needs the network anyway, and a stale cached "no" would
-  /// offer to start a second canteen.
-  Future<bool> canteenExists() async {
-    try {
-      return (await _owner.get(const GetOptions(source: Source.server))).exists;
-    } on FirebaseException catch (e) {
-      throw mapFirebaseError(e);
+      // Only a network failure is "connect and retry"; a refusal (e.g. the
+      // Anonymous provider switched off) must not be reported as offline.
+      if (e.code == 'network-request-failed') {
+        throw const ValidationException(ErrorCode.needsInternet);
+      }
+      rethrow;
     }
   }
 
@@ -221,36 +184,6 @@ class AccessService {
         'requestedAt': DateTime.now().toUtc().toIso8601String(),
       });
     await _store.commit(b, 'devices.request');
-  }
-
-  /// First phone on a fresh project becomes its owner and first admin phone.
-  /// A transaction on purpose — it needs the network anyway, and two phones
-  /// racing to claim the same project must not both win.
-  Future<void> claimNewCanteen(String name) async {
-    await ensureIdentity();
-    final uid = _auth.currentUser!.uid;
-    final now = DateTime.now().toUtc().toIso8601String();
-    try {
-      await _store.db.runTransaction((tx) async {
-        final owner = await tx.get(_owner);
-        if (owner.exists) {
-          throw const ConflictException(ErrorCode.alreadySetUp);
-        }
-        tx
-          ..set(_owner, {'uid': uid, 'createdAt': now})
-          ..set(_device(uid), {
-            'name': name.trim(),
-            'status': 'approved',
-            'role': Role.admin.wire,
-            'platform': Platform.operatingSystem,
-            'requestedAt': now,
-            'approvedAt': now,
-          });
-      });
-      _log.warning('canteen_claimed uid=$uid');
-    } on FirebaseException catch (e) {
-      throw mapFirebaseError(e);
-    }
   }
 
   /// Forget this phone's identity and begin again from the setup screen.
@@ -284,17 +217,35 @@ class AccessService {
 
   // ---- online accounts --------------------------------------------------------
 
+  /// Signs in, and — for someone this canteen has not seen — asks to join as
+  /// a pending scanner. An inactive or pending account stays signed in so the
+  /// waiting screen can say so, rather than failing with a bare error.
   Future<OnlineAccount> signInOnline(String email, String password) async {
     final cred = await _auth.signInWithEmailAndPassword(
         email: email.trim(), password: password);
-    final row =
-        await _store.freshDoc(_store.doc(Col.onlineUsers, cred.user!.uid));
-    final account = row == null ? null : OnlineAccount.fromJson(row);
-    if (account == null || !account.isActive) {
-      await _auth.signOut();
-      throw const ForbiddenException(ErrorCode.permissionDenied);
-    }
-    return account;
+    return requestOnlineAccess(cred.user!);
+  }
+
+  /// The signed-in person's account in this canteen, creating the pending
+  /// join request if there is none yet.
+  Future<OnlineAccount> requestOnlineAccess(User user) async {
+    final ref = _store.doc(Col.onlineUsers, user.uid);
+    final row = await _store.freshDoc(ref);
+    if (row != null) return OnlineAccount.fromJson(row);
+    await _store.commit(
+        _store.batch()
+          ..set(ref, {
+            'email': user.email ?? '',
+            'role': Role.scanner.wire,
+            'status': 'pending',
+            'requestedAt': DateTime.now().toUtc().toIso8601String(),
+          }),
+        'onlineUsers.request');
+    return OnlineAccount(
+        uid: user.uid,
+        email: user.email ?? '',
+        role: Role.scanner,
+        status: 'pending');
   }
 
   Future<void> sendPasswordReset(String email) =>

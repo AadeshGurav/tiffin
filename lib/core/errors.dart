@@ -29,8 +29,8 @@ enum ErrorCode {
   deviceNotApproved,
   needsInternet,
   permissionDenied,
-  firebaseConfigUnreadable,
-  firebaseConfigWrongApp,
+  canteenNotFound,
+  signInRequired,
 
   // members
   memberNotFound,

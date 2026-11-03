@@ -20,7 +20,7 @@ Future<({Backend backend, FakeFirebaseFirestore db})> fakeBackend({
   if (db == null) SharedPreferences.setMockInitialValues({});
   db ??= FakeFirebaseFirestore();
   final backend = Backend(
-    Store(db),
+    Store(db, 'test-canteen'),
     await SharedPreferences.getInstance(),
     deviceRole: deviceRole,
     scratch: Directory.systemTemp.createTempSync('tiffin-test'),
