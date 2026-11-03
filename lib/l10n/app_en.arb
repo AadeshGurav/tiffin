@@ -1573,8 +1573,6 @@
       }
     }
   },
-  "createUseExisting": "I already have an account",
-  "createUseNew": "Create a new account",
   "createButton": "Create canteen",
   "switchCanteenButton": "Switch or join another canteen",
   "deviceSetupCanteen": "Canteen: {name}",

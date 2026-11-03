@@ -47,6 +47,13 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
       }
 
+      function ownerRestoring(uid) {
+        return realIdentity() && request.auth.uid == uid
+            && exists(canteen()) && get(canteen()).data.ownerUid == uid
+            && request.resource.data.status == 'active'
+            && request.resource.data.role == 'admin';
+      }
+
       // ---- access control -------------------------------------------------
 
       match /meta/settings {
@@ -83,8 +90,11 @@ service cloud.firestore {
                 && request.resource.data.status == 'active'
                 && request.resource.data.role == 'admin'
                 && !exists(canteen())
-                && getAfter(canteen()).data.ownerUid == request.auth.uid);
-        allow update, delete: if isAdmin();
+                && getAfter(canteen()).data.ownerUid == request.auth.uid)
+            || ownerRestoring(uid);
+        // The canteen's creator can always restore their own admin row.
+        allow update: if isAdmin() || ownerRestoring(uid);
+        allow delete: if isAdmin();
       }
 
       // ---- the canteen's records ------------------------------------------
