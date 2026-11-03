@@ -1,156 +1,170 @@
-# Graph Report - canteen-coupon-system  (2026-10-17)
+# Graph Report - canteen-coupon-system  (2026-11-03)
 
 ## Corpus Check
-- 216 files · ~122,016 words
+- 153 files · ~124,277 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 41 file(s) not represented in the graph (top: .xml 11, (none) 7, .plist 4)
+- Unclassified: 40 file(s) not represented in the graph (top: .xml 11, (none) 7, .plist 4)
 
 ## Summary
-- 2252 nodes · 3432 edges · 122 communities (105 shown, 17 thin omitted)
+- 2320 nodes · 3563 edges · 131 communities (113 shown, 18 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 24 edges (avg confidence: 0.82)
-- Token cost: 163,191 input · 0 output
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `6be9c2b8`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Backend Seam
-- Ledger Models
-- Motion & Sync State
-- Theme Palettes
-- Device Access Model
-- Devices & Expenses Screens
-- Meal Windows & Cache
-- Offline Account Auth
-- Backup & Restore
-- Feedback Widgets
-- Admin Data Screens
-- Setup & Appearance Screens
-- Firestore Store
-- Earlier ADRs (0001-0004)
-- Canteen Settings
-- Inventory Models
-- Member Picker
-- Firebase Architecture Docs
-- Kitchen Planning Services
-- Saved Logins
-- Member Model
-- Top-ups & Refunds
-- Notifications & Legacy Import
-- Firebase Config & Providers
-- Theme & Motion Tests
-- Ops Models
-- Kitchen Setup UI
-- Member Service
-- Menu Screen
-- Palette
-- Settings Config Screen
-- Settings
-- Nb Button
-- Scanner Screen
-- Xlsx Writer
-- Motion
-- Backup Screen
-- Nb Picker
-- Appearance
-- App Logo
-- Package
-- Oklch
-- Runnertests
-- Logging
-- Admin Dashboard
-- Firebase Config
-- Settings Row
-- Topup Screen
-- Menu
-- Errors
-- App Shell
-- Ingredients Screen
-- Ledger Test
-- Main
-- Login Screen
-- Providers
-- Report Service
-- Appearance Providers
-- Bill View
-- Menu Service
-- App Gate
-- Scan Service
-- Unit Field
-- Host Setup Screen
-- Settings Screen
-- Messages
-- Session Memory
-- User Service
-- Labels
-- Motion
-- Appearance Screen
-- Nb Text Field
-- Reports Screen
-- Nb Feedback
-- Recipes Screen
-- Theme Preview
-- Ingredient Service
-- Providers
-- Online Accounts Screen
-- Backup Test
-- Motion
-- Notice Screen
-- Fake Backend
-- Locale Store
-- Role
-- Refunds Screen
-- Topup History Screen
-- Typography
-- Setup Screens Test
-- L10N Parity Test
-- Appearance Providers
-- Credential Store Test
-- Config
-- Qr Service
-- Frosted Panel
-- Locale Providers
-- Access
-- Firebase Config Test
-- Mainactivity
-- Meal Type
-- Session Memory
-- Topup Screen
-- Bootstrap
-- Screen Awake
-- Settings Screen
-- Providers
-- Labels
-- Login Screen
-- Sentinels
-- Billing Service
-- 0005-Firebase-Offline-First
-- Prd
-- Prd
-- Settings Service
-- Claude
-- Readme
+- backend.dart
+- ledger.dart
+- _
+- app_theme.dart
+- access.dart
+- ../../app/providers.dart
+- cache_warmer.dart
+- auth_service.dart
+- backup_service.dart
+- _
+- members_screen.dart
+- device_setup_screen.dart
+- store.dart
+- ADR 0003 Member category and per-category menu entries
+- settings_service.dart
+- inventory.dart
+- member_picker.dart
+- Scan decision order (unknown, inactive, window, duplicate, balance)
+- ../../core/errors.dart
+- credential_store.dart
+- member.dart
+- topup_service.dart
+- notification_service.dart
+- providers.dart
+- theme_render_test.dart
+- ops.dart
+- ../../l10n/app_localizations.dart
+- member_service.dart
+- menu_screen.dart
+- palette.dart
+- settings_config_screen.dart
+- settings.dart
+- nb_button.dart
+- scanner_screen.dart
+- xlsx_writer.dart
+- shared_widgets/motion.dart
+- backup_screen.dart
+- nb_picker.dart
+- appearance.dart
+- app_logo.dart
+- rules.test.js
+- oklch.dart
+- AppDelegate
+- logging.dart
+- admin_dashboard.dart
+- dart:io
+- package:flutter/material.dart
+- topup_screen.dart
+- menu.dart
+- errors.dart
+- app_shell.dart
+- ingredients_screen.dart
+- ledger_test.dart
+- main.dart
+- login_screen.dart
+- ConsumerWidget
+- report_service.dart
+- appearance_providers.dart
+- bill_view.dart
+- menu_service.dart
+- app_gate.dart
+- scan_service.dart
+- unit_field.dart
+- host_setup_screen.dart
+- welcome_screen.dart
+- messages.dart
+- session_memory.dart
+- user_service.dart
+- labels.dart
+- State
+- appearance_screen.dart
+- nb_text_field.dart
+- package:flutter_riverpod/flutter_riverpod.dart
+- StatelessWidget
+- recipes_screen.dart
+- theme_preview.dart
+- backendProvider
+- build
+- ConsumerState
+- backup_test.dart
+- theme/motion.dart
+- List
+- fake_backend.dart
+- locale_store.dart
+- bool get
+- refunds_screen.dart
+- topup_history_screen.dart
+- String?
+- setup_screens_test.dart
+- l10n_parity_test.dart
+- build
+- credential_store_test.dart
+- _
+- dart:typed_data
+- open_backup_once.dart
+- locale_providers.dart
+- canteens.dart
+- ingredient_quick_add.dart
+- MainActivity.kt
+- meal_type.dart
+- purchase_schedule_service.dart
+- _ChargeTabState
+- canteen_book.dart
+- static const
+- canteenBookProvider
+- theme_catalog.dart
+- ADR 0001 Runtime theming and data portability
+- ADR 0005 Firebase offline-first, LAN host retired
+- sentinels.dart
+- BillingService
+- .tiffin backup (zip + data.json) and LegacyImport
+- member_entity (student/staff one data type)
+- Top-ups and PDF billing (cash/UPI)
+- expenses_screen.dart
+- Engineering standards
+- iOS launch screen assets note
+- clay.dart
+- clean.dart
+- package:flutter_test/flutter_test.dart
+- CI workflow (analyze-test, rules-test, build-apk, build-ios)
+- Theme Spec
+- neobrutal.dart
+- ADR 0002 Kitchen setup and numeric recipe quantities
+- ADR 0006 — Many canteens in one shared Firebase project
+- _ConfigFormState
 
 ## God Nodes (most connected - your core abstractions)
 1. `_` - 58 edges
 2. `backendProvider` - 55 edges
 3. `_` - 35 edges
-4. `_` - 30 edges
-5. `Store` - 20 edges
-6. `sessionProvider` - 17 edges
-7. `accessServiceProvider` - 11 edges
+4. `Store` - 20 edges
+5. `sessionProvider` - 17 edges
+6. `canteenBookProvider` - 13 edges
+7. `accessServiceProvider` - 13 edges
 8. `sessionMemoryProvider` - 10 edges
 9. `_` - 10 edges
 10. `ADR 0001 Runtime theming and data portability` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Runtime Firebase config import (FirebaseConfig)` --conceptually_related_to--> `Firebase setup per canteen`  [INFERRED]
-  docs/adr/0005-firebase-offline-first.md → README.md
 - `Moving a v2 LAN-host canteen across` --conceptually_related_to--> `.tiffin backup (zip + data.json) and LegacyImport`  [INFERRED]
   README.md → docs/adr/0005-firebase-offline-first.md
-- `Project layout (lib/app, core, domain, data, services, l10n, ui)` --conceptually_related_to--> `CacheWarmer and Store.cached`  [INFERRED]
-  README.md → docs/adr/0005-firebase-offline-first.md
-- `Words live in the UI, never in the data` --conceptually_related_to--> `l10n.yaml (AppText from app_en.arb)`  [INFERRED]
-  docs/adr/0005-firebase-offline-first.md → l10n.yaml
-- `CI workflow (analyze-test, rules-test, build-apk, build-ios)` --references--> `firestore.rules emulator tests`  [INFERRED]
-  .github/workflows/ci.yml → tool/rules-test/README.md
+- `Tiffin canteen coupon system (v3)` --references--> `Theme Spec`  [EXTRACTED]
+  README.md → docs/THEME_SPEC.md
+- `CI workflow (analyze-test, rules-test, build-apk, build-ios)` --conceptually_related_to--> `analysis_options.yaml strict lints`  [INFERRED]
+  .github/workflows/ci.yml → analysis_options.yaml
+- `CI workflow (analyze-test, rules-test, build-apk, build-ios)` --conceptually_related_to--> `dart_test.yaml tool tag`  [INFERRED]
+  .github/workflows/ci.yml → dart_test.yaml
+- `firestore.rules emulator tests` --references--> `firestore.rules security boundary`  [EXTRACTED]
+  tool/rules-test/README.md → README.md
 
 ## Import Cycles
 - None detected.
@@ -160,447 +174,479 @@
 - **Offline-first Firestore design** — docs_adr_0005_firebase_offline_first_write_batches, docs_adr_0005_firebase_offline_first_cache_warmer, docs_adr_0005_firebase_offline_first_duplicate_scan_id, firestore_rules [EXTRACTED 1.00]
 - **CI quality gates** — github_workflows_ci_pipeline, analysis_options_lints, dart_test_tool_tag, tool_rules_test_readme_rules_tests, l10n_yaml_config [INFERRED 0.85]
 
-## Communities (122 total, 17 thin omitted)
+## Communities (131 total, 18 thin omitted)
 
-### Community 0 - "Backend Seam"
+### Community 0 - "backend.dart"
 Cohesion: 0.02
 Nodes (87): addExpense, addManualPurchaseItem, addMenuEntry, adjustIngredientStock, adoptOnline, auth, backups, billing (+79 more)
 
-### Community 1 - "Ledger Models"
+### Community 1 - "ledger.dart"
 Cohesion: 0.04
 Nodes (50): amount, balancesAfter, breakfastUnits, brunchUnits, code, createdAt, createdBy, fromJson (+42 more)
 
-### Community 2 - "Motion & Sync State"
+### Community 2 - "_"
 Cohesion: 0.04
 Nodes (37): SyncState, MotionTokens, TiffinPalette, borderBase, borderBold, borderHair, chromeBlur, chromeOpacity (+29 more)
 
-### Community 3 - "Theme Palettes"
-Cohesion: 0.04
-Nodes (35): base, border, buildTiffinTheme, color, copyWith, motion, _NoTransitionBuilder, reduceTransparency (+27 more)
+### Community 3 - "app_theme.dart"
+Cohesion: 0.12
+Nodes (12): base, border, buildTiffinTheme, color, copyWith, motion, _NoTransitionBuilder, reduceTransparency (+4 more)
 
-### Community 4 - "Device Access Model"
+### Community 4 - "access.dart"
 Cohesion: 0.05
-Nodes (38): account, _app, approve, _auth, canteenExists, claimNewCanteen, code, createOnlineAccount (+30 more)
+Nodes (44): Access, account, _app, approve, ApprovedDevice, _auth, code, createOnlineAccount (+36 more)
 
-### Community 5 - "Devices & Expenses Screens"
-Cohesion: 0.08
-Nodes (26): Device, ProfitSummary, build, _expensesProvider, ExpensesScreen, _form, _stat, _summaryProvider (+18 more)
+### Community 5 - "../../app/providers.dart"
+Cohesion: 0.07
+Nodes (22): Device, OnlineAccount, _categoriesProvider, _form, device, email, onlineRefused, pending (+14 more)
 
-### Community 6 - "Meal Windows & Cache"
-Cohesion: 0.05
-Nodes (31): _asMinutes, contains, currentMealType, dayBounds, end, HhMm, hour, isAfter (+23 more)
+### Community 6 - "cache_warmer.dart"
+Cohesion: 0.11
+Nodes (14): CacheWarmer, hashCode, _log, online, operator, pending, _publish, start (+6 more)
 
-### Community 7 - "Offline Account Auth"
+### Community 7 - "auth_service.dart"
 Cohesion: 0.05
 Nodes (37): authenticate, _constantTimeEquals, createInitialAdmin, createSession, deleteSession, expiresAt, fromJson, hashPassword (+29 more)
 
-### Community 8 - "Backup & Restore"
+### Community 8 - "backup_service.dart"
 Cohesion: 0.05
 Nodes (34): appVersion, BackupContents, BackupService, _batchSize, collections, createdAt, dataEntry, _decrypt (+26 more)
 
-### Community 9 - "Feedback Widgets"
+### Community 9 - "_"
 Cohesion: 0.06
 Nodes (35): _, actionLabel, build, categories, duration, empty, _emptyCheck, EmptyQuips (+27 more)
 
-### Community 10 - "Admin Data Screens"
-Cohesion: 0.07
-Nodes (33): backendProvider, login, resumeWithToken, _exportBackup, _restore, _busy, _category, _className (+25 more)
+### Community 10 - "members_screen.dart"
+Cohesion: 0.10
+Nodes (20): _busy, _category, _className, createState, _delete, existing, _grace, _isEdit (+12 more)
 
-### Community 11 - "Setup & Appearance Screens"
-Cohesion: 0.07
-Nodes (26): build, _busy, ConnectFirebaseScreen, _ConnectFirebaseScreenState, createState, _error, _pick, _busy (+18 more)
+### Community 11 - "device_setup_screen.dart"
+Cohesion: 0.14
+Nodes (12): _busy, createState, dispose, _email, _error, _join, _name, _online (+4 more)
 
-### Community 12 - "Firestore Store"
-Cohesion: 0.06
-Nodes (32): batch, cached, cachedDoc, Col, commit, data, db, devices (+24 more)
+### Community 12 - "store.dart"
+Cohesion: 0.05
+Nodes (36): batch, cached, cachedDoc, canteenDoc, canteenId, Col, commit, data (+28 more)
 
-### Community 13 - "Earlier ADRs (0001-0004)"
-Cohesion: 0.06
-Nodes (10): ADR 0001 Runtime theming and data portability, ADR 0002 Kitchen setup and numeric recipe quantities, ADR 0003 Member category and per-category menu entries, ADR 0004 Ingredient inventory and alerts, Clay theme, Clean theme, Frost theme, Neobrutal theme (+2 more)
-
-### Community 14 - "Canteen Settings"
+### Community 14 - "settings_service.dart"
 Cohesion: 0.06
 Nodes (31): appearanceMode, appearanceMotion, appearanceTheme, appName, availableTimezones, changedFields, defaults, enforceAppearance (+23 more)
 
-### Community 15 - "Inventory Models"
+### Community 15 - "inventory.dart"
 Cohesion: 0.06
 Nodes (31): createdAt, date, dishName, formatQuantity, fromJson, id, ingredientId, ingredientName (+23 more)
 
-### Community 16 - "Member Picker"
+### Community 16 - "member_picker.dart"
 Cohesion: 0.06
 Nodes (30): _all, build, categories, category, className, contains, _createNew, createState (+22 more)
 
-### Community 17 - "Firebase Architecture Docs"
-Cohesion: 0.08
-Nodes (30): analysis_options.yaml strict lints, dart_test.yaml tool tag, Approved phones, offline accounts, optional online accounts, ADR 0005 Firebase offline-first, LAN host retired, CacheWarmer and Store.cached, Scan doc id {member}_{day}_{meal} create-only, Runtime Firebase config import (FirebaseConfig), Writes as WriteBatch (Store.commit), FieldValue.increment (+22 more)
+### Community 17 - "Scan decision order (unknown, inactive, window, duplicate, balance)"
+Cohesion: 0.13
+Nodes (16): Approved phones, offline accounts, optional online accounts, CacheWarmer and Store.cached, Scan doc id {member}_{day}_{meal} create-only, Runtime Firebase config import (FirebaseConfig), Writes as WriteBatch (Store.commit), FieldValue.increment, Grace allowance (via_grace), Menu planning, recipes, purchase schedule, inventory, Roles: admin, counter, scanner (+8 more)
 
-### Community 18 - "Kitchen Planning Services"
+### Community 18 - "../../core/errors.dart"
 Cohesion: 0.07
-Nodes (26): Store, add, _col, list, _log, _store, summary, addManual (+18 more)
+Nodes (29): Store, add, _col, ExpenseService, list, _log, _store, summary (+21 more)
 
-### Community 19 - "Saved Logins"
+### Community 19 - "credential_store.dart"
 Cohesion: 0.07
 Nodes (27): baseUrl, forgetEverything, forgetHost, forgetLogin, fromJson, hostId, invalidateToken, _key (+19 more)
 
-### Community 20 - "Member Model"
+### Community 20 - "member.dart"
 Cohesion: 0.07
 Nodes (27): balances, breakfast, brunch, category, className, createdAt, forMeal, fromJson (+19 more)
 
-### Community 21 - "Top-ups & Refunds"
+### Community 21 - "topup_service.dart"
 Cohesion: 0.08
 Nodes (22): _col, create, list, _log, RefundService, _rejectOverRefund, _settings, _store (+14 more)
 
-### Community 22 - "Notifications & Legacy Import"
-Cohesion: 0.07
-Nodes (21): Json, collections, _convert, LegacyData, LegacyImport, read, settings, _col (+13 more)
+### Community 22 - "notification_service.dart"
+Cohesion: 0.12
+Nodes (14): _col, dismiss, generateDue, _headcountOverrun, listFor, _lowStock, NotificationService, _prepReminders (+6 more)
 
-### Community 23 - "Firebase Config & Providers"
-Cohesion: 0.08
-Nodes (20): FirebaseConfig, app, backend, cacheWarmerProvider, config, db, _emulatorHost, FirebaseConfigController (+12 more)
+### Community 23 - "providers.dart"
+Cohesion: 0.09
+Nodes (18): app, backend, cacheWarmerProvider, canteen, db, _emulatorHost, Grant, onlineAccountsEnabledProvider (+10 more)
 
-### Community 24 - "Theme & Motion Tests"
+### Community 24 - "theme_render_test.dart"
 Cohesion: 0.09
 Nodes (11): main, render, size, main, resolve, bodyMin, expectContrast, main (+3 more)
 
-### Community 25 - "Ops Models"
+### Community 25 - "ops.dart"
 Cohesion: 0.07
 Nodes (27): amount, AppNotification, AppUser, category, createdAt, createdBy, date, description (+19 more)
 
-### Community 26 - "Kitchen Setup UI"
-Cohesion: 0.08
-Nodes (17): Ingredient, build, createState, dispose, _onTab, _tabs, _dateRow, _explainEmptyGenerate (+9 more)
+### Community 26 - "../../l10n/app_localizations.dart"
+Cohesion: 0.12
+Nodes (12): build, createState, dispose, _onTab, _tabs, build, _dateRow, _explainEmptyGenerate (+4 more)
 
-### Community 27 - "Member Service"
+### Community 27 - "member_service.dart"
 Cohesion: 0.07
 Nodes (26): balanceDelta, BulkFailure, BulkResult, _cleanCategory, _col, create, createBulk, created (+18 more)
 
-### Community 28 - "Menu Screen"
+### Community 28 - "menu_screen.dart"
 Cohesion: 0.09
 Nodes (23): build, _categoriesProvider, _cell, _dateOnly, day, end, entries, entryCountByDay (+15 more)
 
-### Community 29 - "Palette"
+### Community 29 - "palette.dart"
 Cohesion: 0.08
 Nodes (24): accent, accept, border, brightness, ink, inkMuted, isDark, on (+16 more)
 
-### Community 30 - "Settings Config Screen"
+### Community 30 - "settings_config_screen.dart"
 Cohesion: 0.09
-Nodes (23): _appName, _breakfastPrice, _brunchPrice, build, _busy, _ConfigForm, _ConfigFormState, createState (+15 more)
+Nodes (20): SettingsSnapshot, _appName, _breakfastPrice, _brunchPrice, _busy, createState, _graceEnabled, _graceUnits (+12 more)
 
-### Community 31 - "Settings"
+### Community 31 - "settings.dart"
 Cohesion: 0.08
 Nodes (25): appearanceMode, appearanceMotion, appearanceTheme, appName, breakfast, brunch, effectiveGrace, end (+17 more)
 
-### Community 32 - "Nb Button"
+### Community 32 - "nb_button.dart"
 Cohesion: 0.09
 Nodes (20): background, build, busy, foreground, icon, intensity, label, NbButton (+12 more)
 
-### Community 33 - "Scanner Screen"
+### Community 33 - "scanner_screen.dart"
 Cohesion: 0.09
-Nodes (21): ScanResult, _busy, _clear, color, _controller, createState, dispose, _errorMessage (+13 more)
+Nodes (20): ScanResult, _busy, _clear, color, _controller, createState, dispose, _errorMessage (+12 more)
 
-### Community 34 - "Xlsx Writer"
-Cohesion: 0.09
-Nodes (19): add, build, _columnName, _contentTypes, _escape, headers, name, _rootRels (+11 more)
+### Community 34 - "xlsx_writer.dart"
+Cohesion: 0.12
+Nodes (15): add, build, _columnName, _contentTypes, _escape, headers, name, _rootRels (+7 more)
 
-### Community 35 - "Motion"
+### Community 35 - "shared_widgets/motion.dart"
 Cohesion: 0.09
 Nodes (20): _animation, build, child, _controller, createState, curve, delay, dispose (+12 more)
 
-### Community 36 - "Backup Screen"
-Cohesion: 0.09
-Nodes (22): BackupManifest, backups, BackupScreen, _BackupScreenState, build, _busy, bytes, _confirm (+14 more)
+### Community 36 - "backup_screen.dart"
+Cohesion: 0.10
+Nodes (19): BackupManifest, backups, build, _busy, bytes, _confirm, count, createState (+11 more)
 
-### Community 37 - "Nb Picker"
-Cohesion: 0.09
-Nodes (22): build, child, createState, dispose, emptyHint, _filter, initState, label (+14 more)
+### Community 37 - "nb_picker.dart"
+Cohesion: 0.10
+Nodes (20): build, child, createState, dispose, emptyHint, _filter, initState, label (+12 more)
 
-### Community 38 - "Appearance"
+### Community 38 - "appearance.dart"
 Cohesion: 0.09
 Nodes (22): appName, brightness, copyWith, defaults, enforced, fromWire, hostId, isIdentified (+14 more)
 
-### Community 39 - "App Logo"
+### Community 39 - "app_logo.dart"
 Cohesion: 0.09
 Nodes (19): AppLogo, AppWordmark, border, borderWidth, build, CouponPainter, _couponPath, fill (+11 more)
 
-### Community 40 - "Package"
-Cohesion: 0.10
+### Community 40 - "rules.test.js"
+Cohesion: 0.09
 Nodes (15): ADR-0005, firebase, @firebase/rules-unit-testing, firebase-tools, description, devDependencies, firebase, @firebase/rules-unit-testing (+7 more)
 
-### Community 41 - "Oklch"
-Cohesion: 0.09
-Nodes (21): best, bestRatio, c, channel, contrastRatio, darken, darker, _encode (+13 more)
+### Community 41 - "oklch.dart"
+Cohesion: 0.05
+Nodes (38): _asMinutes, contains, currentMealType, dayBounds, end, HhMm, hour, isAfter (+30 more)
 
-### Community 42 - "Runnertests"
+### Community 42 - "AppDelegate"
 Cohesion: 0.11
 Nodes (6): Flutter, AppDelegate, SceneDelegate, RunnerTests, UIKit, XCTest
 
-### Community 43 - "Logging"
+### Community 43 - "logging.dart"
 Cohesion: 0.10
 Nodes (11): AppLogger, configure, _configured, dispose, _fileSink, _format, log, _logFile (+3 more)
 
-### Community 44 - "Admin Dashboard"
-Cohesion: 0.12
+### Community 44 - "admin_dashboard.dart"
+Cohesion: 0.14
 Nodes (4): _Dest, icon, label, tone
 
-### Community 45 - "Firebase Config"
-Cohesion: 0.10
-Nodes (18): _, androidPackage, clear, demo, FirebaseConfigStore, _fromGoogleServicesJson, fromJson, _fromPlist (+10 more)
+### Community 45 - "dart:io"
+Cohesion: 0.20
+Nodes (6): _android, demo, _ios, options, projectId, SharedProject
 
-### Community 46 - "Settings Row"
+### Community 46 - "package:flutter/material.dart"
 Cohesion: 0.11
-Nodes (15): BrandSplash, build, message, build, danger, icon, onTap, subtitle (+7 more)
+Nodes (14): BrandSplash, build, message, build, child, FrostedPanel, sheetBackground, t (+6 more)
 
-### Community 47 - "Topup Screen"
+### Community 47 - "topup_screen.dart"
 Cohesion: 0.11
-Nodes (16): PaymentMethod, SettingsSnapshot, _amount, _busy, _canSubmit, createState, label, _lunch (+8 more)
+Nodes (15): PaymentMethod, _amount, _busy, _canSubmit, createState, label, _lunch, _member (+7 more)
 
-### Community 48 - "Menu"
+### Community 48 - "menu.dart"
 Cohesion: 0.11
 Nodes (17): category, createdAt, createdBy, date, description, fromJson, headcount, id (+9 more)
 
-### Community 49 - "Errors"
-Cohesion: 0.15
+### Community 49 - "errors.dart"
+Cohesion: 0.14
 Nodes (13): AppException, args, AuthException, code, ConflictException, ErrorCode, ForbiddenException, InternalException (+5 more)
 
-### Community 50 - "App Shell"
+### Community 50 - "app_shell.dart"
 Cohesion: 0.12
 Nodes (13): notificationsProvider, syncStateProvider, build, SettingsScreen, actions, build, NbAppBar, _NotificationBell (+5 more)
 
-### Community 51 - "Ingredients Screen"
+### Community 51 - "ingredients_screen.dart"
 Cohesion: 0.12
 Nodes (17): _adjustStock, build, ingredientsProvider, IngredientsTab, lowAt, name, _num, ok (+9 more)
 
-### Community 52 - "Ledger Test"
+### Community 52 - "ledger_test.dart"
 Cohesion: 0.12
 Nodes (7): Backend, b, main, student, at, main, windows
 
-### Community 53 - "Main"
+### Community 53 - "main.dart"
 Cohesion: 0.12
 Nodes (8): crash, crashText, details, _FriendlyErrorWidget, main, prefs, priorOnError, text
 
-### Community 54 - "Login Screen"
-Cohesion: 0.12
-Nodes (14): _busy, _confirm, createState, dispose, _error, initialUsername, LoginScreen, _LoginScreenState (+6 more)
+### Community 54 - "login_screen.dart"
+Cohesion: 0.05
+Nodes (31): savedLoginsForHostProvider, sessionMemoryProvider, build, _busy, _confirm, createState, dispose, _error (+23 more)
 
-### Community 55 - "Providers"
-Cohesion: 0.18
-Nodes (16): accessServiceProvider, devicesProvider, sessionProvider, AdminDashboard, build, _MemberTile, build, PurchaseScheduleScreen (+8 more)
+### Community 55 - "ConsumerWidget"
+Cohesion: 0.21
+Nodes (13): accessServiceProvider, devicesProvider, logout, sessionProvider, AdminDashboard, build, _MemberTile, build (+5 more)
 
-### Community 56 - "Report Service"
-Cohesion: 0.12
-Nodes (13): ExpenseService, all, build, _expenses, fileName, label, _log, menu (+5 more)
+### Community 56 - "report_service.dart"
+Cohesion: 0.10
+Nodes (15): bootstrap, configure, getInstance, all, build, _expenses, fileName, label (+7 more)
 
-### Community 57 - "Appearance Providers"
+### Community 57 - "appearance_providers.dart"
 Cohesion: 0.14
 Nodes (14): AppearanceController, appearancePolicyProvider, appearanceStoreProvider, build, device, _save, setMode, setMotion (+6 more)
 
-### Community 58 - "Bill View"
+### Community 58 - "bill_view.dart"
 Cohesion: 0.12
 Nodes (13): Topup, Member, appName, billPdfFrom, BillView, build, doc, image (+5 more)
 
-### Community 59 - "Menu Service"
+### Community 59 - "menu_service.dart"
 Cohesion: 0.12
 Nodes (14): addEntry, _categories, createCategory, deleteCategory, deleteEntry, _entries, entryId, listCategories (+6 more)
 
-### Community 60 - "App Gate"
+### Community 60 - "app_gate.dart"
 Cohesion: 0.12
 Nodes (3): error, _Failed, onRetry
 
-### Community 61 - "Scan Service"
-Cohesion: 0.12
-Nodes (14): _freshOrNull, lockId, _log, _notifications, _platesCost, processScan, recentScans, reverseScan (+6 more)
+### Community 61 - "scan_service.dart"
+Cohesion: 0.08
+Nodes (21): Json, collections, _convert, LegacyData, LegacyImport, read, settings, _freshOrNull (+13 more)
 
-### Community 62 - "Unit Field"
-Cohesion: 0.13
+### Community 62 - "unit_field.dart"
+Cohesion: 0.14
 Nodes (13): build, createState, _custom, _customSentinel, dispose, _emit, initial, initState (+5 more)
 
-### Community 63 - "Host Setup Screen"
+### Community 63 - "host_setup_screen.dart"
 Cohesion: 0.14
-Nodes (13): build, _busy, _confirm, createState, dispose, _error, HostSetupScreen, _HostSetupScreenState (+5 more)
+Nodes (11): build, _busy, _confirm, createState, dispose, _error, _password, _revealed (+3 more)
 
-### Community 64 - "Settings Screen"
-Cohesion: 0.13
-Nodes (4): createState, dispose, _field, _group
+### Community 64 - "welcome_screen.dart"
+Cohesion: 0.08
+Nodes (21): _appleEnabled, build, _busy, createState, _error, _busy, canteens, _code (+13 more)
 
-### Community 65 - "Messages"
-Cohesion: 0.13
+### Community 65 - "messages.dart"
+Cohesion: 0.14
 Nodes (9): _appError, _authError, confirmWordMatches, errorText, _firestoreError, notificationText, reversalText, scanText (+1 more)
 
-### Community 66 - "Session Memory"
-Cohesion: 0.13
-Nodes (11): credentialStoreProvider, forgetEverything, forgetLogin, greeting, _log, _ref, remember, SessionMemory (+3 more)
+### Community 66 - "session_memory.dart"
+Cohesion: 0.12
+Nodes (13): credentialStoreProvider, forgetEverything, forgetLogin, greeting, _log, _ref, remember, savedHostsProvider (+5 more)
 
-### Community 67 - "User Service"
+### Community 67 - "user_service.dart"
 Cohesion: 0.13
 Nodes (12): AuthService, _auth, create, delete, list, _log, _requireFreeUsername, _store (+4 more)
 
-### Community 68 - "Labels"
-Cohesion: 0.13
-Nodes (14): mealLabel, mealWire, memberTypeLabel, money, number, paymentMethodLabel, paymentStatusLabel, roleLabel (+6 more)
+### Community 68 - "labels.dart"
+Cohesion: 0.11
+Nodes (16): AppTextLabels, mealLabel, mealWire, memberTypeLabel, money, number, paymentMethodLabel, paymentStatusLabel (+8 more)
 
-### Community 69 - "Motion"
+### Community 69 - "State"
 Cohesion: 0.17
-Nodes (12): KitchenSetupScreen, _KitchenSetupScreenState, _RecoverPasswordDialog, _RecoverPasswordDialogState, _ResetConfirmDialog, _ResetConfirmDialogState, _MemberPickerSheet, _MemberPickerSheetState (+4 more)
+Nodes (12): _RestoreConfirmDialog, _RestoreConfirmDialogState, KitchenSetupScreen, _KitchenSetupScreenState, _MemberPickerSheet, _MemberPickerSheetState, _DelayedBuilder, _DelayedBuilderState (+4 more)
 
-### Community 70 - "Appearance Screen"
+### Community 70 - "appearance_screen.dart"
 Cohesion: 0.13
 Nodes (10): appearance, _apply, _busy, createState, enabled, enforced, _LanguageSelector, _ModeSelector (+2 more)
 
-### Community 71 - "Nb Text Field"
+### Community 71 - "nb_text_field.dart"
 Cohesion: 0.13
 Nodes (12): autofocus, build, controller, errorText, formatters, hint, keyboardType, label (+4 more)
 
-### Community 72 - "Reports Screen"
+### Community 72 - "package:flutter_riverpod/flutter_riverpod.dart"
+Cohesion: 0.12
+Nodes (9): build, _busy, createState, _exportReport, _pickRange, _range, _sections, _share (+1 more)
+
+### Community 73 - "StatelessWidget"
 Cohesion: 0.15
-Nodes (10): build, _busy, createState, _exportReport, _pickRange, _range, ReportsScreen, _ReportsScreenState (+2 more)
+Nodes (12): _DayPanel, _MonthGrid, TopUpScreen, _UnitRow, _MessageOverlay, _ResultOverlay, _ReticleOverlay, NbMemberField (+4 more)
 
-### Community 73 - "Nb Feedback"
-Cohesion: 0.14
-Nodes (13): _DayPanel, _MonthGrid, TopUpScreen, _UnitRow, _MessageOverlay, _ResultOverlay, _ReticleOverlay, NbMemberField (+5 more)
-
-### Community 74 - "Recipes Screen"
-Cohesion: 0.16
+### Community 74 - "recipes_screen.dart"
+Cohesion: 0.18
 Nodes (12): allIngredients, build, dish, ingredients, _Line, lines, ok, _recipesProvider (+4 more)
 
-### Community 75 - "Theme Preview"
-Cohesion: 0.15
+### Community 75 - "theme_preview.dart"
+Cohesion: 0.17
 Nodes (9): brightness, build, enabled, id, _Miniature, onTap, selected, ThemePreviewCard (+1 more)
 
-### Community 76 - "Ingredient Service"
-Cohesion: 0.15
-Nodes (11): adjustStock, _col, create, delete, _get, IngredientService, list, _log (+3 more)
+### Community 76 - "backendProvider"
+Cohesion: 0.13
+Nodes (18): backendProvider, login, resumeWithToken, _restore, _credit, _showQr, build, MenuCategoriesScreen (+10 more)
 
-### Community 77 - "Providers"
-Cohesion: 0.23
-Nodes (13): AppGate, build, _SignedInGate, accessProvider, backendReadyProvider, build, firebaseAppProvider, grantProvider (+5 more)
+### Community 77 - "build"
+Cohesion: 0.26
+Nodes (12): AppGate, build, _SignedInGate, activeCanteenProvider, accessProvider, backendReadyProvider, build, firebaseAppProvider (+4 more)
 
-### Community 78 - "Online Accounts Screen"
+### Community 78 - "ConsumerState"
 Cohesion: 0.17
-Nodes (12): OnlineAccount, account, _add, _AddAccountDialog, _AddAccountDialogState, _busy, _create, createState (+4 more)
+Nodes (14): BackupScreen, _BackupScreenState, _MemberForm, _MemberFormState, ReportsScreen, _ReportsScreenState, HostSetupScreen, _HostSetupScreenState (+6 more)
 
-### Community 79 - "Backup Test"
+### Community 79 - "backup_test.dart"
 Cohesion: 0.15
 Nodes (10): b, db, dir, file, _legacyBackup, main, manifest, member (+2 more)
 
-### Community 80 - "Motion"
+### Community 80 - "theme/motion.dart"
 Cohesion: 0.17
 Nodes (9): curve, entrance, fast, isStill, normal, page, pressScale, staggerStep (+1 more)
 
-### Community 81 - "Notice Screen"
-Cohesion: 0.18
-Nodes (6): actions, body, build, icon, NoticeScreen, title
+### Community 81 - "List"
+Cohesion: 0.11
+Nodes (13): actions, body, build, icon, NoticeScreen, title, build, danger (+5 more)
 
-### Community 82 - "Fake Backend"
-Cohesion: 0.18
+### Community 82 - "fake_backend.dart"
+Cohesion: 0.20
 Nodes (6): Role, backend, db, deviceRole, login, signInAdmin
 
-### Community 83 - "Locale Store"
-Cohesion: 0.18
+### Community 83 - "locale_store.dart"
+Cohesion: 0.17
 Nodes (8): code, fromCode, _key, locale, nativeName, _prefs, read, write
 
-### Community 84 - "Role"
+### Community 84 - "bool get"
 Cohesion: 0.20
 Nodes (7): canBill, canScan, canUsePurchaseSchedule, fromWire, isAdmin, scanner, wire
 
-### Community 85 - "Refunds Screen"
-Cohesion: 0.31
-Nodes (8): menuCategoriesProvider, build, _CategoryField, _activeMembersProvider, build, _form, _refundsProvider, RefundsScreen
+### Community 85 - "refunds_screen.dart"
+Cohesion: 0.48
+Nodes (5): _activeMembersProvider, build, _form, _refundsProvider, RefundsScreen
 
-### Community 86 - "Topup History Screen"
-Cohesion: 0.24
+### Community 86 - "topup_history_screen.dart"
+Cohesion: 0.22
 Nodes (8): backend, build, _confirmReverse, _History, _historyProvider, members, TopupHistoryTab, topups
 
-### Community 87 - "Typography"
+### Community 87 - "String?"
 Cohesion: 0.20
 Nodes (7): body, display, family, heading, label, onColor, scale
 
-### Community 88 - "Setup Screens Test"
+### Community 88 - "setup_screens_test.dart"
 Cohesion: 0.20
 Nodes (3): device, main, screens
 
-### Community 89 - "L10N Parity Test"
-Cohesion: 0.20
+### Community 89 - "l10n_parity_test.dart"
+Cohesion: 0.18
 Nodes (5): en, keys, load, main, variables
 
-### Community 90 - "Appearance Providers"
+### Community 90 - "build"
 Cohesion: 0.39
 Nodes (9): appearanceIsEnforcedProvider, deviceAppearanceProvider, effectiveAppearanceProvider, hostGreetingProvider, deviceLocaleProvider, build, TiffinApp, AppearanceScreen (+1 more)
 
-### Community 91 - "Credential Store Test"
+### Community 91 - "credential_store_test.dart"
 Cohesion: 0.22
 Nodes (6): CredentialStore, backing, channel, main, signIn, store
 
-### Community 92 - "Config"
+### Community 92 - "_"
 Cohesion: 0.22
 Nodes (6): _, AppConfig, appVersion, logFileBackupCount, logFileMaxBytes, notificationPollInterval
 
-### Community 93 - "Qr Service"
+### Community 93 - "dart:typed_data"
 Cohesion: 0.25
 Nodes (4): generateCodeId, QrService, _random, renderPng
 
-### Community 94 - "Frosted Panel"
-Cohesion: 0.25
-Nodes (5): build, child, FrostedPanel, sheetBackground, t
+### Community 94 - "open_backup_once.dart"
+Cohesion: 0.20
+Nodes (7): startFromBackupProvider, build, child, createState, initState, OpenBackupOnce, _OpenBackupOnceState
 
-### Community 95 - "Locale Providers"
+### Community 95 - "locale_providers.dart"
 Cohesion: 0.29
 Nodes (5): build, LocaleController, localeStoreProvider, AppLocaleId, LocaleStore
 
-### Community 96 - "Access"
-Cohesion: 0.25
-Nodes (8): Access, ApprovedDevice, NotJoined, OnlineAccess, OnlineRefused, PendingApproval, Removed, SignedOut
+### Community 96 - "canteens.dart"
+Cohesion: 0.10
+Nodes (16): addSignInMethod, _alphabet, _auth, CanteenService, codeLength, _db, _log, nameOf (+8 more)
 
-### Community 97 - "Firebase Config Test"
-Cohesion: 0.29
-Nodes (3): googleServices, main, version
+### Community 97 - "ingredient_quick_add.dart"
+Cohesion: 0.15
+Nodes (8): Ingredient, done, made, name, ok, showQuickAddIngredient, t, unit
 
-### Community 99 - "Meal Type"
+### Community 99 - "meal_type.dart"
 Cohesion: 0.29
 Nodes (4): brunch, fromWire, MealType, wire
 
-### Community 100 - "Session Memory"
+### Community 100 - "purchase_schedule_service.dart"
+Cohesion: 0.17
+Nodes (9): addManual, _col, deleteItem, generate, list, PurchaseScheduleService, _roundUp2, _store (+1 more)
+
+### Community 101 - "_ChargeTabState"
+Cohesion: 0.22
+Nodes (8): menuCategoriesProvider, build, _CategoryField, MembersScreen, SettingsConfigScreen, build, _ChargeTab, _ChargeTabState
+
+### Community 102 - "canteen_book.dart"
+Cohesion: 0.09
+Nodes (20): sharedPreferencesProvider, activate, active, activeCode, build, CanteenBook, CanteenBookState, canteens (+12 more)
+
+### Community 104 - "canteenBookProvider"
+Cohesion: 0.15
+Nodes (17): canteenBookProvider, canteenServiceProvider, identityChangesProvider, identityProvider, build, DeviceSetupScreen, _DeviceSetupScreenState, _go (+9 more)
+
+### Community 105 - "theme_catalog.dart"
+Cohesion: 0.20
+Nodes (5): defaultTheme, fromWire, TiffinThemeId, tokens, wire
+
+### Community 107 - "ADR 0005 Firebase offline-first, LAN host retired"
+Cohesion: 0.33
+Nodes (8): ADR 0005 Firebase offline-first, LAN host retired, PRD — Tiffin unit-based canteen coupon system, PRD §13 LAN host architecture (superseded), PRD §14 Neobrutalism visual theme, PRD §15 Firebase offline-first (v3), Dependabot weekly pub and actions updates, pubspec.yaml dependencies (firebase, riverpod, mobile_scanner), Tiffin canteen coupon system (v3)
+
+### Community 113 - "expenses_screen.dart"
+Cohesion: 0.33
+Nodes (7): ProfitSummary, build, _expensesProvider, ExpensesScreen, _form, _stat, _summaryProvider
+
+### Community 122 - "clay.dart"
+Cohesion: 0.25
+Nodes (6): buildClay, dark, ground, ink, _light, palette
+
+### Community 123 - "clean.dart"
+Cohesion: 0.25
+Nodes (6): buildClean, dark, ground, ink, _light, palette
+
+### Community 124 - "package:flutter_test/flutter_test.dart"
+Cohesion: 0.25
+Nodes (4): main, open, read, writer
+
+### Community 125 - "CI workflow (analyze-test, rules-test, build-apk, build-ios)"
+Cohesion: 0.38
+Nodes (6): analysis_options.yaml strict lints, dart_test.yaml tool tag, CI workflow (analyze-test, rules-test, build-apk, build-ios), l10n.yaml (AppText from app_en.arb), Makefile setup/run/test commands, firestore.rules emulator tests
+
+### Community 126 - "Theme Spec"
 Cohesion: 0.29
-Nodes (7): savedHostsProvider, sessionMemoryProvider, initState, _submit, _SavedLoginsCard, _confirmReset, _confirmSignOut
+Nodes (6): Clay theme, Clean theme, Frost theme, Neobrutal theme, OKLCH palettes, Theme Spec
 
-### Community 101 - "Topup Screen"
+### Community 127 - "neobrutal.dart"
+Cohesion: 0.29
+Nodes (6): buildNeobrutal, dark, ground, ink, _light, palette
+
+### Community 129 - "ADR 0006 — Many canteens in one shared Firebase project"
 Cohesion: 0.33
-Nodes (5): MembersScreen, SettingsConfigScreen, build, _ChargeTab, _ChargeTabState
+Nodes (5): ADR 0006 — Many canteens in one shared Firebase project, Consequences, Context, Decision, Rejected
 
-### Community 102 - "Bootstrap"
-Cohesion: 0.33
-Nodes (4): bootstrap, configure, getInstance, sharedPreferencesProvider
-
-### Community 104 - "Settings Screen"
+### Community 130 - "_ConfigFormState"
 Cohesion: 0.50
-Nodes (4): firebaseConfigProvider, build, build, _confirmChangeProject
-
-### Community 105 - "Providers"
-Cohesion: 0.67
-Nodes (4): onlineAccountsEnabledProvider, onlineAccountsProvider, build, OnlineAccountsScreen
-
-### Community 107 - "Login Screen"
-Cohesion: 0.67
-Nodes (3): savedLoginsForHostProvider, build, _SavedLogins
+Nodes (4): build, _ConfigForm, _ConfigFormState, _timezonesProvider
 
 ## Knowledge Gaps
-- **1425 isolated node(s):** `XCTest`, `error`, `onRetry`, `appearancePolicyProvider`, `device` (+1420 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1639 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **1463 isolated node(s):** `XCTest`, `error`, `onRetry`, `appearancePolicyProvider`, `device` (+1458 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1682 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `_` connect `Feedback Widgets` to `Nb Button`, `Devices & Expenses Screens`, `Bootstrap`, `Nb Feedback`, `Setup & Appearance Screens`, `Theme Preview`, `Settings Row`, `Motion`, `Notice Screen`, `Kitchen Planning Services`, `Typography`, `Kitchen Setup UI`, `Qr Service`, `Frosted Panel`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **What connects `XCTest`, `error`, `onRetry` to the rest of the system?**
-  _1425 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Backend Seam` be split into smaller, more focused modules?**
-  _Cohesion score 0.0196078431372549 - nodes in this community are weakly interconnected._
-- **Why does `Store` connect `Kitchen Planning Services` to `Backend Seam`, `User Service`, `Device Access Model`, `Meal Windows & Cache`, `Offline Account Auth`, `Backup & Restore`, `Menu Service`, `Firestore Store`, `Ingredient Service`, `Canteen Settings`, `Top-ups & Refunds`, `Notifications & Legacy Import`, `Firebase Config & Providers`, `Report Service`, `Member Service`, `Scan Service`?**
+- **Why does `_` connect `_` to `welcome_screen.dart`, `nb_button.dart`, `ingredient_quick_add.dart`, `package:flutter_riverpod/flutter_riverpod.dart`, `StatelessWidget`, `package:flutter/material.dart`, `theme/motion.dart`, `List`, `../../core/errors.dart`, `String?`, `report_service.dart`, `../../l10n/app_localizations.dart`, `dart:typed_data`, `open_backup_once.dart`?**
   _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Should `Ledger Models` be split into smaller, more focused modules?**
+- **What connects `XCTest`, `error`, `onRetry` to the rest of the system?**
+  _1463 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `backend.dart` be split into smaller, more focused modules?**
+  _Cohesion score 0.0196078431372549 - nodes in this community are weakly interconnected._
+- **Why does `Store` connect `../../core/errors.dart` to `backend.dart`, `user_service.dart`, `access.dart`, `purchase_schedule_service.dart`, `cache_warmer.dart`, `auth_service.dart`, `backup_service.dart`, `menu_service.dart`, `store.dart`, `settings_service.dart`, `topup_service.dart`, `notification_service.dart`, `providers.dart`, `report_service.dart`, `member_service.dart`, `scan_service.dart`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+- **Should `ledger.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.037037037037037035 - nodes in this community are weakly interconnected._
-- **Why does `_` connect `Firebase Config` to `Xlsx Writer`, `Meal Type`, `Screen Awake`, `Logging`, `Kitchen Planning Services`, `Fake Backend`, `Locale Store`, `Firebase Config & Providers`, `Theme & Motion Tests`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Should `Motion & Sync State` be split into smaller, more focused modules?**
+- **Why does `_` connect `_` to `nb_button.dart`, `package:flutter/material.dart`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Should `_` be split into smaller, more focused modules?**
   _Cohesion score 0.04421768707482993 - nodes in this community are weakly interconnected._
