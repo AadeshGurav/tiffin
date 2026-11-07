@@ -57,8 +57,9 @@ Its config is built into the app (`lib/app/shared_project.dart`); a canteen is
 created inside the app in one tap.
 
 1. **Authentication ▸ Sign-in method:** enable **Anonymous** (how phones join),
-   **Email/Password**, and the providers you offer: **Google**, **Microsoft**
-   (needs an Azure app registration) and optionally **Apple** (paid Apple
+   **Email/Password**, and the providers you offer: **Google**, and optionally
+   **Microsoft** (needs an Azure app registration; build with
+   `--dart-define=MICROSOFT_SIGN_IN=true`) and **Apple** (paid Apple
    Developer account + the Sign in with Apple capability; build with
    `--dart-define=APPLE_SIGN_IN=true`). Phone sign-in is not built yet.
 2. **Firestore Database ▸ Create database** with the ID **`(default)`**,

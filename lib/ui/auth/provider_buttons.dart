@@ -14,6 +14,10 @@ import '../theme/tokens.dart';
 /// the button appears only in builds made with `--dart-define=APPLE_SIGN_IN=true`.
 const _appleEnabled = bool.fromEnvironment('APPLE_SIGN_IN');
 
+/// Microsoft sign-in needs an Azure app registration wired into Firebase Auth,
+/// so it is opt-in too: `--dart-define=MICROSOFT_SIGN_IN=true`.
+const _microsoftEnabled = bool.fromEnvironment('MICROSOFT_SIGN_IN');
+
 /// "Continue with Google / Microsoft / Apple". [onSignedIn] runs once the
 /// person is signed in, so each screen decides what happens next.
 class ProviderButtons extends ConsumerStatefulWidget {
@@ -57,12 +61,14 @@ class _ProviderButtonsState extends ConsumerState<ProviderButtons> {
           icon: Icons.g_mobiledata,
           onPressed: _busy ? null : () => _go(SignInProvider.google),
         ),
-        const SizedBox(height: NbSpace.sm),
-        NbButton.secondary(
-          label: text.signInMicrosoft,
-          icon: Icons.window,
-          onPressed: _busy ? null : () => _go(SignInProvider.microsoft),
-        ),
+        if (_microsoftEnabled) ...[
+          const SizedBox(height: NbSpace.sm),
+          NbButton.secondary(
+            label: text.signInMicrosoft,
+            icon: Icons.window,
+            onPressed: _busy ? null : () => _go(SignInProvider.microsoft),
+          ),
+        ],
         if (_appleEnabled && Platform.isIOS) ...[
           const SizedBox(height: NbSpace.sm),
           NbButton.secondary(
