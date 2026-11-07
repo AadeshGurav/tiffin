@@ -10,24 +10,24 @@ import 'package:firebase_core/firebase_core.dart';
 /// `flutterfire configure`, which would also add the google-services Gradle
 /// plugin and native files this build does not need.
 abstract final class SharedProject {
-  static const projectId = 'tiffin-dd7c6';
+  static const projectId = 'lunch-time-712b2';
 
   static FirebaseOptions get options => Platform.isIOS ? _ios : _android;
 
   static const _android = FirebaseOptions(
-    apiKey: 'AIzaSyBysEFhizIQ6NXfP-I8g8RVp1AgRxm7NQU',
-    appId: '1:534390191839:android:ccec29f02558be97499b6a',
-    messagingSenderId: '534390191839',
+    apiKey: 'AIzaSyB61uwiUQ6paVJUqZ8neqOvM5rpumZLb5k',
+    appId: '1:657326771347:android:cc8e08deb8030385581166',
+    messagingSenderId: '657326771347',
     projectId: projectId,
-    storageBucket: 'tiffin-dd7c6.firebasestorage.app',
+    storageBucket: 'lunch-time-712b2.firebasestorage.app',
   );
 
   static const _ios = FirebaseOptions(
-    apiKey: 'AIzaSyDXLwis4oz6Hk4ucR86lJN6nH-Ry3Bdy8M',
-    appId: '1:534390191839:ios:e409cf33ab5365c5499b6a',
-    messagingSenderId: '534390191839',
+    apiKey: 'AIzaSyCljik7wfmIcrXt1BrUS2_WY6CasiYPUrM',
+    appId: '1:657326771347:ios:495f449b00b32646581166',
+    messagingSenderId: '657326771347',
     projectId: projectId,
-    storageBucket: 'tiffin-dd7c6.firebasestorage.app',
+    storageBucket: 'lunch-time-712b2.firebasestorage.app',
     iosBundleId: 'com.aadeshgurav.canteencoupon',
   );
 
