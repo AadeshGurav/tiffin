@@ -65,7 +65,7 @@ created inside the app in one tap.
    Standard edition (a database named `default` is not found by the app).
 3. **Deploy the rules and indexes:**
    ```bash
-   firebase deploy --only firestore --project tiffin-dd7c6
+   firebase deploy --only firestore --project lunch-time-712b2
    ```
 4. **Apps:** the Android (`com.canteen.canteen_coupon`) and iOS
    (`com.aadeshgurav.canteencoupon`) apps must exist in the project; their
