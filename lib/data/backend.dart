@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config.dart';
 import '../core/errors.dart';
+import '../core/logging.dart';
 import '../core/meal_type.dart';
 import '../core/role.dart';
 import '../core/sentinels.dart';
@@ -44,6 +45,8 @@ export '../services/settings_service.dart' show SettingsPatch;
 /// for its clients. With every phone talking to Firestore directly there is
 /// one, so this is a class, not an interface.
 class Backend {
+  static final _log = log('backend');
+
   /// [deviceRole] caps which offline accounts may sign in here: null for a
   /// phone signed in with an online account, where the account's own role
   /// applies and there is no offline sign-in. [scratch] is where a legacy
@@ -131,6 +134,7 @@ class Backend {
 
   Future<void> logout() async {
     final token = _session?.token;
+    _log.info('logout username=${_session?.username ?? _online?.username}');
     _session = null;
     _online = null;
     if (token != null) await auth.deleteSession(token);

@@ -66,6 +66,7 @@ class CanteenService {
       await _auth.signInWithEmailAndPassword(
           email: address, password: password);
     }
+    _log.info('online_sign_in provider=password');
   }
 
   /// Signs in with a provider. A phone's anonymous identity is *upgraded* in
@@ -80,6 +81,7 @@ class CanteenService {
       } else {
         await _auth.signInWithProvider(provider);
       }
+      _log.info('online_sign_in provider=${which.name}');
     } on FirebaseAuthException catch (e) {
       if (_wasCancelled(e.code)) return;
       // Google/Microsoft with an address that already has a password account.

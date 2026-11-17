@@ -94,11 +94,21 @@ class AuthService {
   Future<Json?> authenticate(String username, String password) async {
     final rows = await _store.cached(
         _store.col(Col.users).where('username', isEqualTo: username.trim()));
-    if (rows.isEmpty) return null;
+    // The caller never learns which check failed (above), but the log does:
+    // "why can't she sign in" is the commonest question an admin will ask.
+    final name = username.trim();
+    if (rows.isEmpty) return _loginFailed(name, 'unknown_user');
     final user = rows.first;
-    if (user['status'] != 'active') return null;
-    if (!verifyPassword(password, user['passwordHash'] as String)) return null;
+    if (user['status'] != 'active') return _loginFailed(name, 'inactive');
+    if (!verifyPassword(password, user['passwordHash'] as String)) {
+      return _loginFailed(name, 'wrong_password');
+    }
     return user;
+  }
+
+  Null _loginFailed(String username, String reason) {
+    _log.warning('login_failed username=$username reason=$reason');
+    return null;
   }
 
   Future<LocalSession> createSession(Json user) async {

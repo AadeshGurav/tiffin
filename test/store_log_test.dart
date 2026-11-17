@@ -22,4 +22,23 @@ void main() {
     expect(writes, hasLength(1));
     expect(writes.single, matches(RegExp(r'ms=\d+$')));
   });
+
+  test('a failed sign-in logs why, while the caller learns nothing', () async {
+    final lines = <String>[];
+    Logger.root.level = Level.ALL;
+    final sub = Logger.root.onRecord.listen((r) => lines.add(r.message));
+    addTearDown(sub.cancel);
+
+    final fake = await fakeBackend();
+    await signInAdmin(fake.backend);
+    await fake.backend.logout();
+
+    expect(lines, contains('logout username=admin'));
+    expect(fake.backend.login('admin', 'wrong'), throwsA(anything));
+    await Future<void>.delayed(Duration.zero);
+    expect(
+        lines, contains('login_failed username=admin reason=wrong_password'));
+    expect(lines.where((l) => l.contains('wrong')).join(),
+        isNot(contains('wrongpw')));
+  });
 }
