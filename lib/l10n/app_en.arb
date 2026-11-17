@@ -1633,5 +1633,8 @@
   "errorCodeCopied": "Code copied",
   "settingsScreenShareLogTitle": "Share log with IT",
   "settingsScreenShareLogSubtitle": "Sends this phone's log file so IT can find a problem by its code.",
-  "shareLogEmpty": "There is no log on this phone yet."
+  "shareLogEmpty": "There is no log on this phone yet.",
+  "scannerCameraDeniedTitle": "CAMERA OFF",
+  "scannerCameraDenied": "Tiffin can't use the camera. Allow camera access for Tiffin in the phone's settings, then open this screen again.",
+  "scannerCameraUnavailable": "The camera could not start. Close this screen and open it again."
 }

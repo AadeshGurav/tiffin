@@ -125,7 +125,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(controller: _controller, onDetect: _onDetect),
+          MobileScanner(
+            controller: _controller,
+            onDetect: _onDetect,
+            errorBuilder: (context, error) => _CameraProblem(error: error),
+          ),
           const _ReticleOverlay(),
           // Offline is fine for scanning, but the operator should know the
           // scans are being kept on this phone until the network is back.
@@ -334,6 +338,61 @@ class _MessageOverlay extends StatelessWidget {
                 foreground: color,
                 onPressed: onNext,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Why the camera isn't showing, in words — the library's default is a bare
+/// icon. A refused permission is something the operator fixes in Settings, so
+/// it carries no code; anything else is logged under one.
+class _CameraProblem extends StatefulWidget {
+  const _CameraProblem({required this.error});
+
+  final MobileScannerException error;
+
+  @override
+  State<_CameraProblem> createState() => _CameraProblemState();
+}
+
+class _CameraProblemState extends State<_CameraProblem> {
+  ErrorNotice? _notice;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Once: a rebuild must not mint a second code for one failure.
+    final text = AppText.of(context);
+    final denied =
+        widget.error.errorCode == MobileScannerErrorCode.permissionDenied;
+    _notice ??= denied
+        ? ErrorNotice(text.scannerCameraDenied)
+        : ErrorNotice(text.scannerCameraUnavailable,
+            ref: reportError(widget.error, null,
+                context: 'camera failed to start'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Container(
+      color: t.color.warn,
+      padding: const EdgeInsets.all(NbSpace.lg),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.videocam_off, size: 72, color: t.color.onWarn),
+              const SizedBox(height: NbSpace.md),
+              Text(AppText.of(context).scannerCameraDeniedTitle,
+                  textAlign: TextAlign.center,
+                  style: t.text.heading.copyWith(color: t.color.onWarn)),
+              const SizedBox(height: NbSpace.md),
+              ErrorNoticeView(_notice!, color: t.color.onWarn, centered: true),
             ],
           ),
         ),

@@ -738,5 +738,8 @@
   "errorCodeCopied": "कोड कॉपी झाला",
   "settingsScreenShareLogTitle": "लॉग IT ला पाठवा",
   "settingsScreenShareLogSubtitle": "या फोनची लॉग फाइल पाठवते, म्हणजे IT कोडवरून अडचण शोधू शकेल.",
-  "shareLogEmpty": "या फोनवर अजून लॉग नाही."
+  "shareLogEmpty": "या फोनवर अजून लॉग नाही.",
+  "scannerCameraDeniedTitle": "कॅमेरा बंद आहे",
+  "scannerCameraDenied": "Tiffin ला कॅमेरा वापरता येत नाही. फोनच्या सेटिंगमध्ये Tiffin ला कॅमेऱ्याची परवानगी द्या, मग ही स्क्रीन पुन्हा उघडा.",
+  "scannerCameraUnavailable": "कॅमेरा सुरू होऊ शकला नाही. ही स्क्रीन बंद करून पुन्हा उघडा."
 }

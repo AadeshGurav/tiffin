@@ -311,8 +311,9 @@ this device**. Clear any of it from **Appearance ▸ Saved logins**.
 - **"That file is for a different app"** on the connect screen — the config
   file was downloaded for another app id. Add an app with the id the message
   names in the Firebase console and download its file.
-- **Camera won't open** — grant the camera permission in the phone's settings
-  for Tiffin.
+- **Camera won't open** — the scanner says "Camera off". Grant the camera
+  permission for Tiffin in the phone's settings, then open the screen again. If
+  it shows a code instead, send it to IT (see above).
 - **A message ends with "Code: XXXX-XXXX"** — something unexpected went wrong
   that you can't fix. Try again once. If it keeps happening, tap **Copy code**,
   then **Settings ▸ Share log with IT**, and send both to IT. Messages without
