@@ -9,6 +9,7 @@ import 'app/appearance_providers.dart';
 import 'app/bootstrap.dart';
 import 'app/locale_providers.dart';
 import 'core/error_report.dart';
+import 'core/lifecycle_log.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_store.dart';
 import 'ui/theme/app_theme.dart';
@@ -18,6 +19,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final prefs = await bootstrap();
+  WidgetsBinding.instance.addObserver(LifecycleLogger());
 
   // Nothing fails silently (PRD §7, CLAUDE.md §8): every uncaught framework or
   // async error is logged under a reference code and shown as a readable panel

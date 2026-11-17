@@ -1,5 +1,6 @@
 # Errors — for developers and for whoever troubleshoots
 
+The log file and how to read it: [LOGGING.md](LOGGING.md).
 Why and what was rejected: [ADR 0007](adr/0007-plain-traceable-errors.md).
 What the operator sees: [User Guide §4](USER_GUIDE.md#4-if-somethings-wrong).
 

@@ -1,4 +1,4 @@
-.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons android-keys firebase
+.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons android-keys firebase logs
 
 # Zero-touch setup (CLAUDE.md §9): one command from a fresh checkout to a
 # runnable app. The shared Firebase project is built in
@@ -19,6 +19,11 @@ android-keys:
 #   make firebase ANDROID=~/Downloads/google-services.json IOS=~/Downloads/GoogleService-Info.plist
 firebase:
 	python3 tool/use_firebase.py $(if $(ANDROID),ANDROID=$(ANDROID)) $(if $(IOS),IOS=$(IOS))
+
+# Copy the app's log file from the running simulator / Android device to
+# ./app.log (docs/LOGGING.md). `make logs OUT=x.log` to pick the name.
+logs:
+	tool/pull_logs.sh $(OUT)
 
 # Regenerate the AppText classes after editing an .arb file.
 l10n:
