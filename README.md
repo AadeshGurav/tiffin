@@ -77,6 +77,19 @@ created inside the app in one tap.
    Play Integrity) and enforce it for Firestore and Auth, and watch usage —
    everyone's canteen shares your quota. This is not wired in the app yet.
 
+**Switching to a different Firebase project** (another account, or a fresh
+project for testing): download `google-services.json` (Android app) and
+`GoogleService-Info.plist` (iOS app) from Project settings ▸ Your apps, then
+
+```bash
+make firebase ANDROID=~/Downloads/google-services.json IOS=~/Downloads/GoogleService-Info.plist
+```
+
+It rewrites `lib/app/shared_project.dart`, `.firebaserc` and the iOS sign-in
+URL scheme, then prints the one-time steps above to repeat in the new project.
+Rebuild afterwards. Each project has its own canteens and accounts: nothing
+moves across (use Backup & restore for that).
+
 **Without a real project**, run against the local emulators:
 
 ```bash
