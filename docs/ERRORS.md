@@ -27,6 +27,17 @@ What the operator sees: [User Guide §4](USER_GUIDE.md#4-if-somethings-wrong).
 Anything without its own sentence (an unknown Firebase code, a bug) is
 unexpected: it gets a reference code and a full log entry automatically.
 
+## Where a failure surfaces
+
+| Failure | What the person sees |
+| --- | --- |
+| Caught in a screen | `describeError` → inline notice, snackbar or `ErrorPanel` |
+| Uncaught async error (no screen owns it) | A snackbar with the code (`showUncaughtError`) |
+| Widget build error | The friendly panel, with the code as selectable text |
+| `bootstrap()` throws | A plain last-resort screen with the code |
+
+Error panels scroll, so the code and Retry stay reachable at large text sizes.
+
 ## Finding a failure by code (operator / IT)
 
 1. The person reads out or sends the code (`K7F2-9QX` style) shown under the

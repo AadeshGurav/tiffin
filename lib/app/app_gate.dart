@@ -37,6 +37,7 @@ class AppGate extends ConsumerWidget {
     if (app.hasError) {
       return _Failed(
           error: app.error!,
+          stack: app.stackTrace,
           onRetry: () => ref.invalidate(firebaseAppProvider));
     }
     if (!app.hasValue) return BrandSplash(message: text.splashPreparing);
@@ -45,7 +46,9 @@ class AppGate extends ConsumerWidget {
     final access = ref.watch(accessProvider);
     if (access.hasError) {
       return _Failed(
-          error: access.error!, onRetry: () => ref.invalidate(accessProvider));
+          error: access.error!,
+          stack: access.stackTrace,
+          onRetry: () => ref.invalidate(accessProvider));
     }
     return switch (access.asData?.value) {
       null => BrandSplash(message: text.splashPreparing),
@@ -70,6 +73,7 @@ class _SignedInGate extends ConsumerWidget {
     if (ready.hasError) {
       return _Failed(
           error: ready.error!,
+          stack: ready.stackTrace,
           onRetry: () => ref.invalidate(cacheWarmerProvider));
     }
     if (!ready.hasValue) return BrandSplash(message: text.splashSyncing);
@@ -99,18 +103,19 @@ class _SignedInGate extends ConsumerWidget {
 }
 
 class _Failed extends StatelessWidget {
-  const _Failed({required this.error, required this.onRetry});
+  const _Failed({required this.error, this.stack, required this.onRetry});
 
   final Object error;
+  final StackTrace? stack;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) => Scaffold(
         body: SafeArea(
           child: Center(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: ErrorPanel(error: error, onRetry: onRetry),
+              child: ErrorPanel(error: error, stack: stack, onRetry: onRetry),
             ),
           ),
         ),

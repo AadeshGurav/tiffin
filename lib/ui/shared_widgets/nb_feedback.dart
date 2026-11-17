@@ -54,9 +54,11 @@ class AsyncView<T> extends StatelessWidget {
       child: value.when(
         loading: () =>
             NbLoading(key: const ValueKey('loading'), label: loadingLabel),
+        // Scrollable: at large text sizes the code and Retry must stay
+        // reachable rather than run off the bottom of a small screen.
         error: (error, stack) => Center(
           key: const ValueKey('error'),
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(NbSpace.lg),
             child: ErrorPanel(error: error, stack: stack, onRetry: onRetry),
           ),
@@ -322,16 +324,32 @@ Future<void> copyErrorCode(BuildContext context, String ref) async {
   }
 }
 
+/// The app-wide messenger, so a failure with no screen to blame (an uncaught
+/// async error) can still be put in front of the person.
+final rootMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+/// Tells the person that something unexpected failed, with its reference
+/// code, when no handler of ours caught it. Quiet if the app has no UI yet.
+void showUncaughtError(String ref) {
+  final context = rootMessengerKey.currentContext;
+  final messenger = rootMessengerKey.currentState;
+  if (context == null || messenger == null || !context.mounted) return;
+  showNbSnack(context, AppText.of(context).errInternal,
+      ok: false, ref: ref, messenger: messenger);
+}
+
 /// A short-lived confirmation/error line (Peak-End Rule, CLAUDE.md §11.2).
+/// [messenger] is only for callers whose [context] sits above the screens.
 void showNbSnack(
   BuildContext context,
   String message, {
   bool ok = true,
   Duration duration = const Duration(seconds: 3),
   String? ref,
+  ScaffoldMessengerState? messenger,
 }) {
   final t = context.tokens;
-  final messenger = ScaffoldMessenger.maybeOf(context);
+  messenger ??= ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
   messenger
     ..clearSnackBars()

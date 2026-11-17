@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app_gate.dart';
 import 'app/appearance_providers.dart';
@@ -12,13 +13,21 @@ import 'core/error_report.dart';
 import 'core/lifecycle_log.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_store.dart';
+import 'ui/shared_widgets/nb_feedback.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/theme/tokens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final prefs = await bootstrap();
+  final SharedPreferences prefs;
+  try {
+    prefs = await bootstrap();
+  } catch (e, st) {
+    // Nothing is set up to render with, so this is the last-resort screen.
+    runApp(_StartupFailed(ref: reportError(e, st, context: 'startup failed')));
+    return;
+  }
   WidgetsBinding.instance.addObserver(LifecycleLogger());
 
   // Nothing fails silently (PRD §7, CLAUDE.md §8): every uncaught framework or
@@ -37,7 +46,9 @@ Future<void> main() async {
   ErrorWidget.builder =
       (details) => _FriendlyErrorWidget(details: details, text: crashText);
   PlatformDispatcher.instance.onError = (error, stack) {
-    reportError(error, stack, context: 'uncaught async error');
+    final ref = reportError(error, stack, context: 'uncaught async error');
+    // No screen owns this failure, so say so rather than fail invisibly.
+    showUncaughtError(ref);
     return true;
   };
 
@@ -71,6 +82,7 @@ class TiffinApp extends ConsumerWidget {
     return MaterialApp(
       onGenerateTitle: (context) => appName ?? AppText.of(context).appTitle,
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootMessengerKey,
       theme: themeFor(Brightness.light),
       darkTheme: themeFor(Brightness.dark),
       themeMode: appearance.mode,
@@ -140,6 +152,45 @@ class _FriendlyErrorWidget extends StatelessWidget {
                   textAlign: TextAlign.center, style: labelStyle),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when startup itself fails, before any theme, locale setting or
+/// provider exists. Plain Material on purpose: it must not depend on anything
+/// that could be what broke.
+class _StartupFailed extends StatelessWidget {
+  const _StartupFailed({required this.ref});
+
+  final String ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final device = PlatformDispatcher.instance.locale.languageCode;
+    final text = lookupAppText(AppText.supportedLocales.firstWhere(
+        (l) => l.languageCode == device,
+        orElse: () => const Locale('en')));
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(NbSpace.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48),
+                  const SizedBox(height: NbSpace.md),
+                  Text(text.errInternal, textAlign: TextAlign.center),
+                  const SizedBox(height: NbSpace.sm),
+                  SelectableText(text.errorCodeLabel(ref)),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
