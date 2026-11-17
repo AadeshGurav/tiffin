@@ -28,6 +28,10 @@ without logging them; one showed `'$e'` to the user.
   on the *formatted* text, so traces are covered.
 - **IT can get the log.** Settings ▸ Share log with IT opens the share sheet
   with `logs/app.log` (adds the `share_plus` dependency).
+- **No failure is invisible.** An uncaught async error shows a snackbar with
+  its code; a failing startup shows a plain last-resort screen with a code; a
+  camera that won't start says why. Error panels scroll so the code stays
+  reachable at large text sizes.
 - **Guarded by tests.** `test/error_handling_test.dart` fails on interpolated
   exception text in UI, on `errorText` used outside `describeError`, and on any
   `catch` that neither logs nor rethrows.
