@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 500" width="1040" height="500" role="img" aria-labelledby="scan-flow-title scan-flow-desc" font-family="Geist, 'Helvetica Neue', Arial, sans-serif">
+<title id="scan-flow-title">Five checks, one answer in a glance</title>
+<desc id="scan-flow-desc">A scanned QR code passes five checks in order — known code, active member, meal time, first scan this meal, balance — then is accepted; any failure is rejected with a plain reason.</desc>
+<defs><marker id="scan-flow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="#4f5d75"/></marker><marker id="scan-flow-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="#bf4520"/></marker></defs>
+<rect width="1040" height="500" fill="#f5f5f5"/>
+<text x="40" y="40" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1.6" fill="#bf4520">THE SCAN, IN ONE GLANCE</text>
+<text x="40" y="76" font-family="'Instrument Serif', Georgia, serif" font-size="30" fill="#2d3142">Five checks, one answer in a glance</text>
+<path d="M136,172 L164,172" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#scan-flow-a)"/>
+<path d="M284,172 L312,172" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#scan-flow-a)"/>
+<path d="M432,172 L460,172" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#scan-flow-a)"/>
+<path d="M580,172 L608,172" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#scan-flow-a)"/>
+<path d="M728,172 L756,172" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#scan-flow-a)"/>
+<path d="M876,172 L904,172" fill="none" stroke="#bf4520" stroke-width="1.4" marker-end="url(#scan-flow-c)"/>
+<path d="M224,212 L224,292" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#scan-flow-a)"/>
+<path d="M372,212 L372,292" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#scan-flow-a)"/>
+<path d="M520,212 L520,292" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#scan-flow-a)"/>
+<path d="M668,212 L668,292" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#scan-flow-a)"/>
+<path d="M816,212 L816,292" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#scan-flow-a)"/>
+<rect x="16" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="16" y="132" width="120" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="76" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Scan QR</text>
+<text x="76" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">camera</text>
+<rect x="164" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="164" y="132" width="120" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="224" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Known code?</text>
+<text x="224" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">QR → member</text>
+<rect x="312" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="312" y="132" width="120" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="372" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Member active?</text>
+<text x="372" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">not deactivated</text>
+<rect x="460" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="460" y="132" width="120" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="520" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">In meal time?</text>
+<text x="520" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">per Settings</text>
+<rect x="608" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="608" y="132" width="120" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="668" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Once per meal?</text>
+<text x="668" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">one scan per day</text>
+<rect x="756" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="756" y="132" width="120" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="816" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Balance left?</text>
+<text x="816" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">units + grace</text>
+<rect x="904" y="132" width="120" height="80" fill="#f5f5f5"/>
+<rect x="904" y="132" width="120" height="80" rx="6" fill="#f5e3de" stroke="#bf4520" stroke-width="1.2"/>
+<text x="964" y="170" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Accept</text>
+<text x="964" y="186" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">−1 unit · logged</text>
+<rect x="164" y="292" width="712" height="64" fill="#f5f5f5"/>
+<rect x="164" y="292" width="712" height="64" rx="6" fill="#ececec" stroke="#4f5d75" stroke-width="1.2"/>
+<text x="520" y="322" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Reject — with a plain, specific reason</text>
+<text x="520" y="338" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">shown in the operator's language · never a generic error</text>
+<rect x="240" y="247" width="43" height="15" fill="#f5f5f5"/><text x="246" y="258" text-anchor="start" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="9.5" letter-spacing=".8" fill="#5a6580">FAILS</text>
+<text x="16" y="404" text-anchor="start" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="15" fill="#4f5d75">Offline? The same checks run on the phone's last-synced balance.</text><text x="16" y="423.5" text-anchor="start" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="15" fill="#4f5d75">If two phones serve one meal, the server keeps the first and returns the unit.</text>
+<circle r="4.5" fill="#bf4520" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" path="M76,172 L964,172" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.02;0.5;1"/><animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="discrete" keyTimes="0;0.02;0.5" values="0;1;0"/></circle>
+<circle r="4.5" fill="#2d3142" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" path="M76,172 L512,172 Q520,172 520,180 L520,292" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.55;0.95;1"/><animate attributeName="opacity" dur="8s" repeatCount="indefinite" calcMode="discrete" keyTimes="0;0.55;0.95" values="0;1;0"/></circle>
+<line x1="40" x2="1000" y1="456" y2="456" stroke="#bfc0c0"/>
+<line x1="40" x2="68" y1="478" y2="478" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#scan-flow-a)"/>
+<text x="76" y="482" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Passes</text>
+<line x1="141.2" x2="169.2" y1="478" y2="478" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4"/>
+<text x="177.2" y="482" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Fails</text>
+<circle cx="242.2" cy="478" r="4.5" fill="#bf4520"/>
+<text x="256.2" y="482" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Accepted scan</text>
+<rect x="364.8" y="471" width="20" height="14" rx="3" fill="#f5e3de" stroke="#bf4520"/>
+<text x="392.8" y="482" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Outcome</text>
+</svg>

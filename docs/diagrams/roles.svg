@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" width="960" height="580" role="img" aria-labelledby="roles-title roles-desc" font-family="Geist, 'Helvetica Neue', Arial, sans-serif">
+<title id="roles-title">Three roles, one canteen</title>
+<desc id="roles-desc">A canteen has admin, counter and scanner roles with narrowing permissions; students and staff are scanned records, not logins.</desc>
+<defs><marker id="roles-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="#4f5d75"/></marker><marker id="roles-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="#bf4520"/></marker></defs>
+<rect width="960" height="580" fill="#f5f5f5"/>
+<text x="40" y="40" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1.6" fill="#bf4520">WHO CAN DO WHAT</text>
+<text x="40" y="76" font-family="'Instrument Serif', Georgia, serif" font-size="30" fill="#2d3142">Three roles, one canteen</text>
+<path d="M420,176 L420,216 Q420,224 412,224 L180,224 Q172,224 172,232 L172,272" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#roles-a)"/>
+<path d="M480,176 L480,272" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#roles-a)"/>
+<path d="M540,176 L540,216 Q540,224 548,224 L780,224 Q788,224 788,232 L788,272" fill="none" stroke="#4f5d75" stroke-width="1.4" marker-end="url(#roles-a)"/>
+<path d="M480,408 L480,456" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#roles-a)"/>
+<path d="M788,408 L788,456" fill="none" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#roles-a)"/>
+<rect x="360" y="112" width="240" height="64" fill="#f5f5f5"/>
+<rect x="360" y="112" width="240" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="480" y="142" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">A canteen</text>
+<text x="480" y="158" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">canteens/{code}</text>
+<rect x="40" y="272" width="264" height="136" fill="#f5f5f5"/>
+<rect x="40" y="272" width="264" height="136" rx="6" fill="#f5e3de" stroke="#bf4520" stroke-width="1.2"/>
+<text x="172" y="324" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Admin</text>
+<text x="172" y="340" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">Everything</text>
+<text x="172" y="354" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">members · menu · kitchen · refunds</text>
+<text x="172" y="368" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">reports · users · phones</text>
+<rect x="348" y="272" width="264" height="136" fill="#f5f5f5"/>
+<rect x="348" y="272" width="264" height="136" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="480" y="324" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Counter</text>
+<text x="480" y="340" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">Scan</text>
+<text x="480" y="354" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">top-up &amp; bill</text>
+<text x="480" y="368" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">shared purchase schedule</text>
+<rect x="656" y="272" width="264" height="136" fill="#f5f5f5"/>
+<rect x="656" y="272" width="264" height="136" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="788" y="331" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Scanner</text>
+<text x="788" y="347" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">Scan only</text>
+<text x="788" y="361" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">nothing else</text>
+<rect x="348" y="456" width="572" height="56" fill="#f5f5f5"/>
+<rect x="348" y="456" width="572" height="56" rx="6" fill="#f5f5f5" stroke="#5a6580" stroke-width="1.2" stroke-dasharray="5,4"/>
+<text x="634" y="482" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2d3142">Students &amp; staff</text>
+<text x="634" y="498" text-anchor="middle" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#4f5d75">records, not logins · permanent QR · units per meal</text>
+<rect x="490" y="425" width="36.8" height="15" fill="#f5f5f5"/><text x="496" y="436" text-anchor="start" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="9.5" letter-spacing=".8" fill="#5a6580">SCAN</text>
+<rect x="798" y="425" width="36.8" height="15" fill="#f5f5f5"/><text x="804" y="436" text-anchor="start" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="9.5" letter-spacing=".8" fill="#5a6580">SCAN</text>
+<text x="40" y="124" text-anchor="start" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="15" fill="#4f5d75">Each phone is approved with</text><text x="40" y="143.5" text-anchor="start" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="15" fill="#4f5d75">the narrowest role it needs;</text><text x="40" y="163" text-anchor="start" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="15" fill="#4f5d75">that role caps who can sign in on it.</text>
+<circle r="4.5" fill="#bf4520" opacity="0"><animateMotion dur="6s" repeatCount="indefinite" path="M420,176 L420,216 Q420,224 412,224 L180,224 Q172,224 172,232 L172,272" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.05;0.25;1"/><animate attributeName="opacity" dur="6s" repeatCount="indefinite" calcMode="discrete" keyTimes="0;0.05;0.25" values="0;1;0"/></circle>
+<circle r="4.5" fill="#bf4520" opacity="0"><animateMotion dur="6s" repeatCount="indefinite" path="M480,176 L480,272" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.17;0.37;1"/><animate attributeName="opacity" dur="6s" repeatCount="indefinite" calcMode="discrete" keyTimes="0;0.17;0.37" values="0;1;0"/></circle>
+<circle r="4.5" fill="#bf4520" opacity="0"><animateMotion dur="6s" repeatCount="indefinite" path="M540,176 L540,216 Q540,224 548,224 L780,224 Q788,224 788,232 L788,272" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.29;0.49;1"/><animate attributeName="opacity" dur="6s" repeatCount="indefinite" calcMode="discrete" keyTimes="0;0.29;0.49" values="0;1;0"/></circle>
+<line x1="40" x2="920" y1="536" y2="536" stroke="#bfc0c0"/>
+<rect x="40" y="551" width="20" height="14" rx="3" fill="#f5e3de" stroke="#bf4520"/>
+<text x="68" y="562" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Full control</text>
+<rect x="170.4" y="551" width="20" height="14" rx="3" fill="#fff" stroke="#2d3142"/>
+<text x="198.4" y="562" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Limited role</text>
+<rect x="300.8" y="551" width="20" height="14" rx="3" fill="#f5f5f5" stroke="#5a6580"/>
+<text x="328.8" y="562" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Not a login</text>
+<line x1="425.0" x2="453.0" y1="558" y2="558" stroke="#4f5d75" stroke-width="1.4" stroke-dasharray="5,4"/>
+<text x="461.0" y="562" font-family="'Geist Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#5a6580">Is scanned</text>
+</svg>

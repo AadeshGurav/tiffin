@@ -20,7 +20,8 @@ when the connection returns. There is no host phone and no LAN server.
 - **Three languages.** English, Hindi and Marathi, chosen per phone — scan
   verdicts, errors, notifications, the bill and the spreadsheet included.
 
-The full product spec is in [`docs/PRD.md`](docs/PRD.md) (§5–§8 business rules,
+Start at the [documentation index](docs/README.md) (leadership overview,
+developer guide, user guide). The full product spec is in [`docs/PRD.md`](docs/PRD.md) (§5–§8 business rules,
 §15 architecture). Why things are the way they are, with the alternatives that
 were rejected: [`docs/adr/`](docs/adr/). Day-to-day use:
 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md). Themes:

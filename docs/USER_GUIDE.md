@@ -14,6 +14,8 @@ The app speaks **English, हिन्दी and मराठी** — each phon
 
 ## 1. Roles
 
+![Roles: admin, counter, scanner](diagrams/roles.svg)
+
 | Role | Who | Can do |
 |---|---|---|
 | **Admin** | The contractor | Everything: members, top-ups & billing, top-up history & reversal, QR codes, menu planning, kitchen setup (ingredients + recipes), purchase schedule, expenses, refunds, settings, scan reversal, accounts, phones. |
@@ -102,6 +104,8 @@ asked. While the scan screen is open the phone stays awake.
 ## 3. Daily use
 
 ### 3.1 Scan (counter / scanner / admin)
+
+![The scan: five checks, then accept or reject](diagrams/scan-flow.svg)
 
 Open **Scan**, point at the QR. The verdict fills the screen:
 
