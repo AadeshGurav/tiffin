@@ -43,4 +43,14 @@ void main() {
     expect(File('${logFile().path}.1').existsSync(), isTrue);
     expect(logFile().lengthSync(), lessThan(AppConfig.logFileMaxBytes));
   });
+
+  test('an unusable log directory falls back to console-only', () async {
+    final blocker = File('${dir.path}/blocker')..writeAsStringSync('x');
+    AppLogger.resetForTest();
+    await AppLogger.configure(
+        toFile: true, directory: Directory(blocker.path), console: false);
+
+    expect(AppLogger.logFilePath, isNull);
+    log('scan').info('still works'); // must not throw
+  });
 }

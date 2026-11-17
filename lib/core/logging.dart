@@ -52,8 +52,16 @@ class AppLogger {
     });
 
     if (toFile) {
-      await _openFile(directory ?? await getApplicationDocumentsDirectory());
-      _append(sessionHeader());
+      try {
+        await _openFile(directory ?? await getApplicationDocumentsDirectory());
+        _append(sessionHeader());
+      } catch (e) {
+        // A phone with no writable log directory must still start: fall back
+        // to console-only and say so there.
+        _logFile = null;
+        // ignore: avoid_print
+        print('log file unavailable, logging to console only: $e');
+      }
     }
   }
 
