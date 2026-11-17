@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../core/config.dart';
+import '../core/logging.dart';
 import '../core/role.dart';
 import '../data/access.dart';
 import '../data/backend.dart';
@@ -204,10 +205,16 @@ final notificationsProvider =
     yield const [];
     return;
   }
+  var failing = false;
   while (true) {
     try {
       yield await backend.listNotifications();
-    } catch (_) {
+      failing = false;
+    } catch (e, st) {
+      // Once per streak: this retries every poll, so a lasting fault must not
+      // fill the log.
+      if (!failing) log('notifications').warning('poll failing', e, st);
+      failing = true;
       yield const [];
     }
     await Future<void>.delayed(AppConfig.notificationPollInterval);

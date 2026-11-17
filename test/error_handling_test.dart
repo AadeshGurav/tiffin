@@ -169,13 +169,7 @@ void main() {
     // Catch sites that neither log nor rethrow, per file. Reviewed; shrinks
     // as each is classified (keep and log / narrow / remove) and must end
     // empty. A count lower than listed fails too, so the list cannot go stale.
-    const silentCatchAllowList = <String, int>{
-      'lib/ui/admin/topup_screen.dart': 1,
-      'lib/app/credential_store.dart': 1,
-      'lib/app/providers.dart': 1,
-      'lib/app/canteen_book.dart': 1,
-      'lib/services/settings_service.dart': 1,
-    };
+    const silentCatchAllowList = <String, int>{};
 
     test('no catch swallows an error without logging or rethrowing', () {
       final handled = RegExp(r'log|reportError|describeError|rethrow|throw',

@@ -48,7 +48,8 @@ class SettingsService {
   Future<Json?> _freshOrNull() async {
     try {
       return await _store.freshDoc(_ref);
-    } catch (_) {
+    } catch (e) {
+      _log.warning('settings not synced yet, using defaults', e);
       return null; // offline and never synced: the defaults are the answer
     }
   }

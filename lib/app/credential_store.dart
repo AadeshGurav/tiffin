@@ -143,7 +143,10 @@ class CredentialStore {
         try {
           hosts.add(SavedHost.fromJson(
               jsonDecode(entry.value) as Map<String, dynamic>));
-        } catch (_) {/* skip the bad one, keep the rest */}
+        } catch (e) {
+          // Type only: the error text can quote the stored credentials.
+          _log.warning('skipping one unreadable saved host (${e.runtimeType})');
+        }
       }
       hosts.sort((a, b) => b.lastUsed.compareTo(a.lastUsed));
       return hosts;

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/logging.dart';
 import 'bootstrap.dart';
 
 /// A canteen this phone has joined or created.
@@ -57,7 +58,8 @@ class CanteenBook extends Notifier<CanteenBookState> {
         canteens: canteens,
         activeCode: canteens.any((c) => c.code == active) ? active : null,
       );
-    } catch (_) {
+    } catch (e) {
+      log('canteen_book').warning('saved canteen list is unreadable', e);
       return const CanteenBookState(); // corrupt entry: start at Welcome
     }
   }

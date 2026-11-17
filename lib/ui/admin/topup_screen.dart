@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../core/logging.dart';
 import '../../domain/ledger.dart';
 import '../../domain/member.dart';
 import '../../domain/settings.dart';
@@ -27,6 +28,8 @@ final _settingsProvider = FutureProvider.autoDispose<SettingsSnapshot>(
 /// Top-up & billing (PRD §6.3). Two tabs: **Charge** takes a payment, **History**
 /// lists past top-ups and reverses them. History used to be its own dashboard
 /// tile — it's the same subject, so it's a tab here now.
+final _log = log('topup');
+
 class TopUpScreen extends StatelessWidget {
   const TopUpScreen({super.key});
 
@@ -107,7 +110,10 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
       try {
         upiQr = Uint8List.fromList(
             await ref.read(backendProvider).topupUpiQrPng(topup.id));
-      } catch (_) {/* fall through — show without the QR */}
+      } catch (e, st) {
+        // The bill is still useful without the QR, so carry on.
+        _log.warning('showing the bill without its UPI QR', e, st);
+      }
     }
     if (!mounted) return;
     final t = context.tokens;
