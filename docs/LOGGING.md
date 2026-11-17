@@ -40,6 +40,14 @@ awk '/=== session start/{n++} n==3' app.log   # the third launch only
 A gap followed by a new `session start` with no `lifecycle paused/detached`
 before it means the app was killed or crashed.
 
+## What gets logged for free
+
+Every Firestore write goes through `Store.commit`, which logs it by name:
+`wrote menu.add ms=84`, `queued scan.record (offline, will sync)`, later
+`synced …`, or `WARNING server rejected …`. Grep `wrote|queued|synced|rejected`
+to see exactly what a phone did to the data and whether it reached the server.
+Services add their own business lines (`created member_id=…`) on top.
+
 ## Behaviour
 
 - **Levels:** debug/profile builds log everything (`ALL`); release logs `INFO`

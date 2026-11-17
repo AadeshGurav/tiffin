@@ -121,12 +121,18 @@ class Store {
     String what, {
     void Function(Object error)? onRejected,
   }) async {
+    final started = Stopwatch()..start();
     final ack = batch.commit();
+    if (!online) _log.info('queued $what (offline, will sync)');
     if (online) {
       try {
         await ack.timeout(serverWait);
+        // The one line that shows every write the app makes, whichever
+        // service made it, and how long the server took.
+        _log.info('wrote $what ms=${started.elapsedMilliseconds}');
         return;
       } on TimeoutException {
+        _log.info('queued $what (server slow, will sync)');
         // Queued; it will sync. Fall through to watching it in the background.
       } on FirebaseException catch (e) {
         _log.warning('server rejected $what', e);
@@ -135,7 +141,7 @@ class Store {
     }
     // Still observed, so a rejection that arrives long after the screen moved
     // on is logged and reported rather than lost.
-    unawaited(ack.then((_) => _log.fine('synced $what'), onError: (Object e) {
+    unawaited(ack.then((_) => _log.info('synced $what'), onError: (Object e) {
       _log.warning('server rejected $what after sync', e);
       onRejected?.call(e);
     }));
