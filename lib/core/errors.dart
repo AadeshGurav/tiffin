@@ -71,6 +71,9 @@ enum ErrorCode {
   purchaseItemNotFound,
   expenseAmountNegative,
 
+  // typed numbers
+  numberInvalid,
+
   // settings
   settingsNegative,
   settingsBadTimezone,

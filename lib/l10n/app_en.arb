@@ -1636,5 +1636,6 @@
   "shareLogEmpty": "There is no log on this phone yet.",
   "scannerCameraDeniedTitle": "CAMERA OFF",
   "scannerCameraDenied": "Tiffin can't use the camera. Allow camera access for Tiffin in the phone's settings, then open this screen again.",
-  "scannerCameraUnavailable": "The camera could not start. Close this screen and open it again."
+  "scannerCameraUnavailable": "The camera could not start. Close this screen and open it again.",
+  "errNumberInvalid": "That isn't a valid number. Check what you typed and try again."
 }

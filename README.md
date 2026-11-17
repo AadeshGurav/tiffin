@@ -47,7 +47,7 @@ make rules-test # firestore.rules on the Firestore emulator (Node + Java 17+)
 
 Re-run `make l10n` after editing `lib/l10n/*.arb`. `app_en.arb` is the
 template; every message with placeholders carries a description for
-translators, and `test/l10n_parity_test.dart` fails on missing, unused or
+translators, and `test/l10n/l10n_parity_test.dart` fails on missing, unused or
 untranslated keys.
 
 ## Firebase setup (once, by the app owner)

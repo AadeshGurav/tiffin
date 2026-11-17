@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
-import '../admin/purchase_schedule_screen.dart';
-import '../admin/topup_screen.dart';
+import '../admin/kitchen/purchase_schedule_screen.dart';
+import '../admin/people/topup_screen.dart';
 import '../scanner/scanner_screen.dart';
 import '../shared_widgets/app_shell.dart';
 import '../shared_widgets/nb_group.dart';

@@ -44,7 +44,7 @@ ios:
 # Regenerate the per-theme launcher icons from the app's own painter, then
 # rebuild the native icon sets. Run after changing a theme's palette or shape.
 icons:
-	flutter test test/generate_icons_test.dart --tags tool
+	flutter test test/tool/generate_icons_test.dart --tags tool
 	dart run flutter_launcher_icons
 
 analyze:

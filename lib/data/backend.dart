@@ -15,27 +15,27 @@ import '../domain/menu.dart';
 import '../domain/ops.dart';
 import '../domain/settings.dart';
 import '../l10n/app_localizations.dart';
-import '../services/auth_service.dart';
-import '../services/backup_service.dart';
-import '../services/billing_service.dart';
-import '../services/expense_service.dart';
-import '../services/ingredient_service.dart';
-import '../services/member_service.dart';
-import '../services/menu_service.dart';
-import '../services/notification_service.dart';
-import '../services/purchase_schedule_service.dart';
-import '../services/qr_service.dart';
-import '../services/recipe_service.dart';
-import '../services/refund_service.dart';
-import '../services/report_service.dart';
-import '../services/scan_service.dart';
-import '../services/settings_service.dart';
-import '../services/topup_service.dart';
-import '../services/user_service.dart';
+import '../services/people/auth_service.dart';
+import '../services/system/backup_service.dart';
+import '../services/money/billing_service.dart';
+import '../services/money/expense_service.dart';
+import '../services/kitchen/ingredient_service.dart';
+import '../services/people/member_service.dart';
+import '../services/kitchen/menu_service.dart';
+import '../services/system/notification_service.dart';
+import '../services/kitchen/purchase_schedule_service.dart';
+import '../services/scanning/qr_service.dart';
+import '../services/kitchen/recipe_service.dart';
+import '../services/money/refund_service.dart';
+import '../services/money/report_service.dart';
+import '../services/scanning/scan_service.dart';
+import '../services/system/settings_service.dart';
+import '../services/money/topup_service.dart';
+import '../services/people/user_service.dart';
 import '../ui/theme/appearance.dart';
 import 'store.dart';
 
-export '../services/settings_service.dart' show SettingsPatch;
+export '../services/system/settings_service.dart' show SettingsPatch;
 
 /// The one data-access seam every screen depends on (PRD §13.7). It owns the
 /// services, knows who is signed in on this phone, and stamps that name on

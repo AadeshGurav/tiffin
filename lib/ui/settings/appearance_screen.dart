@@ -7,7 +7,7 @@ import '../../app/providers.dart';
 import '../../app/session_memory.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/locale_store.dart';
-import '../../services/settings_service.dart';
+import '../../services/system/settings_service.dart';
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';

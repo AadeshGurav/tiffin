@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/logging.dart';
-import '../services/scan_service.dart' show ymd;
+import '../services/scanning/scan_service.dart' show ymd;
 import 'store.dart';
 
 /// Whether this phone can reach Firestore right now, and whether it has

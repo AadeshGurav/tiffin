@@ -69,7 +69,7 @@ addition to colour: a distinct **icon**, a distinct **border weight**, and a
 
 ## 5. The contrast test is the guardrail
 
-`test/theme_contrast_test.dart` asserts WCAG AA across all eight palettes:
+`test/ui/theme/theme_contrast_test.dart` asserts WCAG AA across all eight palettes:
 4.5:1 for body text, 3:1 for large text and meaningful boundaries. It found
 eleven real problems when the themes were written — mid-lightness accents that
 cleared neither white nor black text, and hairline borders that left a card
@@ -81,7 +81,7 @@ passes if **either** its border or its fill separates it from the page — which
 is how Neobrutal can use a pastel tile behind a 3px ink border while Clean has
 to earn it with the border.
 
-`test/theme_render_test.dart` renders every shared primitive under all eight
+`test/ui/theme/theme_render_test.dart` renders every shared primitive under all eight
 variants, including at the 320px reflow floor.
 
 ## 6. Where the setting lives

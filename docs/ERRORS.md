@@ -22,7 +22,7 @@ What the operator sees: [User Guide §4](USER_GUIDE.md#4-if-somethings-wrong).
    Render it with `ErrorNoticeView`, `showNbSnack(..., ref: notice.ref)` or
    `runGuarded`. Never write `'$e'`, `e.toString()` or `e.runtimeType` into UI.
 5. A `catch` that deliberately carries on (a fallback) must still log a line.
-   `test/error_handling_test.dart` fails on a silent one.
+   `test/core/error_handling_test.dart` fails on a silent one.
 
 Anything without its own sentence (an unknown Firebase code, a bug) is
 unexpected: it gets a reference code and a full log entry automatically.

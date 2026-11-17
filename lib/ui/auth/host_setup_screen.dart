@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/error_report.dart';
 import '../../app/providers.dart';
 import '../../l10n/messages.dart';
-import '../admin/backup_screen.dart' show showImportDialog;
+import '../admin/system/backup_screen.dart' show showImportDialog;
 import '../shared_widgets/nb_button.dart';
 import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';

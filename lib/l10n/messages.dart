@@ -139,6 +139,7 @@ extension AppTextMessages on AppText {
       ErrorCode.purchaseQuantityRequired => errPurchaseQuantityRequired,
       ErrorCode.purchaseItemNotFound => errPurchaseItemNotFound,
       ErrorCode.expenseAmountNegative => errExpenseAmountNegative,
+      ErrorCode.numberInvalid => errNumberInvalid,
       ErrorCode.settingsNegative => errSettingsNegative,
       ErrorCode.settingsBadTimezone => errSettingsBadTimezone(s('name')),
       ErrorCode.settingsBadTime => errSettingsBadTime(meal('meal')),
