@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/error_report.dart';
 import '../../app/providers.dart';
 import '../../l10n/messages.dart';
 import '../admin/backup_screen.dart' show showImportDialog;
@@ -34,7 +35,7 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
   final _confirm = TextEditingController();
   bool _busy = false;
   bool _revealed = false;
-  String? _error;
+  ErrorNotice? _error;
 
   @override
   void dispose() {
@@ -58,7 +59,8 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
 
   Future<void> _submit() async {
     if (_password.text != _confirm.text) {
-      setState(() => _error = AppText.of(context).hostSetupPasswordMismatch);
+      setState(() =>
+          _error = ErrorNotice(AppText.of(context).hostSetupPasswordMismatch));
       return;
     }
     setState(() {
@@ -75,8 +77,10 @@ class _HostSetupScreenState extends ConsumerState<HostSetupScreen> {
       await ref
           .read(sessionProvider.notifier)
           .login(_username.text.trim(), _password.text);
-    } catch (e) {
-      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
+    } catch (e, st) {
+      if (mounted) {
+        setState(() => _error = AppText.of(context).describeError(e, st));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -3,11 +3,13 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/error_report.dart';
 import '../../app/providers.dart';
 import '../../data/canteens.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
 import '../shared_widgets/nb_button.dart';
+import '../shared_widgets/nb_feedback.dart';
 import '../theme/tokens.dart';
 
 /// Sign in with Apple needs the iOS capability and a paid developer team, so
@@ -31,7 +33,7 @@ class ProviderButtons extends ConsumerStatefulWidget {
 
 class _ProviderButtonsState extends ConsumerState<ProviderButtons> {
   bool _busy = false;
-  String? _error;
+  ErrorNotice? _error;
 
   Future<void> _go(SignInProvider which) async {
     setState(() {
@@ -42,8 +44,10 @@ class _ProviderButtonsState extends ConsumerState<ProviderButtons> {
       await ref.read(canteenServiceProvider).signInWith(which);
       final user = ref.read(identityProvider).currentUser;
       if (user != null && !user.isAnonymous) await widget.onSignedIn();
-    } catch (e) {
-      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
+    } catch (e, st) {
+      if (mounted) {
+        setState(() => _error = AppText.of(context).describeError(e, st));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -51,7 +55,6 @@ class _ProviderButtonsState extends ConsumerState<ProviderButtons> {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.tokens;
     final text = AppText.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,7 +82,7 @@ class _ProviderButtonsState extends ConsumerState<ProviderButtons> {
         ],
         if (_error != null) ...[
           const SizedBox(height: NbSpace.sm),
-          Text(_error!, style: t.text.body.copyWith(color: t.color.reject)),
+          ErrorNoticeView(_error!),
         ],
       ],
     );

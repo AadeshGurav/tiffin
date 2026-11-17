@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/error_report.dart';
 import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../core/errors.dart';
@@ -34,7 +35,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   _Step _step = _Step.home;
   bool _fromBackup = false;
   bool _busy = false;
-  String? _error;
+  ErrorNotice? _error;
 
   @override
   void dispose() {
@@ -52,8 +53,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     });
     try {
       await action();
-    } catch (e) {
-      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
+    } catch (e, st) {
+      if (mounted) {
+        setState(() => _error = AppText.of(context).describeError(e, st));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/error_report.dart';
 import '../../app/appearance_providers.dart';
 import '../../app/credential_store.dart';
 import '../../app/canteen_book.dart';
@@ -33,7 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
   bool _rememberPassword = false;
   bool _resuming = true;
-  String? _error;
+  ErrorNotice? _error;
 
   @override
   void initState() {
@@ -75,8 +76,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
-    } catch (e) {
-      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
+    } catch (e, st) {
+      if (mounted) {
+        setState(() => _error = AppText.of(context).describeError(e, st));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -104,8 +107,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         showNbSnack(context, AppText.of(context).loginPasswordResetSnack);
       }
-    } catch (e) {
-      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
+    } catch (e, st) {
+      if (mounted) {
+        setState(() => _error = AppText.of(context).describeError(e, st));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

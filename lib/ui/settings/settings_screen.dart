@@ -11,6 +11,7 @@ import '../../services/backup_service.dart';
 import '../admin/backup_screen.dart';
 import 'devices_screen.dart';
 import 'online_accounts_screen.dart';
+import 'share_log.dart';
 import '../admin/menu_categories_screen.dart';
 import '../admin/reports_screen.dart';
 import '../admin/settings_config_screen.dart';
@@ -114,6 +115,12 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: text.settingsScreenAddMethodSubtitle,
                 onTap: () => _addMethod(context, ref),
               ),
+            NbListRow(
+              icon: Icons.bug_report_outlined,
+              title: text.settingsScreenShareLogTitle,
+              subtitle: text.settingsScreenShareLogSubtitle,
+              onTap: () => shareLogFile(context),
+            ),
             NbListRow(
               icon: Icons.logout,
               title: text.settingsScreenSignOutTitle,

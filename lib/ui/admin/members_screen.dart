@@ -11,6 +11,7 @@ import '../shared_widgets/nb_text_field.dart';
 import '../theme/tokens.dart';
 import '../shared_widgets/motion.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/messages.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>((ref) async {
   return ref.watch(backendProvider).listMembers();
@@ -181,8 +182,11 @@ class _MemberTile extends ConsumerWidget {
     try {
       png = Uint8List.fromList(
           await ref.read(backendProvider).memberQrPng(member.id));
-    } catch (e) {
-      if (context.mounted) showNbSnack(context, '$e', ok: false);
+    } catch (e, st) {
+      if (context.mounted) {
+        final notice = AppText.of(context).describeError(e, st);
+        showNbSnack(context, notice.message, ok: false, ref: notice.ref);
+      }
       return;
     }
     if (!context.mounted) return;

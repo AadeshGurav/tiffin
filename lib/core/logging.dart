@@ -29,17 +29,11 @@ class AppLogger {
 
     Logger.root.level = Level.INFO;
     Logger.root.onRecord.listen((record) {
-      final line = _format(record);
+      final entry = formatRecord(record);
       // stdout is what an operator watching the host device sees on boot.
       // ignore: avoid_print
-      print(line);
-      _fileSink?.writeln(line);
-      if (record.error != null) {
-        final errLine = '    error: ${record.error}';
-        // ignore: avoid_print
-        print(errLine);
-        _fileSink?.writeln(errLine);
-      }
+      print(entry);
+      _fileSink?.writeln(entry);
     });
 
     if (toFile) {
@@ -47,9 +41,17 @@ class AppLogger {
     }
   }
 
-  static String _format(LogRecord r) =>
-      '${r.time.toUtc().toIso8601String()} ${r.level.name.padRight(7)} '
-      '${r.loggerName} ${r.message}';
+  /// One log entry: the line, then the error and its stack trace. Redacted
+  /// after formatting, so a secret inside an exception's text or a trace is
+  /// covered as well as one in the message.
+  static String formatRecord(LogRecord r) {
+    final buffer = StringBuffer(
+        '${r.time.toUtc().toIso8601String()} ${r.level.name.padRight(7)} '
+        '${r.loggerName} ${r.message}');
+    if (r.error != null) buffer.write('\n    error: ${r.error}');
+    if (r.stackTrace != null) buffer.write('\n${r.stackTrace}');
+    return redactSecrets(buffer.toString());
+  }
 
   static Future<void> _openFile() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -76,6 +78,9 @@ class AppLogger {
   /// Absolute path of the current log file, or null on a client.
   static String? get logFilePath => _logFile?.path;
 
+  /// Writes anything still buffered, so a shared log file is complete.
+  static Future<void> flush() async => _fileSink?.flush();
+
   static Future<void> dispose() async {
     await _fileSink?.flush();
     await _fileSink?.close();
@@ -86,3 +91,24 @@ class AppLogger {
 /// Convenience: `log('scan').info(...)` — one named logger per domain, matching
 /// the Python build's `logging.getLogger(__name__)` convention.
 Logger log(String domain) => Logger(domain);
+
+// Shapes of credential material that must never reach a log file. Matched on
+// the formatted text, where exception messages and stack traces already are.
+final _secretShapes = [
+  RegExp(r'AIza[0-9A-Za-z_\-]{35}'), // Firebase / Google API key
+  RegExp(r'eyJ[\w-]+\.[\w-]+\.[\w-]+'), // JWT
+  RegExp(r'Bearer\s+[\w.~+/=-]+', caseSensitive: false),
+];
+final _secretAssignment = RegExp(
+    r'(password|passphrase|passwd|secret|token|api[_-]?key)(["\x27]?\s*[=:]\s*)("[^"]*"|\x27[^\x27]*\x27|[^\s,;)}\]]+)',
+    caseSensitive: false);
+
+/// Masks API keys, tokens and `password=…`-style values in [text].
+String redactSecrets(String text) {
+  var out = text;
+  for (final shape in _secretShapes) {
+    out = out.replaceAll(shape, '[redacted]');
+  }
+  return out.replaceAllMapped(
+      _secretAssignment, (m) => '${m[1]}${m[2]}[redacted]');
+}

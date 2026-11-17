@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../core/error_report.dart';
 import '../../app/providers.dart';
 import '../../core/screen_awake.dart';
 import '../../domain/ledger.dart';
 import '../shared_widgets/app_shell.dart';
 import '../shared_widgets/motion.dart';
 import '../shared_widgets/nb_button.dart';
+import '../shared_widgets/nb_feedback.dart';
 import '../shared_widgets/nb_surface.dart';
 import '../theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
@@ -39,7 +41,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   );
 
   ScanResult? _result;
-  String? _errorMessage;
+  ErrorNotice? _errorMessage;
   bool _busy = false;
   String? _lastCode;
   DateTime _lastAt = DateTime.fromMillisecondsSinceEpoch(0);
@@ -77,9 +79,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     try {
       final result = await ref.read(backendProvider).scan(code);
       if (mounted) setState(() => _result = result);
-    } catch (e) {
+    } catch (e, st) {
       if (mounted) {
-        setState(() => _errorMessage = AppText.of(context).errorText(e));
+        setState(
+            () => _errorMessage = AppText.of(context).describeError(e, st));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -166,7 +169,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           if (_errorMessage != null)
             _MessageOverlay(
               title: text.scannerErrorTitle,
-              message: _errorMessage!,
+              notice: _errorMessage!,
               color: t.color.warn,
               onColor: t.color.onWarn,
               onNext: _clear,
@@ -291,14 +294,14 @@ class _ResultOverlay extends StatelessWidget {
 class _MessageOverlay extends StatelessWidget {
   const _MessageOverlay({
     required this.title,
-    required this.message,
+    required this.notice,
     required this.color,
     required this.onColor,
     required this.onNext,
   });
 
   final String title;
-  final String message;
+  final ErrorNotice notice;
   final Color color;
   final Color onColor;
   final VoidCallback onNext;
@@ -323,9 +326,7 @@ class _MessageOverlay extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: t.text.display.copyWith(color: onColor, fontSize: 40)),
               const SizedBox(height: NbSpace.md),
-              Text(message,
-                  textAlign: TextAlign.center,
-                  style: t.text.body.copyWith(color: onColor, fontSize: 18)),
+              ErrorNoticeView(notice, color: onColor, centered: true),
               const SizedBox(height: NbSpace.xl),
               NbButton(
                 label: text.scannerTryAgainButton,

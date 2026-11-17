@@ -1292,8 +1292,8 @@
   "errBackupWrongPassphrase": "That password doesn't open this backup.",
   "errBackupNewerVersion": "That backup was made by a newer version of Tiffin. Update the app first.",
   "errBackupTargetNotEmpty": "This canteen already has members. To replace them, use Settings ▸ Backup & restore.",
-  "errInternal": "Something went wrong on this phone. It has been written to the log.",
-  "errUnexpected": "Something unexpected went wrong. It has been written to the log.",
+  "errInternal": "Something went wrong on this phone. Try again. If it keeps happening, tell IT the code below.",
+  "errUnexpected": "Something unexpected went wrong. Try again. If it keeps happening, tell IT the code below.",
   "reversalScanReversed": "Scan reversed — {meal} balance is now {restored}.",
   "@reversalScanReversed": {
     "description": "On a reversal result. meal = a meal name (Breakfast, Lunch, Brunch); restored = a balance after the reversal.",
@@ -1542,7 +1542,7 @@
   "themeClayLabel": "Clay",
   "themeClayBlurb": "Soft, round and warm. Friendliest of the four.",
   "crashTitle": "This screen hit a problem.",
-  "crashBody": "Go back and try again — it has been written to the log.",
+  "crashBody": "Go back and try again. If it keeps happening, tell IT the code below.",
   "tooltipDelete": "Delete",
   "tooltipNotifications": "Notifications",
   "tooltipDismiss": "Dismiss",
@@ -1619,5 +1619,19 @@
   "canteenChange": "Change",
   "adminGroupPeople": "People",
   "adminGroupMoney": "Money",
-  "adminGroupKitchen": "Kitchen"
+  "adminGroupKitchen": "Kitchen",
+  "errorCodeLabel": "Code: {ref}",
+  "@errorCodeLabel": {
+    "description": "Under an unexpected-error message. ref = a short code like K7F2-9QX that IT looks up in the log.",
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCopyCode": "Copy code",
+  "errorCodeCopied": "Code copied",
+  "settingsScreenShareLogTitle": "Share log with IT",
+  "settingsScreenShareLogSubtitle": "Sends this phone's log file so IT can find a problem by its code.",
+  "shareLogEmpty": "There is no log on this phone yet."
 }

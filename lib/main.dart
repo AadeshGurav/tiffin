@@ -8,7 +8,7 @@ import 'app/app_gate.dart';
 import 'app/appearance_providers.dart';
 import 'app/bootstrap.dart';
 import 'app/locale_providers.dart';
-import 'core/logging.dart';
+import 'core/error_report.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_store.dart';
 import 'ui/theme/app_theme.dart';
@@ -20,19 +20,22 @@ Future<void> main() async {
   final prefs = await bootstrap();
 
   // Nothing fails silently (PRD §7, CLAUDE.md §8): every uncaught framework or
-  // async error is written to the log and shown as a readable panel instead of
-  // the red screen of death.
-  final crash = log('crash');
+  // async error is logged under a reference code and shown as a readable panel
+  // instead of the red screen of death. PlatformDispatcher.onError is also the
+  // catch-all for uncaught errors in any zone, so no runZonedGuarded is needed.
   final priorOnError = FlutterError.onError;
   FlutterError.onError = (details) {
-    crash.severe('flutter framework error', details.exception, details.stack);
+    // Keyed by the details object so the panel built for this very error
+    // (ErrorWidget.builder receives the same instance) shows the same code.
+    reportedRefs[details] = reportError(details.exception, details.stack,
+        context: 'flutter framework error');
     priorOnError?.call(details);
   };
   final crashText = lookupAppText(LocaleStore(prefs).read().locale);
   ErrorWidget.builder =
       (details) => _FriendlyErrorWidget(details: details, text: crashText);
   PlatformDispatcher.instance.onError = (error, stack) {
-    crash.severe('uncaught async error', error, stack);
+    reportError(error, stack, context: 'uncaught async error');
     return true;
   };
 
@@ -127,6 +130,13 @@ class _FriendlyErrorWidget extends StatelessWidget {
               textAlign: TextAlign.center,
               style: bodyStyle,
             ),
+            // Above MaterialApp there may be no Material for a button, so the
+            // code is selectable text rather than a Copy button.
+            if (reportedRefs[details] case final ref?) ...[
+              const SizedBox(height: NbSpace.xs),
+              SelectableText(text.errorCodeLabel(ref),
+                  textAlign: TextAlign.center, style: labelStyle),
+            ],
           ],
         ),
       ),

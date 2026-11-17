@@ -313,6 +313,10 @@ this device**. Clear any of it from **Appearance ▸ Saved logins**.
   names in the Firebase console and download its file.
 - **Camera won't open** — grant the camera permission in the phone's settings
   for Tiffin.
+- **A message ends with "Code: XXXX-XXXX"** — something unexpected went wrong
+  that you can't fix. Try again once. If it keeps happening, tap **Copy code**,
+  then **Settings ▸ Share log with IT**, and send both to IT. Messages without
+  a code say what to do themselves.
 - **Logs** — every phone writes a rolling log (`logs/app.log` under the app's
   documents directory) of scans, top-ups, refunds, admin actions and anything
   the server refused.

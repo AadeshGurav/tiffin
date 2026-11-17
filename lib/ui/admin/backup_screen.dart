@@ -78,7 +78,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       manifest = backups.inspect(bytes);
     } on AppException catch (e) {
       if (mounted) {
-        showNbSnack(context, AppText.of(context).errorText(e), ok: false);
+        final notice = AppText.of(context).describeError(e);
+        showNbSnack(context, notice.message, ok: false, ref: notice.ref);
       }
       return;
     }
@@ -297,7 +298,10 @@ Future<bool> showImportDialog(BuildContext context) async {
   try {
     manifest = backups.inspect(bytes);
   } on AppException catch (e) {
-    if (context.mounted) showNbSnack(context, text.errorText(e), ok: false);
+    if (context.mounted) {
+      final notice = text.describeError(e);
+      showNbSnack(context, notice.message, ok: false, ref: notice.ref);
+    }
     return false;
   }
   String? passphrase;

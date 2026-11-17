@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/error_report.dart';
 import '../../l10n/app_localizations.dart';
 import '../shared_widgets/app_logo.dart';
+import '../shared_widgets/nb_feedback.dart';
 import '../theme/tokens.dart';
 
 /// The one layout every setup and sign-in screen shares, so a person always
@@ -34,7 +36,7 @@ class AuthFrame extends StatelessWidget {
   final String? canteenName;
   final VoidCallback? onChangeCanteen;
   final List<Widget> body;
-  final String? error;
+  final ErrorNotice? error;
 
   /// The single primary action of the step.
   final Widget? action;
@@ -73,7 +75,7 @@ class AuthFrame extends StatelessWidget {
                   ...body,
                   if (error != null) ...[
                     const SizedBox(height: NbSpace.md),
-                    _ErrorLine(message: error!),
+                    _ErrorLine(notice: error!),
                   ],
                   if (action != null) ...[
                     const SizedBox(height: NbSpace.lg),
@@ -136,26 +138,20 @@ class _CanteenBar extends StatelessWidget {
 
 /// Icon plus words, so an error never relies on colour alone (§12.2).
 class _ErrorLine extends StatelessWidget {
-  const _ErrorLine({required this.message});
+  const _ErrorLine({required this.notice});
 
-  final String message;
+  final ErrorNotice notice;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    return Semantics(
-      liveRegion: true,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline, size: 20, color: t.color.reject),
-          const SizedBox(width: NbSpace.sm),
-          Expanded(
-            child: Text(message,
-                style: t.text.body.copyWith(color: t.color.reject)),
-          ),
-        ],
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.error_outline, size: 20, color: t.color.reject),
+        const SizedBox(width: NbSpace.sm),
+        Expanded(child: ErrorNoticeView(notice)),
+      ],
     );
   }
 }

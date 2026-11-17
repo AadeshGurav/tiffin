@@ -593,8 +593,8 @@
   "errBackupWrongPassphrase": "हा पासवर्ड हा बॅकअप उघडत नाही.",
   "errBackupNewerVersion": "हा बॅकअप Tiffin च्या नवीन आवृत्तीने बनवला आहे. आधी अ‍ॅप अपडेट करा.",
   "errBackupTargetNotEmpty": "या कॅन्टीनमध्ये आधीच सदस्य आहेत. ते बदलण्यासाठी सेटिंग्ज ▸ बॅकअप आणि रिस्टोअर वापरा.",
-  "errInternal": "या फोनवर काहीतरी चुकले. ते लॉगमध्ये नोंदवले आहे.",
-  "errUnexpected": "काहीतरी अनपेक्षित चुकले. ते लॉगमध्ये नोंदवले आहे.",
+  "errInternal": "या फोनवर काहीतरी चुकले. पुन्हा प्रयत्न करा. वारंवार होत असेल तर खालील कोड IT ला सांगा.",
+  "errUnexpected": "काहीतरी अनपेक्षित चुकले. पुन्हा प्रयत्न करा. वारंवार होत असेल तर खालील कोड IT ला सांगा.",
   "reversalScanReversed": "स्कॅन रद्द केले — {meal} ची शिल्लक आता {restored} आहे.",
   "reversalScanNotFound": "ते स्कॅन आता अस्तित्वात नाही.",
   "reversalScanAlreadyReversed": "ते स्कॅन आधीच रद्द केले आहे.",
@@ -676,7 +676,7 @@
   "themeClayLabel": "क्ले",
   "themeClayBlurb": "मऊ, गोल आणि उबदार. चारांपैकी सर्वात मैत्रीपूर्ण.",
   "crashTitle": "या स्क्रीनमध्ये अडचण आली.",
-  "crashBody": "मागे जाऊन पुन्हा प्रयत्न करा — हे लॉगमध्ये नोंदवले आहे.",
+  "crashBody": "मागे जाऊन पुन्हा प्रयत्न करा. वारंवार होत असेल तर खालील कोड IT ला सांगा.",
   "tooltipDelete": "हटवा",
   "tooltipNotifications": "सूचना",
   "tooltipDismiss": "काढा",
@@ -732,5 +732,11 @@
   "canteenChange": "बदला",
   "adminGroupPeople": "लोक",
   "adminGroupMoney": "पैसे",
-  "adminGroupKitchen": "स्वयंपाकघर"
+  "adminGroupKitchen": "स्वयंपाकघर",
+  "errorCodeLabel": "कोड: {ref}",
+  "errorCopyCode": "कोड कॉपी करा",
+  "errorCodeCopied": "कोड कॉपी झाला",
+  "settingsScreenShareLogTitle": "लॉग IT ला पाठवा",
+  "settingsScreenShareLogSubtitle": "या फोनची लॉग फाइल पाठवते, म्हणजे IT कोडवरून अडचण शोधू शकेल.",
+  "shareLogEmpty": "या फोनवर अजून लॉग नाही."
 }

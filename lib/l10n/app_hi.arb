@@ -593,8 +593,8 @@
   "errBackupWrongPassphrase": "यह पासवर्ड इस बैकअप को नहीं खोलता।",
   "errBackupNewerVersion": "यह बैकअप Tiffin के नए संस्करण से बना है। पहले ऐप अपडेट करें।",
   "errBackupTargetNotEmpty": "इस कैंटीन में पहले से सदस्य हैं। उन्हें बदलने के लिए सेटिंग्स ▸ बैकअप और रिस्टोर का उपयोग करें।",
-  "errInternal": "इस फ़ोन पर कुछ गड़बड़ हुई। यह लॉग में दर्ज हो गया है।",
-  "errUnexpected": "कुछ अनपेक्षित गड़बड़ हुई। यह लॉग में दर्ज हो गया है।",
+  "errInternal": "इस फ़ोन पर कुछ गड़बड़ हुई। फिर कोशिश करें। बार-बार हो तो नीचे दिया कोड IT को बताएँ।",
+  "errUnexpected": "कुछ अनपेक्षित गड़बड़ हुई। फिर कोशिश करें। बार-बार हो तो नीचे दिया कोड IT को बताएँ।",
   "reversalScanReversed": "स्कैन उलटा गया — {meal} का बैलेंस अब {restored} है।",
   "reversalScanNotFound": "वह स्कैन अब मौजूद नहीं है।",
   "reversalScanAlreadyReversed": "वह स्कैन पहले ही उलटा जा चुका है।",
@@ -676,7 +676,7 @@
   "themeClayLabel": "क्ले",
   "themeClayBlurb": "नरम, गोल और गर्म। चारों में सबसे दोस्ताना।",
   "crashTitle": "इस स्क्रीन में समस्या आई।",
-  "crashBody": "वापस जाकर फिर कोशिश करें — यह लॉग में दर्ज हो गया है।",
+  "crashBody": "वापस जाकर फिर कोशिश करें। बार-बार हो तो नीचे दिया कोड IT को बताएँ।",
   "tooltipDelete": "हटाएं",
   "tooltipNotifications": "सूचनाएं",
   "tooltipDismiss": "हटाएं",
@@ -732,5 +732,11 @@
   "canteenChange": "बदलें",
   "adminGroupPeople": "लोग",
   "adminGroupMoney": "पैसे",
-  "adminGroupKitchen": "रसोई"
+  "adminGroupKitchen": "रसोई",
+  "errorCodeLabel": "कोड: {ref}",
+  "errorCopyCode": "कोड कॉपी करें",
+  "errorCodeCopied": "कोड कॉपी हो गया",
+  "settingsScreenShareLogTitle": "लॉग IT को भेजें",
+  "settingsScreenShareLogSubtitle": "इस फ़ोन की लॉग फ़ाइल भेजता है ताकि IT कोड से समस्या ढूँढ सके।",
+  "shareLogEmpty": "इस फ़ोन पर अभी कोई लॉग नहीं है।"
 }

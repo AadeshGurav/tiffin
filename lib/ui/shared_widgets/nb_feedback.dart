@@ -1,10 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/error_report.dart';
 import '../../core/errors.dart';
-import '../../core/logging.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
 import '../theme/tokens.dart';
@@ -14,8 +15,8 @@ import 'nb_surface.dart';
 
 /// Renders an [AsyncValue] as loading / a specific error / empty / data — never
 /// a bare spinner over a blank screen, never a blank screen for "no rows yet"
-/// (CLAUDE.md §11.4, §11.1 #1). The error path shows the [AppException] message
-/// verbatim and a retry.
+/// (CLAUDE.md §11.4, §11.1 #1). The error path shows a plain message (with a
+/// reference code when IT must look into it) and a retry.
 class AsyncView<T> extends StatelessWidget {
   const AsyncView({
     super.key,
@@ -53,11 +54,11 @@ class AsyncView<T> extends StatelessWidget {
       child: value.when(
         loading: () =>
             NbLoading(key: const ValueKey('loading'), label: loadingLabel),
-        error: (error, _) => Center(
+        error: (error, stack) => Center(
           key: const ValueKey('error'),
           child: Padding(
             padding: const EdgeInsets.all(NbSpace.lg),
-            child: ErrorPanel(error: error, onRetry: onRetry),
+            child: ErrorPanel(error: error, stack: stack, onRetry: onRetry),
           ),
         ),
         data: (data) => KeyedSubtree(
@@ -201,20 +202,34 @@ class EmptyQuips {
       [AppText.of(context).emptyQuipsNotifications1];
 }
 
-class ErrorPanel extends StatelessWidget {
-  const ErrorPanel({super.key, required this.error, this.onRetry});
+/// A failure in a panel with a retry. Stateful so the reference code of an
+/// unexpected failure is minted once per error, not on every rebuild.
+class ErrorPanel extends StatefulWidget {
+  const ErrorPanel({super.key, required this.error, this.stack, this.onRetry});
 
   final Object error;
+  final StackTrace? stack;
   final VoidCallback? onRetry;
+
+  @override
+  State<ErrorPanel> createState() => _ErrorPanelState();
+}
+
+class _ErrorPanelState extends State<ErrorPanel> {
+  ErrorNotice? _notice;
+  Object? _describedError;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final text = AppText.of(context);
-    final title = error is AuthException
+    if (_notice == null || !identical(_describedError, widget.error)) {
+      _describedError = widget.error;
+      _notice = text.describeError(widget.error, widget.stack);
+    }
+    final title = widget.error is AuthException
         ? text.nbFeedbackSessionProblem
         : text.nbFeedbackSomethingBroke;
-    final message = text.errorText(error);
     return NbSurface(
       background: t.color.warn,
       intensity: NbIntensity.full,
@@ -233,15 +248,15 @@ class ErrorPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: NbSpace.sm),
-          Text(message, style: t.text.body.copyWith(color: t.color.onWarn)),
-          if (onRetry != null) ...[
+          ErrorNoticeView(_notice!, color: t.color.onWarn),
+          if (widget.onRetry != null) ...[
             const SizedBox(height: NbSpace.md),
             NbButton(
               label: text.nbFeedbackTryAgain,
               icon: Icons.refresh,
               background: t.color.ink,
               foreground: t.color.surface,
-              onPressed: onRetry,
+              onPressed: widget.onRetry,
             ),
           ],
         ],
@@ -250,7 +265,62 @@ class ErrorPanel extends StatelessWidget {
   }
 }
 
-final _log = log('ui');
+/// The three-part error: what happened and what to try (one message), then —
+/// only when IT must look into it — the reference code with a copy button.
+/// Announced to screen readers as it appears (CLAUDE.md §12.2).
+class ErrorNoticeView extends StatelessWidget {
+  const ErrorNoticeView(this.notice,
+      {super.key, this.color, this.centered = false});
+
+  final ErrorNotice notice;
+  final Color? color;
+  final bool centered;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final text = AppText.of(context);
+    final ink = color ?? t.color.reject;
+    final ref = notice.ref;
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      child: Column(
+        crossAxisAlignment:
+            centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        children: [
+          Text(notice.message,
+              textAlign: centered ? TextAlign.center : TextAlign.start,
+              style: t.text.body.copyWith(color: ink)),
+          if (ref != null)
+            Wrap(
+              alignment: centered ? WrapAlignment.center : WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: NbSpace.sm,
+              children: [
+                SelectableText(text.errorCodeLabel(ref),
+                    style: t.text.label.copyWith(color: ink)),
+                TextButton.icon(
+                  onPressed: () => copyErrorCode(context, ref),
+                  icon: Icon(Icons.copy, size: 20, color: ink),
+                  label: Text(text.errorCopyCode,
+                      style: t.text.body.copyWith(color: ink)),
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> copyErrorCode(BuildContext context, String ref) async {
+  await Clipboard.setData(ClipboardData(text: ref));
+  if (context.mounted) {
+    showNbSnack(context, AppText.of(context).errorCodeCopied);
+  }
+}
 
 /// A short-lived confirmation/error line (Peak-End Rule, CLAUDE.md §11.2).
 void showNbSnack(
@@ -258,6 +328,7 @@ void showNbSnack(
   String message, {
   bool ok = true,
   Duration duration = const Duration(seconds: 3),
+  String? ref,
 }) {
   final t = context.tokens;
   final messenger = ScaffoldMessenger.maybeOf(context);
@@ -266,7 +337,15 @@ void showNbSnack(
     ..clearSnackBars()
     ..showSnackBar(
       SnackBar(
-        duration: duration,
+        // A code has to outlast the time it takes to read it out or copy it.
+        duration: ref == null ? duration : const Duration(minutes: 1),
+        showCloseIcon: ref != null,
+        action: ref == null
+            ? null
+            : SnackBarAction(
+                label: AppText.of(context).errorCopyCode,
+                onPressed: () => Clipboard.setData(ClipboardData(text: ref)),
+              ),
         backgroundColor: ok ? t.color.accept : t.color.reject,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -279,7 +358,10 @@ void showNbSnack(
                 color: ok ? t.color.onAccept : t.color.onReject),
             const SizedBox(width: NbSpace.sm),
             Expanded(
-              child: Text(message,
+              child: Text(
+                  ref == null
+                      ? message
+                      : '$message\n${AppText.of(context).errorCodeLabel(ref)}',
                   style: t.text.body.copyWith(
                       color: ok ? t.color.onAccept : t.color.onReject)),
             ),
@@ -339,11 +421,13 @@ Future<bool> runGuarded(
     }
     return true;
   } catch (e, st) {
-    if (e is! AppException) _log.severe('unexpected failure', e, st);
     if (context.mounted) {
-      showNbSnack(context, AppText.of(context).errorText(e),
-          ok: false, duration: const Duration(seconds: 5));
+      final notice = AppText.of(context).describeError(e, st);
+      showNbSnack(context, notice.message,
+          ok: false, duration: const Duration(seconds: 5), ref: notice.ref);
     } else {
+      // No screen left to tell, but the failure still goes to the log.
+      if (e is! AppException) reportError(e, st);
       messenger?.clearSnackBars();
     }
     return false;

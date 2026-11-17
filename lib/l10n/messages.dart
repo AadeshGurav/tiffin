@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:logging/logging.dart';
 
+import '../core/error_report.dart';
 import '../core/errors.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
@@ -8,27 +10,52 @@ import '../domain/ops.dart';
 import 'app_localizations.dart';
 import 'labels.dart';
 
+final _expected = Logger('error');
+
 /// Turns the app's codes into sentences. Services return *what happened*;
 /// this is the one place that says it, so every screen words the same failure
 /// the same way, in the operator's language (CLAUDE.md §8, §13).
 extension AppTextMessages on AppText {
   /// Any error a screen might catch — the app's own, Firestore's, Firebase
   /// Auth's — as one readable sentence. Never a stack trace or raw exception
-  /// text; anything unrecognised gets a plain "written to the log".
-  String errorText(Object error) => switch (error) {
+  /// text. Prefer [describeError], which also logs what nobody anticipated.
+  String errorText(Object error) =>
+      _knownText(error) ??
+      (error is AppException ? errInternal : errUnexpected);
+
+  /// The one way a screen turns a caught failure into something to show.
+  /// An anticipated failure is a plain sentence. An unanticipated one is
+  /// logged in full under a fresh reference code, which rides along so the
+  /// person can hand it to IT (see docs/ERRORS.md).
+  ErrorNotice describeError(Object error, [StackTrace? stack]) {
+    final known = _knownText(error);
+    if (known != null) {
+      // Worth a trace in the log (a refused write, a dropped connection) but
+      // nothing the person needs to report.
+      if (error is! AppException) {
+        _expected.warning('${error.runtimeType}: $error');
+      }
+      return ErrorNotice(known);
+    }
+    return ErrorNotice(errorText(error), ref: reportError(error, stack));
+  }
+
+  /// Null for anything that has no sentence of its own.
+  String? _knownText(Object error) => switch (error) {
+        AppException(code: ErrorCode.internal) => null,
         AppException e => _appError(e),
         FirebaseAuthException e => _authError(e.code),
         FirebaseException e => _firestoreError(e.code),
-        _ => errUnexpected,
+        _ => null,
       };
 
-  String _firestoreError(String code) => switch (code) {
+  String? _firestoreError(String code) => switch (code) {
         'permission-denied' => errPermissionDenied,
         'unavailable' || 'deadline-exceeded' => errNeedsInternet,
-        _ => errUnexpected,
+        _ => null,
       };
 
-  String _authError(String code) => switch (code) {
+  String? _authError(String code) => switch (code) {
         'invalid-credential' ||
         'wrong-password' ||
         'user-not-found' ||
@@ -43,7 +70,7 @@ extension AppTextMessages on AppText {
         'provider-already-linked' => errMethodAlreadyAdded,
         'email-already-in-use' => errEmailInUse,
         'weak-password' => errPasswordTooShort(6),
-        _ => errUnexpected,
+        _ => null,
       };
 
   String _appError(AppException e) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/error_report.dart';
 import '../../app/canteen_book.dart';
 import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -28,7 +29,7 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
   // phone is the rarer case (it is one tap away below).
   bool _online = true;
   bool _busy = false;
-  String? _error;
+  ErrorNotice? _error;
 
   @override
   void dispose() {
@@ -45,8 +46,10 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
     });
     try {
       await action();
-    } catch (e) {
-      if (mounted) setState(() => _error = AppText.of(context).errorText(e));
+    } catch (e, st) {
+      if (mounted) {
+        setState(() => _error = AppText.of(context).describeError(e, st));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -72,8 +75,8 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
   Future<void> _sendReset() => _run(() async {
         await ref.read(accessServiceProvider).sendPasswordReset(_email.text);
         if (mounted) {
-          setState(() =>
-              _error = AppText.of(context).onlineResetSent(_email.text.trim()));
+          setState(() => _error = ErrorNotice(
+              AppText.of(context).onlineResetSent(_email.text.trim())));
         }
       });
 
