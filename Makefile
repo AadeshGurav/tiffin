@@ -1,4 +1,4 @@
-.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons
+.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons android-keys
 
 # Zero-touch setup (CLAUDE.md §9): one command from a fresh checkout to a
 # runnable app. The shared Firebase project is built in
@@ -6,6 +6,13 @@
 setup:
 	flutter pub get
 	flutter gen-l10n
+	-$(MAKE) android-keys
+
+# Register this machine's Android signing keys (debug + release) in Firebase.
+# Google sign-in on Android fails for any build signed with a key Firebase
+# does not know. Safe to re-run; setup and apk do it for you.
+android-keys:
+	tool/register_android_keys.sh
 
 # Regenerate the AppText classes after editing an .arb file.
 l10n:
@@ -16,7 +23,7 @@ run:
 	flutter run
 
 # Build the release APK.
-apk:
+apk: android-keys
 	flutter build apk --release
 
 # Build the iOS app (needs full Xcode + CocoaPods). Signing is set in Xcode.

@@ -37,7 +37,7 @@ were rejected: [`docs/adr/`](docs/adr/). Day-to-day use:
 ## Setup
 
 ```bash
-make setup      # flutter pub get + generate the AppText classes
+make setup      # flutter pub get + AppText classes + register Android keys
 make run        # run on a connected device
 make apk        # release APK  ->  build/app/outputs/flutter-apk/app-release.apk
 make test       # unit + widget tests
@@ -70,7 +70,9 @@ created inside the app in one tap.
    ```
 4. **Apps:** the Android (`com.canteen.canteen_coupon`) and iOS
    (`com.aadeshgurav.canteencoupon`) apps must exist in the project; their
-   values are in `lib/app/shared_project.dart`.
+   values are in `lib/app/shared_project.dart`. The Android app also needs
+   the SHA fingerprints of every key builds are signed with; see
+   [Android signing](#android-signing).
 5. **Before a public release:** turn on Firebase **App Check** (App Attest /
    Play Integrity) and enforce it for Firestore and Auth, and watch usage —
    everyone's canteen shares your quota. This is not wired in the app yet.
@@ -83,6 +85,36 @@ flutter run --dart-define=USE_EMULATOR=true
 # a phone on the same Wi-Fi instead of an Android emulator:
 flutter run --dart-define=USE_EMULATOR=true --dart-define=EMULATOR_HOST=192.168.1.20
 ```
+
+## Android signing
+
+Google (and any browser-based) sign-in on Android only works for builds signed
+with a key whose SHA-1/SHA-256 is registered on the Firebase Android app. A
+new machine has its own debug key, and the release key is separate, so:
+
+```bash
+make android-keys   # registers this machine's debug + release keys; safe to re-run
+```
+
+`make setup` and `make apk` run it for you. It needs the Firebase CLI logged in
+with access to the project. If you build with plain `flutter run` on a new
+machine, run it once after the first build creates `~/.android/debug.keystore`.
+
+**Release key.** Release builds are signed with the upload key named in
+`android/key.properties` (git-ignored):
+
+```properties
+storePassword=…
+keyPassword=…
+keyAlias=upload
+storeFile=/Users/<you>/.android/lunch-time-upload.jks
+```
+
+Without that file, release builds fall back to the debug key. **Back up the
+`.jks` and its password** (a password manager): every future update must be
+signed with the same key. Publishing on Google Play adds Play's own app-signing
+key; copy its fingerprints from Play Console ▸ App integrity into the Firebase
+Android app too.
 
 ## Moving an existing (v2, LAN-host) canteen across
 
@@ -116,6 +148,5 @@ firestore.rules   the security boundary (tested in tool/rules-test)
   a shift, check on two phones: approve a phone, scan in airplane mode on
   both, reconnect, and confirm the duplicate is dropped
   (USER_GUIDE §4).
-- Android release signing still uses the debug keystore.
 - Home-screen icon switching per theme is not wired (the in-app logo follows
   the theme).
