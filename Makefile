@@ -1,4 +1,4 @@
-.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons android-keys
+.PHONY: setup l10n run apk ios analyze test rules-test format clean doctor icons android-keys firebase
 
 # Zero-touch setup (CLAUDE.md §9): one command from a fresh checkout to a
 # runnable app. The shared Firebase project is built in
@@ -13,6 +13,12 @@ setup:
 # does not know. Safe to re-run; setup and apk do it for you.
 android-keys:
 	tool/register_android_keys.sh
+
+# Switch the app to another Firebase project from the files its console gives
+# you (Project settings > Your apps):
+#   make firebase ANDROID=~/Downloads/google-services.json IOS=~/Downloads/GoogleService-Info.plist
+firebase:
+	python3 tool/use_firebase.py $(if $(ANDROID),ANDROID=$(ANDROID)) $(if $(IOS),IOS=$(IOS))
 
 # Regenerate the AppText classes after editing an .arb file.
 l10n:
