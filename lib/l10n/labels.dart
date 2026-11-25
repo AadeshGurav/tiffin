@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../core/meal_type.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
+import '../ui/theme/category_palette.dart';
 import '../ui/theme/theme_catalog.dart';
 import 'app_localizations.dart';
 
@@ -40,6 +41,19 @@ extension AppTextLabels on AppText {
         'active' => statusActive,
         'inactive' => statusInactive,
         _ => status,
+      };
+
+  String categoryColorName(CategoryColor c) => switch (c) {
+        CategoryColor.red => categoryColorRed,
+        CategoryColor.orange => categoryColorOrange,
+        CategoryColor.olive => categoryColorOlive,
+        CategoryColor.green => categoryColorGreen,
+        CategoryColor.teal => categoryColorTeal,
+        CategoryColor.blue => categoryColorBlue,
+        CategoryColor.indigo => categoryColorIndigo,
+        CategoryColor.purple => categoryColorPurple,
+        CategoryColor.pink => categoryColorPink,
+        CategoryColor.slate => categoryColorSlate,
       };
 
   String paymentMethodLabel(PaymentMethod method) => switch (method) {

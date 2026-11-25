@@ -1637,5 +1637,62 @@
   "scannerCameraDeniedTitle": "CAMERA OFF",
   "scannerCameraDenied": "Tiffin can't use the camera. Allow camera access for Tiffin in the phone's settings, then open this screen again.",
   "scannerCameraUnavailable": "The camera could not start. Close this screen and open it again.",
-  "errNumberInvalid": "That isn't a valid number. Check what you typed and try again."
+  "errNumberInvalid": "That isn't a valid number. Check what you typed and try again.",
+  "categoryColorLabel": "QR card colour",
+  "@categoryColorLabel": {
+    "description": "On the menu category form. The colour that frames the QR cards of members in this category."
+  },
+  "categoryColorNone": "No colour",
+  "@categoryColorNone": {
+    "description": "Menu category colour choice meaning 'use the plain default'."
+  },
+  "categoryColorSelected": "Colour: {name}",
+  "@categoryColorSelected": {
+    "description": "Shown under the colour swatches so the choice is never carried by colour alone. name = a colour name such as Teal.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryColorRed": "Red",
+  "@categoryColorRed": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorOrange": "Orange",
+  "@categoryColorOrange": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorOlive": "Olive",
+  "@categoryColorOlive": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorGreen": "Green",
+  "@categoryColorGreen": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorTeal": "Teal",
+  "@categoryColorTeal": {
+    "description": "Colour name in the QR card palette (blue-green)."
+  },
+  "categoryColorBlue": "Blue",
+  "@categoryColorBlue": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorIndigo": "Indigo",
+  "@categoryColorIndigo": {
+    "description": "Colour name in the QR card palette (deep blue-violet)."
+  },
+  "categoryColorPurple": "Purple",
+  "@categoryColorPurple": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorPink": "Pink",
+  "@categoryColorPink": {
+    "description": "Colour name in the QR card palette."
+  },
+  "categoryColorSlate": "Slate",
+  "@categoryColorSlate": {
+    "description": "Colour name in the QR card palette (dark grey-blue)."
+  }
 }

@@ -742,5 +742,18 @@
   "scannerCameraDeniedTitle": "कॅमेरा बंद आहे",
   "scannerCameraDenied": "Tiffin ला कॅमेरा वापरता येत नाही. फोनच्या सेटिंगमध्ये Tiffin ला कॅमेऱ्याची परवानगी द्या, मग ही स्क्रीन पुन्हा उघडा.",
   "scannerCameraUnavailable": "कॅमेरा सुरू होऊ शकला नाही. ही स्क्रीन बंद करून पुन्हा उघडा.",
-  "errNumberInvalid": "ही योग्य संख्या नाही. जे लिहिले ते तपासा आणि पुन्हा प्रयत्न करा."
+  "errNumberInvalid": "ही योग्य संख्या नाही. जे लिहिले ते तपासा आणि पुन्हा प्रयत्न करा.",
+  "categoryColorLabel": "QR कार्डचा रंग",
+  "categoryColorNone": "रंग नाही",
+  "categoryColorSelected": "रंग: {name}",
+  "categoryColorRed": "लाल",
+  "categoryColorOrange": "केशरी",
+  "categoryColorOlive": "ऑलिव्ह",
+  "categoryColorGreen": "हिरवा",
+  "categoryColorTeal": "निळा-हिरवा",
+  "categoryColorBlue": "निळा",
+  "categoryColorIndigo": "इंडिगो",
+  "categoryColorPurple": "जांभळा",
+  "categoryColorPink": "गुलाबी",
+  "categoryColorSlate": "राखाडी"
 }
