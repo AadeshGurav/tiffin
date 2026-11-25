@@ -1665,5 +1665,9 @@
   "searchSortAmount": "Highest amount",
   "scanLogScreenSearchLabel": "Search by member, meal or category",
   "expensesScreenSearchLabel": "Search by category or description",
-  "expensesScreenSortCategory": "Category"
+  "expensesScreenSortCategory": "Category",
+  "purchaseScheduleScreenSearchLabel": "Search items to buy",
+  "purchaseScheduleScreenSortDate": "By date",
+  "purchaseScheduleScreenSortName": "By name within each day",
+  "purchaseScheduleScreenSortPending": "Not bought first within each day"
 }

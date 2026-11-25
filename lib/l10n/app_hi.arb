@@ -762,5 +762,9 @@
   "searchSortAmount": "सबसे ज़्यादा राशि",
   "scanLogScreenSearchLabel": "सदस्य, भोजन या श्रेणी से खोजें",
   "expensesScreenSearchLabel": "श्रेणी या विवरण से खोजें",
-  "expensesScreenSortCategory": "श्रेणी"
+  "expensesScreenSortCategory": "श्रेणी",
+  "purchaseScheduleScreenSearchLabel": "खरीदने की चीज़ें खोजें",
+  "purchaseScheduleScreenSortDate": "तारीख के अनुसार",
+  "purchaseScheduleScreenSortName": "हर दिन में नाम के अनुसार",
+  "purchaseScheduleScreenSortPending": "हर दिन में बिना खरीदे पहले"
 }
