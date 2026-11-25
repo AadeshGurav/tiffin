@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../app/providers.dart';
 import '../../../core/list_search.dart';
 import '../../../domain/ledger.dart';
+import '../../../domain/settings.dart';
 import '../../../domain/member.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
@@ -38,6 +39,7 @@ class TopupHistoryTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final history = ref.watch(_historyProvider);
+    final meals = ref.watch(anytimeMealsProvider).asData?.value ?? const [];
     final fmt = DateFormat('MMM d, y · HH:mm');
 
     return AsyncView<_History>(
@@ -103,6 +105,11 @@ class TopupHistoryTab extends ConsumerWidget {
                           AppText.of(context)
                               .paymentStatusLabel(tp.paymentStatus)),
                       style: t.text.label),
+                  if (tp.anytimeUnits.isNotEmpty)
+                    Text(
+                        AppText.of(context)
+                            .unitsLine(tp.units, meals, anytimeOnly: true),
+                        style: t.text.label),
                   Text(
                       AppText.of(context).topupHistoryCreatedInfo(
                           fmt.format(tp.createdAt.toLocal()), tp.createdBy),
@@ -118,7 +125,8 @@ class TopupHistoryTab extends ConsumerWidget {
                     const SizedBox(height: NbSpace.sm),
                     NbButton.secondary(
                       label: AppText.of(context).topupHistoryReverseButton,
-                      onPressed: () => _confirmReverse(context, ref, tp, name),
+                      onPressed: () =>
+                          _confirmReverse(context, ref, tp, name, meals),
                     ),
                   ],
                 ],
@@ -130,18 +138,29 @@ class TopupHistoryTab extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmReverse(
-      BuildContext context, WidgetRef ref, Topup tp, String name) async {
+  Future<void> _confirmReverse(BuildContext context, WidgetRef ref, Topup tp,
+      String name, List<AnytimeMeal> meals) async {
     final t = context.tokens;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(AppText.of(context).topupHistoryReverseDialogTitle,
             style: t.text.heading),
-        content: Text(
-          AppText.of(context).topupHistoryReverseDialogBody(
-              tp.lunchUnits, tp.breakfastUnits, tp.brunchUnits, name),
-          style: t.text.body,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppText.of(context).topupHistoryReverseDialogBody(
+                  tp.lunchUnits, tp.breakfastUnits, tp.brunchUnits, name),
+              style: t.text.body,
+            ),
+            if (tp.anytimeUnits.isNotEmpty)
+              Text(
+                  AppText.of(context)
+                      .unitsLine(tp.units, meals, anytimeOnly: true),
+                  style: t.text.label),
+          ],
         ),
         actions: [
           TextButton(

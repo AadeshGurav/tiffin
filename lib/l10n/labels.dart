@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../core/meal_type.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
+import '../domain/member.dart' show UnitCounts;
 import '../domain/settings.dart' show AnytimeMeal;
 import '../ui/theme/category_palette.dart';
 import '../ui/theme/theme_catalog.dart';
@@ -28,6 +29,16 @@ extension AppTextLabels on AppText {
     }
     return id;
   }
+
+  /// One "Tea 5" per non-zero meal in [units] — every meal, or with
+  /// [anytimeOnly] just the anytime ones — joined with " · "; '' when none.
+  String unitsLine(UnitCounts units, List<AnytimeMeal> catalogue,
+          {bool anytimeOnly = false}) =>
+      [
+        for (final e in units.byMeal.entries)
+          if (!anytimeOnly || MealType.tryWire(e.key) == null)
+            mealUnits(mealName(e.key, catalogue), e.value),
+      ].join(' · ');
 
   String roleLabel(Role role) => switch (role) {
         Role.admin => roleAdmin,

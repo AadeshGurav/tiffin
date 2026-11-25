@@ -294,6 +294,8 @@
   "topupScreenLunchLabel": "दोपहर का भोजन  ({price})",
   "topupScreenBreakfastLabel": "नाश्ता  ({price})",
   "topupScreenBrunchLabel": "ब्रंच  ({price})",
+  "topupScreenAnytimeLabel": "{meal}  ({price})",
+  "mealUnits": "{meal}: {count}",
   "topupScreenPaymentCash": "नकद",
   "topupScreenPaymentUpi": "UPI",
   "topupScreenTotalLabel": "कुल",

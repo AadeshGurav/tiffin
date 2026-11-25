@@ -645,6 +645,30 @@
     },
     "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
   },
+  "topupScreenAnytimeLabel": "{meal}  ({price})",
+  "@topupScreenAnytimeLabel": {
+    "description": "A unit row on the top-up screen. meal = an anytime meal's name (Tea); price = a formatted amount per unit.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "mealUnits": "{meal}: {count}",
+  "@mealUnits": {
+    "description": "Units of one meal, on bills and summaries. meal = a meal name; count = a whole number, may be negative.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "topupScreenPaymentCash": "Cash",
   "topupScreenPaymentUpi": "UPI",
   "topupScreenTotalLabel": "TOTAL",
