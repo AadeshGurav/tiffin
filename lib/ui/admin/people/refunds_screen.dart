@@ -32,6 +32,12 @@ class RefundsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final refunds = ref.watch(_refundsProvider);
+    // Whose refund it was; members are cached, so this is instant.
+    final nameById = {
+      for (final m in ref.watch(_activeMembersProvider).asData?.value ??
+          const <Member>[])
+        m.id: m.name,
+    };
     final fmt = DateFormat('MMM d, y');
     return Scaffold(
       appBar: AppBar(title: Text(AppText.of(context).refundsScreenTitle)),
@@ -62,6 +68,11 @@ class RefundsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                      nameById[r.memberId] ??
+                          AppText.of(context)
+                              .topupHistoryUnknownMember(shortCode(r.memberId)),
+                      style: t.text.body),
                   Text(
                       AppText.of(context).refundsScreenLineSummary(
                           r.lunchUnits,
