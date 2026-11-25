@@ -749,5 +749,8 @@
   "searchNoMatchesHint": "वर्तनी जाँचें या कम शब्द आज़माएँ।",
   "searchSortNameAz": "नाम A से Z",
   "searchSortNewest": "सबसे नया पहले",
-  "searchSortOldest": "सबसे पुराना पहले"
+  "searchSortOldest": "सबसे पुराना पहले",
+  "membersScreenSearchLabel": "नाम, QR कोड या श्रेणी से खोजें",
+  "membersScreenSortBalance": "सबसे ज़्यादा यूनिट बाकी",
+  "membersScreenSortCategory": "श्रेणी"
 }

@@ -26,6 +26,8 @@ class UnitCounts {
 
   bool get isAllZero => lunch == 0 && breakfast == 0 && brunch == 0;
 
+  int get total => lunch + breakfast + brunch;
+
   Map<String, dynamic> toJson() =>
       {'lunch': lunch, 'breakfast': breakfast, 'brunch': brunch};
 }

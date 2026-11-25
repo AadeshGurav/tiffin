@@ -1652,5 +1652,8 @@
   "searchNoMatchesHint": "Check the spelling or try fewer words.",
   "searchSortNameAz": "Name A to Z",
   "searchSortNewest": "Newest first",
-  "searchSortOldest": "Oldest first"
+  "searchSortOldest": "Oldest first",
+  "membersScreenSearchLabel": "Search by name, QR code or category",
+  "membersScreenSortBalance": "Most units left",
+  "membersScreenSortCategory": "Category"
 }

@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/number_input.dart';
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../domain/member.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import '../../shared_widgets/motion.dart';
 import '../../../l10n/app_localizations.dart';
@@ -48,13 +50,35 @@ class MembersScreen extends ConsumerWidget {
         ),
         // One flat, lazily built list with hairlines: a card per member made
         // a long list hard to scan, and its two buttons per card hid the name.
-        builder: (list) => ListView.separated(
-          itemCount: list.length,
-          separatorBuilder: (_, __) =>
-              Divider(height: t.shape.borderHair, color: t.color.border),
-          itemBuilder: (_, i) => _MemberTile(
-            member: list[i],
-            onChanged: () => ref.invalidate(_membersProvider),
+        builder: (list) => SearchSortList<Member>(
+          items: list,
+          searchLabel: AppText.of(context).membersScreenSearchLabel,
+          searchFields: (m) => [
+            m.name,
+            m.qrCodeId,
+            m.category,
+            m.className,
+            m.rollNumber,
+            m.staffId,
+          ],
+          sorts: [
+            SortOption(AppText.of(context).searchSortNameAz,
+                (a, b) => compareNames(a.name, b.name)),
+            SortOption(AppText.of(context).membersScreenSortBalance,
+                (a, b) => b.balances.total.compareTo(a.balances.total)),
+            SortOption(AppText.of(context).membersScreenSortCategory,
+                (a, b) => compareNames(a.category, b.category)),
+            SortOption(AppText.of(context).searchSortNewest,
+                (a, b) => b.createdAt.compareTo(a.createdAt)),
+          ],
+          builder: (context, visible) => ListView.separated(
+            itemCount: visible.length,
+            separatorBuilder: (_, __) =>
+                Divider(height: t.shape.borderHair, color: t.color.border),
+            itemBuilder: (_, i) => _MemberTile(
+              member: visible[i],
+              onChanged: () => ref.invalidate(_membersProvider),
+            ),
           ),
         ),
       ),
