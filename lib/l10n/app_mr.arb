@@ -755,5 +755,7 @@
   "membersScreenSortCategory": "श्रेणी",
   "ingredientsScreenSearchLabel": "साहित्य शोधा",
   "ingredientsScreenSortLowStock": "कमी साठा आधी",
-  "recipesScreenSearchLabel": "रेसिपी शोधा"
+  "recipesScreenSearchLabel": "रेसिपी शोधा",
+  "usersScreenSearchLabel": "वापरकर्तानाव किंवा भूमिकेने शोधा",
+  "usersScreenSortRole": "भूमिका"
 }

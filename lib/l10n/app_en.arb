@@ -1658,5 +1658,7 @@
   "membersScreenSortCategory": "Category",
   "ingredientsScreenSearchLabel": "Search ingredients",
   "ingredientsScreenSortLowStock": "Low stock first",
-  "recipesScreenSearchLabel": "Search recipes"
+  "recipesScreenSearchLabel": "Search recipes",
+  "usersScreenSearchLabel": "Search by username or role",
+  "usersScreenSortRole": "Role"
 }

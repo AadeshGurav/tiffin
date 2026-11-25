@@ -755,5 +755,7 @@
   "membersScreenSortCategory": "श्रेणी",
   "ingredientsScreenSearchLabel": "सामग्री खोजें",
   "ingredientsScreenSortLowStock": "कम स्टॉक पहले",
-  "recipesScreenSearchLabel": "रेसिपी खोजें"
+  "recipesScreenSearchLabel": "रेसिपी खोजें",
+  "usersScreenSearchLabel": "यूज़रनेम या भूमिका से खोजें",
+  "usersScreenSortRole": "भूमिका"
 }
