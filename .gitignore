@@ -43,3 +43,6 @@ lib/l10n/app_localizations*.dart
 # graphify: the graph is tracked (CLAUDE.md §19.1), its machine-local
 # scratch files are not.
 graphify-out/.graphify_*
+
+# Agent worktrees (machine-local)
+.claude/worktrees/
