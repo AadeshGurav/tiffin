@@ -785,6 +785,15 @@
   "refundsScreenLunchUnitsLabel": "Lunch units",
   "refundsScreenBreakfastUnitsLabel": "Breakfast units",
   "refundsScreenBrunchUnitsLabel": "Brunch units",
+  "refundsScreenAnytimeUnitsLabel": "{meal} units",
+  "@refundsScreenAnytimeUnitsLabel": {
+    "description": "A field on the refund form. meal = an anytime meal's name (Tea).",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "refundsScreenReasonLabel": "Reason (optional)",
   "refundsScreenCancelButton": "Cancel",
   "refundsScreenProcessConfirmButton": "Process",

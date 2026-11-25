@@ -351,6 +351,7 @@
   "refundsScreenLunchUnitsLabel": "दुपारच्या जेवणाची एकके",
   "refundsScreenBreakfastUnitsLabel": "न्याहारीची एकके",
   "refundsScreenBrunchUnitsLabel": "ब्रंचची एकके",
+  "refundsScreenAnytimeUnitsLabel": "{meal}ची एकके",
   "refundsScreenReasonLabel": "कारण (ऐच्छिक)",
   "refundsScreenCancelButton": "रद्द करा",
   "refundsScreenProcessConfirmButton": "प्रक्रिया करा",

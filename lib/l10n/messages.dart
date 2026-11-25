@@ -77,7 +77,11 @@ extension AppTextMessages on AppText {
   String _appError(AppException e) {
     String s(String k) => '${e.args[k] ?? ''}';
     int n(String k) => (e.args[k] as num?)?.toInt() ?? 0;
-    String meal(String k) => mealName(s(k));
+    // An anytime meal's name may ride along in the args (ADR 0009).
+    String meal(String k) => mealName(s(k), [
+          if (e.args['mealName'] case final String name)
+            AnytimeMeal(id: s(k), name: name, price: 0),
+        ]);
     String role(String k) {
       try {
         return roleLabel(Role.fromWire(s(k)));

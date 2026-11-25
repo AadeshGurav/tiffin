@@ -241,6 +241,7 @@ class Backend {
       lunchUnits: draft.lunchUnits,
       breakfastUnits: draft.breakfastUnits,
       brunchUnits: draft.brunchUnits,
+      anytimeUnits: draft.anytimeUnits,
       reason: draft.reason,
       processedBy: _username,
     ));

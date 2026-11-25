@@ -34,6 +34,7 @@ class RefundsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final refunds = ref.watch(_refundsProvider);
+    final meals = ref.watch(anytimeMealsProvider).asData?.value ?? const [];
     // Whose refund it was; members are cached, so this is instant.
     final nameById = {
       for (final m in ref.watch(_activeMembersProvider).asData?.value ??
@@ -98,6 +99,11 @@ class RefundsScreen extends ConsumerWidget {
                             r.brunchUnits,
                             AppText.of(context).money(r.refundAmount)),
                         style: t.text.body),
+                    if (r.anytimeUnits.isNotEmpty)
+                      Text(
+                          AppText.of(context)
+                              .unitsLine(r.units, meals, anytimeOnly: true),
+                          style: t.text.body),
                     Text(
                         AppText.of(context).refundsScreenLineInfo(
                             fmt.format(r.createdAt.toLocal()),
@@ -121,18 +127,26 @@ class RefundsScreen extends ConsumerWidget {
     final categories = (await ref.read(menuCategoriesProvider.future))
         .map((c) => c.name)
         .toList();
+    final catalogue = await ref.read(anytimeMealsProvider.future);
     if (!context.mounted || members.isEmpty) return;
     Member selected = members.first;
     final lunch = TextEditingController();
     final breakfast = TextEditingController();
     final brunch = TextEditingController();
     final reason = TextEditingController();
+    // One field per anytime meal this member holds, retired ones included
+    // (ADR 0009): a retired meal's units are refunded, never stranded.
+    var anytime = <String, TextEditingController>{};
 
     // A meal on grace is below zero: there is nothing of it to refund.
     void prefill() {
       lunch.text = '${max(0, selected.balances.lunch)}';
       breakfast.text = '${max(0, selected.balances.breakfast)}';
       brunch.text = '${max(0, selected.balances.brunch)}';
+      anytime = {
+        for (final e in selected.balances.anytime.entries)
+          if (e.value > 0) e.key: TextEditingController(text: '${e.value}'),
+      };
     }
 
     prefill();
@@ -177,6 +191,14 @@ class RefundsScreen extends ConsumerWidget {
                     label: AppText.of(context).refundsScreenBrunchUnitsLabel,
                     controller: brunch,
                     keyboardType: TextInputType.number),
+                for (final e in anytime.entries) ...[
+                  const SizedBox(height: NbSpace.sm),
+                  NbTextField(
+                      label: AppText.of(context).refundsScreenAnytimeUnitsLabel(
+                          AppText.of(context).mealName(e.key, catalogue)),
+                      controller: e.value,
+                      keyboardType: TextInputType.number),
+                ],
                 const SizedBox(height: NbSpace.sm),
                 NbTextField(
                     label: AppText.of(context).refundsScreenReasonLabel,
@@ -203,6 +225,10 @@ class RefundsScreen extends ConsumerWidget {
             lunchUnits: parseWholeNumber(lunch.text),
             breakfastUnits: parseWholeNumber(breakfast.text),
             brunchUnits: parseWholeNumber(brunch.text),
+            anytimeUnits: {
+              for (final e in anytime.entries)
+                e.key: parseWholeNumber(e.value.text),
+            },
             reason: reason.text.trim().isEmpty ? null : reason.text.trim(),
             processedBy: '',
           )),

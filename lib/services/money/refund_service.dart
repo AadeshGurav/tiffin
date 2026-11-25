@@ -27,10 +27,9 @@ class RefundService {
   }
 
   Future<Refund> create(RefundDraft draft) async {
+    final units = draft.units;
     // A negative refund would credit units (and record a negative payout).
-    if (draft.lunchUnits < 0 ||
-        draft.breakfastUnits < 0 ||
-        draft.brunchUnits < 0) {
+    if (units.byMeal.values.any((n) => n < 0)) {
       throw const ValidationException(ErrorCode.negativeUnits);
     }
     if (draft.isAllZero) {
@@ -42,35 +41,38 @@ class RefundService {
       throw const NotFoundException(ErrorCode.memberNotFound);
     }
     final balances = Member.fromJson(memberRow).balances;
-    _rejectOverRefund('lunch', draft.lunchUnits, balances.lunch);
-    _rejectOverRefund('breakfast', draft.breakfastUnits, balances.breakfast);
-    _rejectOverRefund('brunch', draft.brunchUnits, balances.brunch);
+    final settings = await _settings.read();
+    // A retired meal is still refundable: that is what retiring keeps open.
+    for (final id in units.anytime.keys) {
+      if (settings.anytimeMeal(id) == null) {
+        throw ValidationException(ErrorCode.unknownMeal, {'meal': id});
+      }
+    }
+    for (final e in units.byMeal.entries) {
+      _rejectOverRefund(
+          e.key, e.value, balances[e.key], settings.anytimeMeal(e.key)?.name);
+    }
 
-    final prices = (await _settings.read()).unitPrices;
     final refund = Refund(
       id: _store.newId(Col.refunds),
       memberId: draft.memberId,
       lunchUnits: draft.lunchUnits,
       breakfastUnits: draft.breakfastUnits,
       brunchUnits: draft.brunchUnits,
-      refundAmount: draft.lunchUnits * prices.lunch +
-          draft.breakfastUnits * prices.breakfast +
-          draft.brunchUnits * prices.brunch,
+      anytimeUnits: {
+        for (final e in units.anytime.entries)
+          if (e.value != 0) e.key: e.value,
+      },
+      refundAmount: units.byMeal.entries
+          .fold(0.0, (total, e) => total + e.value * settings.priceOf(e.key)),
       reason: draft.reason,
       processedBy: draft.processedBy,
       createdAt: DateTime.now().toUtc(),
     );
     final b = _store.batch()
       ..set(_col.doc(refund.id), refund.toJson()..remove('id'))
-      ..update(
-          _store.doc(Col.members, draft.memberId),
-          MemberService.balanceDelta(
-              UnitCounts(
-                lunch: draft.lunchUnits,
-                breakfast: draft.breakfastUnits,
-                brunch: draft.brunchUnits,
-              ),
-              sign: -1));
+      ..update(_store.doc(Col.members, draft.memberId),
+          MemberService.balanceDelta(units, sign: -1));
     await _store.commit(b, 'refunds.create ${refund.id}');
     _log.info('created member_id=${draft.memberId} refund_id=${refund.id} '
         'amount=${refund.refundAmount.toStringAsFixed(2)} '
@@ -80,10 +82,17 @@ class RefundService {
 
   /// Only meals actually being refunded are checked: a meal running on grace
   /// (below zero) must not block refunding another one.
-  void _rejectOverRefund(String meal, int requested, int available) {
+  /// [mealName] names an anytime meal in the message (the phone showing it
+  /// may not have the catalogue at hand).
+  void _rejectOverRefund(
+      String meal, int requested, int available, String? mealName) {
     if (requested > 0 && requested > available) {
-      throw ValidationException(ErrorCode.refundExceedsBalance,
-          {'requested': requested, 'meal': meal, 'available': available});
+      throw ValidationException(ErrorCode.refundExceedsBalance, {
+        'requested': requested,
+        'meal': meal,
+        'available': available,
+        if (mealName != null) 'mealName': mealName,
+      });
     }
   }
 }

@@ -368,6 +368,7 @@ class RefundDraft {
     this.lunchUnits = 0,
     this.breakfastUnits = 0,
     this.brunchUnits = 0,
+    this.anytimeUnits = const {},
     this.reason,
     required this.processedBy,
   });
@@ -377,6 +378,7 @@ class RefundDraft {
         lunchUnits: (j['lunchUnits'] as num?)?.toInt() ?? 0,
         breakfastUnits: (j['breakfastUnits'] as num?)?.toInt() ?? 0,
         brunchUnits: (j['brunchUnits'] as num?)?.toInt() ?? 0,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         reason: j['reason'] as String?,
         processedBy: j['processedBy'] as String,
       );
@@ -385,17 +387,26 @@ class RefundDraft {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id (ADR 0009 §4).
+  final Map<String, int> anytimeUnits;
   final String? reason;
   final String processedBy;
 
-  bool get isAllZero =>
-      lunchUnits == 0 && breakfastUnits == 0 && brunchUnits == 0;
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
+  bool get isAllZero => units.isAllZero;
 
   Map<String, dynamic> toJson() => {
         'memberId': memberId,
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'reason': reason,
         'processedBy': processedBy,
       };
@@ -408,6 +419,7 @@ class Refund {
     required this.lunchUnits,
     required this.breakfastUnits,
     required this.brunchUnits,
+    this.anytimeUnits = const {},
     required this.refundAmount,
     this.reason,
     required this.processedBy,
@@ -420,6 +432,7 @@ class Refund {
         lunchUnits: j['lunchUnits'] as int,
         breakfastUnits: j['breakfastUnits'] as int,
         brunchUnits: j['brunchUnits'] as int,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         refundAmount: (j['refundAmount'] as num).toDouble(),
         reason: j['reason'] as String?,
         processedBy: j['processedBy'] as String,
@@ -431,17 +444,28 @@ class Refund {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id; absent on pre-0009 records.
+  final Map<String, int> anytimeUnits;
   final double refundAmount;
   final String? reason;
   final String processedBy;
   final DateTime createdAt;
 
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'memberId': memberId,
+        // Flat built-in fields kept for older builds, as on top-ups.
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'refundAmount': refundAmount,
         'reason': reason,
         'processedBy': processedBy,
