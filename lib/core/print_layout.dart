@@ -1,8 +1,8 @@
-/// Pure layout maths for printing member QR cards on any paper.
-///
-/// No Flutter, no PDF: everything is millimetres in, millimetres out, so the
-/// "how many cards fit?" question is unit-testable and the screen, the PDF and
-/// the cut marks all agree because they ask the same [SheetPlan].
+// Pure layout maths for printing member QR cards on any paper.
+//
+// No Flutter, no PDF: everything is millimetres in, millimetres out, so the
+// "how many cards fit?" question is unit-testable and the screen, the PDF and
+// the cut marks all agree because they ask the same SheetPlan.
 
 /// Paper the canteen might print on. Sizes are the short and long side in mm;
 /// a roll has a fixed width and no length (its pages are cut to the card).
