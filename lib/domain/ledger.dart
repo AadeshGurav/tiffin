@@ -194,6 +194,12 @@ class ReversalResult {
 // Top-up
 // ---------------------------------------------------------------------------
 
+/// `{mealId: units}` from a stored `anytimeUnits` map; absent reads as none.
+Map<String, int> anytimeUnitsFromJson(Object? j) => {
+      for (final e in (j as Map? ?? const {}).entries)
+        e.key as String: (e.value as num).toInt(),
+    };
+
 enum PaymentMethod {
   cash,
   upi;
@@ -212,6 +218,7 @@ class TopupDraft {
     this.lunchUnits = 0,
     this.breakfastUnits = 0,
     this.brunchUnits = 0,
+    this.anytimeUnits = const {},
     required this.paymentMethod,
     required this.createdBy,
   });
@@ -221,6 +228,7 @@ class TopupDraft {
         lunchUnits: (j['lunchUnits'] as num?)?.toInt() ?? 0,
         breakfastUnits: (j['breakfastUnits'] as num?)?.toInt() ?? 0,
         brunchUnits: (j['brunchUnits'] as num?)?.toInt() ?? 0,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         paymentMethod: PaymentMethod.fromWire(j['paymentMethod'] as String),
         createdBy: j['createdBy'] as String,
       );
@@ -229,17 +237,26 @@ class TopupDraft {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id (ADR 0009 §4).
+  final Map<String, int> anytimeUnits;
   final PaymentMethod paymentMethod;
   final String createdBy;
 
-  bool get isAllZero =>
-      lunchUnits == 0 && breakfastUnits == 0 && brunchUnits == 0;
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
+  bool get isAllZero => units.isAllZero;
 
   Map<String, dynamic> toJson() => {
         'memberId': memberId,
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'paymentMethod': paymentMethod.wire,
         'createdBy': createdBy,
       };
@@ -252,6 +269,7 @@ class Topup {
     required this.lunchUnits,
     required this.breakfastUnits,
     required this.brunchUnits,
+    this.anytimeUnits = const {},
     required this.amount,
     required this.paymentMethod,
     required this.paymentStatus,
@@ -271,6 +289,7 @@ class Topup {
         lunchUnits: j['lunchUnits'] as int,
         breakfastUnits: j['breakfastUnits'] as int,
         brunchUnits: j['brunchUnits'] as int,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         amount: (j['amount'] as num).toDouble(),
         paymentMethod: PaymentMethod.fromWire(j['paymentMethod'] as String),
         paymentStatus: j['paymentStatus'] as String,
@@ -293,6 +312,9 @@ class Topup {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id; absent on pre-0009 records.
+  final Map<String, int> anytimeUnits;
   final double amount;
   final PaymentMethod paymentMethod;
   final String paymentStatus; // 'pending' | 'confirmed'
@@ -307,12 +329,21 @@ class Topup {
   /// The member's balances right after this top-up — printed on the bill.
   final UnitCounts? balancesAfter;
 
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'memberId': memberId,
+        // The flat built-in fields stay: older builds read them as non-null
+        // ints, so a Tea-only top-up still parses there (ADR 0009 §4).
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'amount': amount,
         'paymentMethod': paymentMethod.wire,
         'paymentStatus': paymentStatus,
