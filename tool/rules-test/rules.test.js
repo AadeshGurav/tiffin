@@ -166,6 +166,24 @@ describe('the one-scan-per-meal lock', () => {
   });
 });
 
+describe('who is waiting to join', () => {
+  beforeEach(() => seed({
+    'canteens/c1': { name: 'x', ownerUid: 'owner' },
+    'canteens/c1/onlineUsers/owner': { email: 'a@b.c', role: 'admin', status: 'active' },
+    'canteens/c1/devices/gate': { name: 'Gate', status: 'pending', role: 'scanner' },
+    'canteens/c1/devices/counter': approved('counter'),
+  }));
+
+  test('an admin signed in online lists the phones asking to join', async () => {
+    await assertSucceeds(getDocs(collection(person('owner'), 'canteens/c1/devices')));
+  });
+
+  test('nobody else lists them', async () => {
+    await assertFails(getDocs(collection(phone('counter'), 'canteens/c1/devices')));
+    await assertFails(getDocs(collection(phone('gate'), 'canteens/c1/devices')));
+  });
+});
+
 describe('online accounts', () => {
   beforeEach(() => seed({
     'canteens/c1/onlineUsers/on': { email: 'a@b.c', role: 'counter', status: 'active' },
@@ -217,6 +235,8 @@ describe('canteens', () => {
     await seed({ 'canteens/ABCD2345': { name: 'x', ownerUid: 'owner' } });
     await assertSucceeds(getDoc(doc(anonymous('p'), 'canteens/ABCD2345')));
     await assertFails(getDocs(collection(anonymous('p'), 'canteens')));
+    // Why the app gives a new phone its anonymous identity before the lookup.
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'canteens/ABCD2345')));
   });
 
   test('the creator can restore their own admin row, nobody else can', async () => {

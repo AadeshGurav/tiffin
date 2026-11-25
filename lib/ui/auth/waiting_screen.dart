@@ -14,17 +14,25 @@ import '../shared_widgets/notice_screen.dart';
 /// access stream is live, so approval elsewhere moves this screen on by itself.
 class WaitingScreen extends ConsumerWidget {
   const WaitingScreen(
-      {super.key, required Device this.device, this.removed = false})
+      {super.key,
+      required Device this.device,
+      this.removed = false,
+      this.delivered = true})
       : email = null,
         pending = false;
 
   const WaitingScreen.onlineRefused(
       {super.key, required String this.email, this.pending = false})
       : device = null,
-        removed = false;
+        removed = false,
+        delivered = true;
 
   final Device? device;
   final bool removed;
+
+  /// False while the request has not reached the server, so the admin
+  /// cannot see it yet — said plainly rather than left to look like waiting.
+  final bool delivered;
   final String? email;
 
   /// Online account that asked to join and awaits approval (vs turned off).
@@ -75,7 +83,11 @@ class WaitingScreen extends ConsumerWidget {
     return NoticeScreen(
       icon: Icons.hourglass_top,
       title: text.waitingTitle,
-      body: '${text.waitingBody(d.name)}\n\n${text.waitingCode(d.code)}',
+      body: [
+        if (!delivered) text.waitingNotSent,
+        text.waitingBody(d.name),
+        text.waitingCode(d.code),
+      ].join('\n\n'),
       actions: [switchCanteen, startOver],
     );
   }

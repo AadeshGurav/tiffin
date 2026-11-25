@@ -63,8 +63,10 @@ All canteens live in one Firebase project that the app owner runs. Follow
 2. Either name the phone and tap **Join this canteen** (it then shows
    **Waiting for approval** with a short **phone code**), or sign in with
    Google / Microsoft / email, which sends a join request as that person.
-3. On an admin phone: **Settings ▸ Devices** (phones) or **Settings ▸ Online
-   accounts** (people); approve and pick a role. The waiting phone moves on by
+3. On an admin phone the dashboard's **Settings** row says **N waiting to
+   join**. Open **Settings ▸ Devices** (phones that joined by name) or
+   **Settings ▸ Online accounts** (people who signed in), whichever row says
+   someone is waiting, and tap **Approve**. The waiting phone moves on by
    itself.
 4. Sign in with an account made under **Settings ▸ Users**.
 
@@ -300,9 +302,12 @@ this device**. Clear any of it from **Appearance ▸ Saved logins**.
 
 ## 4. If something's wrong
 
-- **"Waiting for approval" never moves on** — the admin phone needs
-  internet to approve, and so does the waiting phone to notice. Check both are
-  online, and that the admin approved the right phone code.
+- **"Waiting for approval" never moves on** — if the screen says the request
+  *has not reached the admin yet*, this phone needs internet first; the admin
+  cannot see it until then. Otherwise the admin phone needs internet to
+  approve, and so does the waiting phone to notice. A phone that signed in
+  with Google or email is under **Settings ▸ Online accounts**, not Devices.
+  Check that the admin approved the right phone code.
 - **"This phone isn't allowed to do that"** — the phone's role is narrower
   than the job. Change it in **Settings ▸ Devices** on an admin phone.
 - **Offline for a long time** — fine for scanning and top-ups. Balances other

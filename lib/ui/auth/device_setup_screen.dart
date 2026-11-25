@@ -40,6 +40,10 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
   }
 
   Future<void> _run(Future<void> Function() action) async {
+    // Read before awaiting: the access stream can replace this screen while
+    // [action] is still running (see [setupErrorProvider]).
+    final text = AppText.of(context);
+    final keep = ref.read(setupErrorProvider.notifier)..set(null);
     setState(() {
       _busy = true;
       _error = null;
@@ -47,8 +51,11 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
     try {
       await action();
     } catch (e, st) {
+      final notice = text.describeError(e, st);
       if (mounted) {
-        setState(() => _error = AppText.of(context).describeError(e, st));
+        setState(() => _error = notice);
+      } else {
+        keep.set(notice);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -60,11 +67,16 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
     return typed.isEmpty ? AppText.of(context).deviceSetupNameHint : typed;
   }
 
-  Future<void> _join() => _run(() async {
-        final access = ref.read(accessServiceProvider);
-        await access.ensureIdentity();
-        await access.requestApproval(_phoneName);
-      });
+  Future<void> _join() {
+    final text = AppText.of(context);
+    final keep = ref.read(setupErrorProvider.notifier);
+    return _run(() async {
+      final access = ref.read(accessServiceProvider);
+      await access.ensureIdentity();
+      await access.requestApproval(_phoneName,
+          onRejected: (e) => keep.set(text.describeError(e)));
+    });
+  }
 
   Future<void> _signInOnline() => _run(() async {
         await ref
@@ -98,10 +110,13 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
       selected: {_online},
       onSelectionChanged: _busy
           ? null
-          : (v) => setState(() {
+          : (v) {
+              ref.read(setupErrorProvider.notifier).set(null);
+              setState(() {
                 _online = v.first;
                 _error = null;
-              }),
+              });
+            },
     );
 
     final fields = _online
@@ -148,7 +163,7 @@ class _DeviceSetupScreenState extends ConsumerState<DeviceSetupScreen> {
           ? null
           : () => ref.read(canteenBookProvider.notifier).deactivate(),
       body: [mode, const SizedBox(height: NbSpace.lg), ...fields],
-      error: _error,
+      error: _error ?? ref.watch(setupErrorProvider),
       action: _online
           ? NbButton(
               label: text.onlineSignInButton,

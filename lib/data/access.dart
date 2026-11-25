@@ -27,8 +27,12 @@ class NotJoined extends Access {
 }
 
 class PendingApproval extends Access {
-  const PendingApproval(this.device);
+  const PendingApproval(this.device, {this.delivered = true});
   final Device device;
+
+  /// False while the request exists only on this phone: the admin cannot
+  /// see it until it reaches the server.
+  final bool delivered;
 }
 
 class Removed extends Access {
@@ -132,14 +136,16 @@ class AccessService {
         return _watchOnline(u);
       });
 
+  // Metadata changes too, so the moment the request reaches the server is an
+  // event of its own (see [PendingApproval.delivered]).
   Stream<Access> _watchDevice(String uid) =>
-      _device(uid).snapshots().map((device) {
+      _device(uid).snapshots(includeMetadataChanges: true).map((device) {
         if (!device.exists) return const NotJoined();
         final d = Device.fromJson(Store.withId(device));
         return switch (d.status) {
           'approved' => ApprovedDevice(d),
           'removed' => Removed(d),
-          _ => PendingApproval(d),
+          _ => PendingApproval(d, delivered: !device.metadata.hasPendingWrites),
         };
       });
 
@@ -172,8 +178,11 @@ class AccessService {
     }
   }
 
-  /// Asks the admin to approve this phone.
-  Future<void> requestApproval(String name) async {
+  /// Asks the admin to approve this phone. [onRejected] hears of a refusal
+  /// that arrives after this returns (the request was queued); Firestore then
+  /// takes the request back off this phone by itself.
+  Future<void> requestApproval(String name,
+      {void Function(Object error)? onRejected}) async {
     await ensureIdentity();
     final b = _store.batch()
       ..set(_device(_auth.currentUser!.uid), {
@@ -183,7 +192,7 @@ class AccessService {
         'platform': Platform.operatingSystem,
         'requestedAt': DateTime.now().toUtc().toIso8601String(),
       });
-    await _store.commit(b, 'devices.request');
+    await _store.commit(b, 'devices.request', onRejected: onRejected);
   }
 
   /// Forget this phone's identity and begin again from the setup screen.

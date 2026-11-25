@@ -41,6 +41,9 @@ class CanteenService {
     if (code.length != codeLength) {
       throw const NotFoundException(ErrorCode.canteenNotFound);
     }
+    // The rules let only a signed-in phone read a canteen by its code, and a
+    // new phone has no identity yet: without this its first join is refused.
+    if (_auth.currentUser == null) await _auth.signInAnonymously();
     try {
       final snap = await Store.rootDoc(_db, code)
           .get(const GetOptions(source: Source.server));

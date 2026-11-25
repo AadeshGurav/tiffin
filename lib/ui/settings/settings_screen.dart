@@ -36,6 +36,9 @@ class SettingsScreen extends ConsumerWidget {
     final text = AppText.of(context);
     final isAdmin = ref.watch(sessionProvider)?.role.isAdmin ?? false;
     final canteen = ref.watch(canteenBookProvider).active;
+    // Only an admin may list who is asking to join.
+    final pending =
+        isAdmin ? ref.watch(pendingJoinsProvider) : (devices: 0, accounts: 0);
 
     void go(Widget screen) =>
         Navigator.of(context).push(tiffinRoute<void>(context, () => screen));
@@ -77,10 +80,20 @@ class SettingsScreen extends ConsumerWidget {
             ]),
           if (isAdmin)
             NbGroup(title: text.settingsScreenGroupAccess, children: [
-              row(Icons.devices, text.devicesTitle, text.devicesSubtitle,
+              row(
+                  Icons.devices,
+                  text.devicesTitle,
+                  pending.devices > 0
+                      ? text.joinRequestsWaiting(pending.devices)
+                      : text.devicesSubtitle,
                   const DevicesScreen()),
-              row(Icons.alternate_email, text.onlineAccountsTitle,
-                  text.onlineAccountsSubtitle, const OnlineAccountsScreen()),
+              row(
+                  Icons.alternate_email,
+                  text.onlineAccountsTitle,
+                  pending.accounts > 0
+                      ? text.joinRequestsWaiting(pending.accounts)
+                      : text.onlineAccountsSubtitle,
+                  const OnlineAccountsScreen()),
             ]),
           NbGroup(title: text.settingsScreenGroupDisplay, children: [
             row(

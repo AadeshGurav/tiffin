@@ -39,6 +39,7 @@ extension AppTextLabels on AppText {
   String statusLabel(String status) => switch (status) {
         'active' => statusActive,
         'inactive' => statusInactive,
+        'pending' => statusPending,
         _ => status,
       };
 

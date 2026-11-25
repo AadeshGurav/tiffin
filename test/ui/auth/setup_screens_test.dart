@@ -3,7 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiffin/app/bootstrap.dart';
+import 'package:tiffin/app/providers.dart';
+import 'package:tiffin/core/error_report.dart';
 import 'package:tiffin/core/role.dart';
 import 'package:tiffin/data/access.dart';
 import 'package:tiffin/l10n/app_localizations.dart';
@@ -28,6 +29,7 @@ void main() {
     'welcome': const WelcomeScreen(),
     'join': const DeviceSetupScreen(),
     'waiting': const WaitingScreen(device: device),
+    'waiting, not sent': const WaitingScreen(device: device, delivered: false),
     'removed': const WaitingScreen(device: device, removed: true),
     'online refused': const WaitingScreen.onlineRefused(email: 'a@b.c'),
     'online pending':
@@ -81,5 +83,49 @@ void main() {
     ));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.textContaining('ABCDEF'), findsOneWidget);
+  });
+
+  Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: MaterialApp(
+        localizationsDelegates: AppText.localizationsDelegates,
+        supportedLocales: AppText.supportedLocales,
+        theme: buildTiffinTheme(TiffinThemeId.defaultTheme, Brightness.light),
+        home: screen,
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
+  // Regression: a request still queued on the phone looked exactly like one
+  // the admin could see, so the phone waited for an admin who saw nothing.
+  testWidgets('a request that has not reached the admin says so',
+      (tester) async {
+    await pumpScreen(
+        tester, const WaitingScreen(device: device, delivered: false));
+    final text = AppText.of(tester.element(find.byType(WaitingScreen)));
+    expect(find.textContaining(text.waitingNotSent), findsOneWidget);
+  });
+
+  testWidgets('a delivered request does not claim it is unsent',
+      (tester) async {
+    await pumpScreen(tester, const WaitingScreen(device: device));
+    final text = AppText.of(tester.element(find.byType(WaitingScreen)));
+    expect(find.textContaining(text.waitingNotSent), findsNothing);
+  });
+
+  // Regression: a refused request was rolled back and the phone landed on a
+  // fresh setup screen with no word of why.
+  testWidgets('the setup screen shows a refusal that came after it left',
+      (tester) async {
+    await pumpScreen(tester, const DeviceSetupScreen());
+    ProviderScope.containerOf(tester.element(find.byType(DeviceSetupScreen)))
+        .read(setupErrorProvider.notifier)
+        .set(const ErrorNotice('Refused by the server'));
+    await tester.pump();
+    expect(find.text('Refused by the server'), findsOneWidget);
   });
 }

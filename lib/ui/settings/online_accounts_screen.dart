@@ -120,9 +120,12 @@ class _AccountRow extends ConsumerWidget {
                 context,
                 () => access.setOnlineAccount(account.uid,
                     status: account.isActive ? 'inactive' : 'active')),
+            // Same write either way; a join request says what it does.
             child: Text(account.isActive
                 ? text.onlineAccountsTurnOff
-                : text.onlineAccountsTurnOn),
+                : account.status == 'pending'
+                    ? text.onlineAccountsApprove
+                    : text.onlineAccountsTurnOn),
           ),
         ],
       ),
