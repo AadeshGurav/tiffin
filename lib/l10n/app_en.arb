@@ -1707,18 +1707,6 @@
   "@qrPrintSectionMembers": {
     "description": "Section heading: choosing members."
   },
-  "qrPrintSectionPaper": "Paper",
-  "@qrPrintSectionPaper": {
-    "description": "Section heading: paper size and orientation."
-  },
-  "qrPrintSectionCard": "Card",
-  "@qrPrintSectionCard": {
-    "description": "Section heading: size of one card."
-  },
-  "qrPrintSectionSpacing": "Spacing",
-  "@qrPrintSectionSpacing": {
-    "description": "Section heading: page margin, gap between cards and cut marks."
-  },
   "qrPrintSearchLabel": "Search by name",
   "@qrPrintSearchLabel": {
     "description": "Label of the member search field on the print screen."
@@ -1796,10 +1784,6 @@
         "type": "String"
       }
     }
-  },
-  "qrPrintOrientationLabel": "Orientation",
-  "@qrPrintOrientationLabel": {
-    "description": "Label of the portrait / landscape choice."
   },
   "qrPrintPortrait": "Portrait",
   "@qrPrintPortrait": {
