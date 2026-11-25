@@ -754,5 +754,6 @@
   "membersScreenSortBalance": "सबसे ज़्यादा यूनिट बाकी",
   "membersScreenSortCategory": "श्रेणी",
   "ingredientsScreenSearchLabel": "सामग्री खोजें",
-  "ingredientsScreenSortLowStock": "कम स्टॉक पहले"
+  "ingredientsScreenSortLowStock": "कम स्टॉक पहले",
+  "recipesScreenSearchLabel": "रेसिपी खोजें"
 }

@@ -1657,5 +1657,6 @@
   "membersScreenSortBalance": "Most units left",
   "membersScreenSortCategory": "Category",
   "ingredientsScreenSearchLabel": "Search ingredients",
-  "ingredientsScreenSortLowStock": "Low stock first"
+  "ingredientsScreenSortLowStock": "Low stock first",
+  "recipesScreenSearchLabel": "Search recipes"
 }

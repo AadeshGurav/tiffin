@@ -754,5 +754,6 @@
   "membersScreenSortBalance": "सर्वाधिक युनिट शिल्लक",
   "membersScreenSortCategory": "श्रेणी",
   "ingredientsScreenSearchLabel": "साहित्य शोधा",
-  "ingredientsScreenSortLowStock": "कमी साठा आधी"
+  "ingredientsScreenSortLowStock": "कमी साठा आधी",
+  "recipesScreenSearchLabel": "रेसिपी शोधा"
 }
