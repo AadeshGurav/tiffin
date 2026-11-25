@@ -1,5 +1,5 @@
-/// Client-side search and sort over a list that is already loaded — no new
-/// queries or indexes. Pure so the matching rules can be tested without a UI.
+// Client-side search and sort over a list that is already loaded — no new
+// queries or indexes. Pure so the matching rules can be tested without a UI.
 
 const _accented = 'àáâãäåāçćčèéêëēėęìíîïīłñńòóôõöøōšśùúûüūýÿžźż';
 const _plain = 'aaaaaaacccceeeeeeeiiiilnnooooooosssuuuuuyyzzz';
