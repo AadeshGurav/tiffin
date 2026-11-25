@@ -41,6 +41,12 @@ class TopupService {
   }
 
   Future<Topup> create(TopupDraft draft) async {
+    // A negative top-up would debit units while billing a negative amount.
+    if (draft.lunchUnits < 0 ||
+        draft.breakfastUnits < 0 ||
+        draft.brunchUnits < 0) {
+      throw const ValidationException(ErrorCode.negativeUnits);
+    }
     if (draft.isAllZero) {
       throw const ValidationException(ErrorCode.topupNeedsUnits);
     }

@@ -31,7 +31,7 @@ class RefundService {
     if (draft.lunchUnits < 0 ||
         draft.breakfastUnits < 0 ||
         draft.brunchUnits < 0) {
-      throw const ValidationException(ErrorCode.refundNegativeUnits);
+      throw const ValidationException(ErrorCode.negativeUnits);
     }
     if (draft.isAllZero) {
       throw const ValidationException(ErrorCode.refundNeedsUnits);
