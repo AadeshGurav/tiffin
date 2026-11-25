@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -117,6 +119,8 @@ class SettingsService {
     });
 
     final current = await read();
+    final meals = patch.anytimeMeals;
+    if (meals != null) _checkAnytimeMeals(meals, current.anytimeMeals);
     final json = patch.toJson();
     if (patch.mealWindows != null) {
       json['mealWindows'] = {
@@ -128,6 +132,45 @@ class SettingsService {
     await _store.commit(b, 'settings.update');
     _log.info('updated fields=${patch.changedFields}');
     return read();
+  }
+
+  /// The catalogue is replaced whole, so every rule is checked against the
+  /// stored one. An id becomes a field path (`balances.<id>`), which is why a
+  /// malformed one is refused here — this is its only gate (ADR 0009).
+  static void _checkAnytimeMeals(
+      List<AnytimeMeal> next, List<AnytimeMeal> stored) {
+    final ids = <String>{};
+    final names = <String>{};
+    for (final m in next) {
+      if (!AnytimeMeal.idPattern.hasMatch(m.id) || !ids.add(m.id)) {
+        throw ValidationException(ErrorCode.unknownMeal, {'meal': m.id});
+      }
+      final name = m.name.trim();
+      if (name.isEmpty) {
+        throw const ValidationException(ErrorCode.mealNameBlank);
+      }
+      if (!names.add(name.toLowerCase())) {
+        throw ValidationException(ErrorCode.mealNameTaken, {'name': name});
+      }
+      if (m.price < 0) {
+        throw const ValidationException(ErrorCode.settingsNegative);
+      }
+    }
+    // Members may hold paid units of a stored meal: retire it, never drop it.
+    for (final old in stored) {
+      if (!ids.contains(old.id)) {
+        throw ValidationException(
+            ErrorCode.mealCannotBeRemoved, {'name': old.name});
+      }
+    }
+  }
+
+  /// A fresh anytime-meal id: `m` + 8 of `[a-z0-9]` (36^8 ≈ 2.8e12, so a
+  /// collision within one canteen's handful of meals is not a concern).
+  static String newAnytimeMealId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final r = Random.secure();
+    return 'm${List.generate(8, (_) => chars[r.nextInt(chars.length)]).join()}';
   }
 }
 
@@ -151,6 +194,7 @@ class SettingsPatch {
     this.appearanceTheme,
     this.appearanceMode,
     this.appearanceMotion,
+    this.anytimeMeals,
   });
 
   factory SettingsPatch.fromJson(Map<String, dynamic> j) => SettingsPatch(
@@ -174,6 +218,10 @@ class SettingsPatch {
         appearanceTheme: j['appearanceTheme'] as String?,
         appearanceMode: j['appearanceMode'] as String?,
         appearanceMotion: j['appearanceMotion'] as bool?,
+        anytimeMeals: (j['anytimeMeals'] as List?)
+            ?.map((m) =>
+                AnytimeMeal.fromJson(Map<String, dynamic>.from(m as Map)))
+            .toList(),
       );
 
   final bool? graceAllowanceEnabled;
@@ -191,6 +239,9 @@ class SettingsPatch {
   final String? appearanceTheme;
   final String? appearanceMode;
   final bool? appearanceMotion;
+
+  /// Replaces the whole catalogue (ADR 0009); drop an entry by retiring it.
+  final List<AnytimeMeal>? anytimeMeals;
 
   /// Wire form for the client → host PATCH. Only set fields are included, so
   /// the host's partial-update semantics are preserved.
@@ -214,6 +265,8 @@ class SettingsPatch {
         if (appearanceTheme != null) 'appearanceTheme': appearanceTheme,
         if (appearanceMode != null) 'appearanceMode': appearanceMode,
         if (appearanceMotion != null) 'appearanceMotion': appearanceMotion,
+        if (anytimeMeals != null)
+          'anytimeMeals': [for (final m in anytimeMeals!) m.toJson()],
       };
 
   List<String> get changedFields => {
@@ -232,5 +285,6 @@ class SettingsPatch {
         if (appearanceTheme != null) 'appearanceTheme',
         if (appearanceMode != null) 'appearanceMode',
         if (appearanceMotion != null) 'appearanceMotion',
+        if (anytimeMeals != null) 'anytimeMeals',
       }.toList();
 }

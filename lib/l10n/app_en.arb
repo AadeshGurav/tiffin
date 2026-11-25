@@ -1291,6 +1291,26 @@
     }
   },
   "errSettingsBlank": "The canteen name can't be empty.",
+  "errMealNameBlank": "Give the meal a name.",
+  "errMealNameTaken": "There is already a meal called {name}.",
+  "@errMealNameTaken": {
+    "description": "On an error message. name = an anytime meal's name (Tea, Juice).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errMealCannotBeRemoved": "{name} can't be deleted because members may still hold its units. Retire it instead.",
+  "@errMealCannotBeRemoved": {
+    "description": "On an error message. name = an anytime meal's name (Tea, Juice).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errUnknownMeal": "That meal no longer exists or has been retired. Pick another.",
   "errNotificationNotFound": "That notification has already gone.",
   "errBackupUnreadable": "That backup is damaged or incomplete.",
   "errBackupNotTiffin": "That isn't a Tiffin backup file.",

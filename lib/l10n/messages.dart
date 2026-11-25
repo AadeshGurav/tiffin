@@ -147,6 +147,10 @@ extension AppTextMessages on AppText {
       ErrorCode.settingsWindowOrder =>
         errSettingsWindowOrder(meal('meal'), s('start'), s('end')),
       ErrorCode.settingsBlank => errSettingsBlank,
+      ErrorCode.mealNameBlank => errMealNameBlank,
+      ErrorCode.mealNameTaken => errMealNameTaken(s('name')),
+      ErrorCode.mealCannotBeRemoved => errMealCannotBeRemoved(s('name')),
+      ErrorCode.unknownMeal => errUnknownMeal,
       ErrorCode.notificationNotFound => errNotificationNotFound,
       ErrorCode.backupUnreadable => errBackupUnreadable,
       ErrorCode.backupNotTiffin => errBackupNotTiffin,
