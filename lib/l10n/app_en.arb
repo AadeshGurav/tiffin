@@ -1694,5 +1694,233 @@
   "categoryColorSlate": "Slate",
   "@categoryColorSlate": {
     "description": "Colour name in the QR card palette (dark grey-blue)."
+  },
+  "membersScreenPrintQrTooltip": "Print QR cards",
+  "@membersScreenPrintQrTooltip": {
+    "description": "Tooltip of the print button in the Members screen app bar."
+  },
+  "qrPrintTitle": "Print QR cards",
+  "@qrPrintTitle": {
+    "description": "Title of the screen where QR cards are chosen and laid out for printing."
+  },
+  "qrPrintSectionMembers": "Who to print",
+  "@qrPrintSectionMembers": {
+    "description": "Section heading: choosing members."
+  },
+  "qrPrintSectionPaper": "Paper",
+  "@qrPrintSectionPaper": {
+    "description": "Section heading: paper size and orientation."
+  },
+  "qrPrintSectionCard": "Card",
+  "@qrPrintSectionCard": {
+    "description": "Section heading: size of one card."
+  },
+  "qrPrintSectionSpacing": "Spacing",
+  "@qrPrintSectionSpacing": {
+    "description": "Section heading: page margin, gap between cards and cut marks."
+  },
+  "qrPrintSearchLabel": "Search by name",
+  "@qrPrintSearchLabel": {
+    "description": "Label of the member search field on the print screen."
+  },
+  "qrPrintCategoryFilterLabel": "Category",
+  "@qrPrintCategoryFilterLabel": {
+    "description": "Label of the category filter on the print screen."
+  },
+  "qrPrintAllCategories": "All categories",
+  "@qrPrintAllCategories": {
+    "description": "Category filter choice that shows every member."
+  },
+  "qrPrintSelectAllShown": "Select all shown ({count})",
+  "@qrPrintSelectAllShown": {
+    "description": "Button that ticks every member currently listed. count = how many are listed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "qrPrintClearSelection": "Clear selection",
+  "@qrPrintClearSelection": {
+    "description": "Button that unticks every member."
+  },
+  "qrPrintSelectedCount": "{count, plural, =0{No members selected} =1{1 member selected} other{{count} members selected}}",
+  "@qrPrintSelectedCount": {
+    "description": "How many members are ticked for printing.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "qrPrintNoMatches": "No members match these filters.",
+  "@qrPrintNoMatches": {
+    "description": "Shown when the search and category filter leave nobody."
+  },
+  "qrPrintLoadingMembers": "Loading members…",
+  "@qrPrintLoadingMembers": {
+    "description": "Spinner label on the print screen."
+  },
+  "qrPrintPaperSizeLabel": "Paper size",
+  "@qrPrintPaperSizeLabel": {
+    "description": "Label of the paper size choice."
+  },
+  "qrPrintPaperRoll": "Thermal roll {width} mm",
+  "@qrPrintPaperRoll": {
+    "description": "A paper choice: a continuous thermal printer roll. width = roll width in millimetres.",
+    "placeholders": {
+      "width": {
+        "type": "String"
+      }
+    }
+  },
+  "qrPrintPaperCr80": "CR80 ID card stock",
+  "@qrPrintPaperCr80": {
+    "description": "A paper choice: blank credit-card sized (54 x 85.6 mm) card stock."
+  },
+  "qrPrintCustom": "Custom size",
+  "@qrPrintCustom": {
+    "description": "Choice that lets the admin type a width and height."
+  },
+  "qrPrintPresetWithSize": "{name} · {width} × {height} mm",
+  "@qrPrintPresetWithSize": {
+    "description": "A size choice with its dimensions. name = e.g. A4 or Small; width and height in millimetres.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "width": {
+        "type": "String"
+      },
+      "height": {
+        "type": "String"
+      }
+    }
+  },
+  "qrPrintOrientationLabel": "Orientation",
+  "@qrPrintOrientationLabel": {
+    "description": "Label of the portrait / landscape choice."
+  },
+  "qrPrintPortrait": "Portrait",
+  "@qrPrintPortrait": {
+    "description": "Page orientation: taller than wide."
+  },
+  "qrPrintLandscape": "Landscape",
+  "@qrPrintLandscape": {
+    "description": "Page orientation: wider than tall."
+  },
+  "qrPrintWidthMmLabel": "Width (mm)",
+  "@qrPrintWidthMmLabel": {
+    "description": "Label of a size field in millimetres."
+  },
+  "qrPrintHeightMmLabel": "Height (mm)",
+  "@qrPrintHeightMmLabel": {
+    "description": "Label of a size field in millimetres."
+  },
+  "qrPrintCardSizeLabel": "Card size",
+  "@qrPrintCardSizeLabel": {
+    "description": "Label of the card size choice."
+  },
+  "qrPrintCardSmall": "Small",
+  "@qrPrintCardSmall": {
+    "description": "A card size choice (40 x 60 mm)."
+  },
+  "qrPrintCardId": "ID card",
+  "@qrPrintCardId": {
+    "description": "A card size choice (85.6 x 54 mm, like a bank card)."
+  },
+  "qrPrintCardLarge": "Large",
+  "@qrPrintCardLarge": {
+    "description": "A card size choice (90 x 120 mm)."
+  },
+  "qrPrintMarginLabel": "Page margin (mm)",
+  "@qrPrintMarginLabel": {
+    "description": "Label of the empty border kept round each page, in millimetres."
+  },
+  "qrPrintGapLabel": "Gap between cards (mm)",
+  "@qrPrintGapLabel": {
+    "description": "Label of the space between neighbouring cards, in millimetres."
+  },
+  "qrPrintCutMarks": "Cut marks",
+  "@qrPrintCutMarks": {
+    "description": "Switch: print short lines at the card corners to cut along."
+  },
+  "qrPrintCutMarksHint": "Short lines at each corner to cut along. Needs a gap and a margin of at least 1 mm.",
+  "@qrPrintCutMarksHint": {
+    "description": "Explains the cut marks switch."
+  },
+  "qrPrintFitPerPage": "{perPage, plural, =1{1 card per page ({cols} × {rows})} other{{perPage} cards per page ({cols} × {rows})}}",
+  "@qrPrintFitPerPage": {
+    "description": "The computed grid. perPage = cards on one page; cols and rows = the grid.",
+    "placeholders": {
+      "perPage": {
+        "type": "int"
+      },
+      "cols": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "qrPrintFitPages": "{pages, plural, =0{Nothing to print yet} =1{1 page to print} other{{pages} pages to print}}",
+  "@qrPrintFitPages": {
+    "description": "How many pages the chosen members need. pages can be 0 when nobody is selected.",
+    "placeholders": {
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "qrPrintProblemMissingSize": "Every paper and card size needs a number above zero.",
+  "@qrPrintProblemMissingSize": {
+    "description": "Shown when a size box is empty or zero."
+  },
+  "qrPrintProblemCardTooLarge": "A {cardWidth} × {cardHeight} mm card does not fit in the {areaWidth} × {areaHeight} mm printable area. Choose a smaller card, smaller margins or larger paper.",
+  "@qrPrintProblemCardTooLarge": {
+    "description": "Shown when the card is bigger than the page minus its margins. All values are millimetres.",
+    "placeholders": {
+      "cardWidth": {
+        "type": "String"
+      },
+      "cardHeight": {
+        "type": "String"
+      },
+      "areaWidth": {
+        "type": "String"
+      },
+      "areaHeight": {
+        "type": "String"
+      }
+    }
+  },
+  "qrPrintPreviewButton": "Preview and print",
+  "@qrPrintPreviewButton": {
+    "description": "Button that builds the PDF and opens the preview."
+  },
+  "qrPrintPickSomeone": "Select at least one member to print.",
+  "@qrPrintPickSomeone": {
+    "description": "Shown when Preview is tapped with nobody selected."
+  },
+  "qrPrintPreviewTitle": "Print preview",
+  "@qrPrintPreviewTitle": {
+    "description": "Title of the PDF preview screen."
+  },
+  "qrPrintBuilding": "Preparing card {done} of {total}…",
+  "@qrPrintBuilding": {
+    "description": "Progress while the cards are drawn. done and total are counts.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "qrPrintTabLayout": "Layout",
+  "@qrPrintTabLayout": {
+    "description": "Tab label on the print screen: paper, card and spacing settings."
   }
 }
