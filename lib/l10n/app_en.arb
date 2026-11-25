@@ -927,6 +927,10 @@
   "@statusInactive": {
     "description": "Account or member status."
   },
+  "statusPending": "Waiting for approval",
+  "@statusPending": {
+    "description": "Online account status: asked to join the canteen, not yet approved by an admin."
+  },
   "paymentCash": "Cash",
   "@paymentCash": {
     "description": "Payment method."
@@ -1478,6 +1482,10 @@
   "onlineAccountsEmpty": "No online accounts yet.",
   "onlineAccountsTurnOff": "Turn off",
   "onlineAccountsTurnOn": "Turn on",
+  "onlineAccountsApprove": "Approve",
+  "@onlineAccountsApprove": {
+    "description": "On online accounts. Button that lets in someone who asked to join."
+  },
   "onlineAccountsCreated": "Created {email}.",
   "@onlineAccountsCreated": {
     "description": "On online accounts. email = an email address.",
@@ -1576,7 +1584,7 @@
   },
   "createButton": "Create canteen",
   "switchCanteenButton": "Switch or join another canteen",
-  "onlinePendingBody": "You asked to join this canteen. An admin needs to approve you; this screen updates by itself.",
+  "onlinePendingBody": "You asked to join this canteen. Ask the admin to open Settings ▸ Online accounts on their phone and approve you. This screen moves on by itself once they do.",
   "settingsScreenSwitchTitle": "Switch canteen",
   "settingsScreenSwitchSubtitle": "Now in {name}. Your logins here are kept.",
   "@settingsScreenSwitchSubtitle": {
