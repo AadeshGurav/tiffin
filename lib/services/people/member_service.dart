@@ -4,6 +4,7 @@ import '../../core/errors.dart';
 import '../../core/logging.dart';
 import '../../data/store.dart';
 import '../../domain/member.dart';
+import '../../domain/settings.dart' show AnytimeMeal;
 import '../scanning/qr_service.dart';
 
 /// Member CRUD, credit and QR reprint (PRD §6.1). Members are kept warm in the
@@ -135,24 +136,28 @@ class MemberService {
     await getById(id);
     final b = _store.batch()..update(_col.doc(id), balanceDelta(units));
     await _store.commit(b, 'members.credit');
-    _log.info('credited member_id=$id lunch=+${units.lunch} '
-        'breakfast=+${units.breakfast} brunch=+${units.brunch}');
+    _log.info('credited member_id=$id units=${units.byMeal}');
     return getById(id);
   }
 
   /// Field updates that add [units] to a member's balances. Shared by
   /// top-ups, refunds and scans so there is one spelling of "change a
   /// balance", and it is always an increment.
-  static Map<String, dynamic> balanceDelta(UnitCounts units, {int sign = 1}) =>
-      {
-        if (units.lunch != 0)
-          'balances.lunch': FieldValue.increment(sign * units.lunch),
-        if (units.breakfast != 0)
-          'balances.breakfast': FieldValue.increment(sign * units.breakfast),
-        if (units.brunch != 0)
-          'balances.brunch': FieldValue.increment(sign * units.brunch),
-        'updatedAt': DateTime.now().toUtc().toIso8601String(),
-      };
+  ///
+  /// A meal id becomes a field path here, so an anytime id that isn't
+  /// well-formed (a `.` would write a nested field) is refused (ADR 0009).
+  static Map<String, dynamic> balanceDelta(UnitCounts units, {int sign = 1}) {
+    for (final id in units.anytime.keys) {
+      if (!AnytimeMeal.idPattern.hasMatch(id)) {
+        throw ValidationException(ErrorCode.unknownMeal, {'meal': id});
+      }
+    }
+    return {
+      for (final e in units.byMeal.entries)
+        'balances.${e.key}': FieldValue.increment(sign * e.value),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    };
+  }
 
   static Json _stored(Member m) => m.toJson()..remove('id');
 

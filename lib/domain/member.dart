@@ -4,19 +4,43 @@ import '../core/meal_type.dart';
 /// so host mode and client mode speak the same types. (§13.7 lists interfaces
 /// per domain; the models they carry live here.)
 
-/// Units per meal type — the shape of a balance, a top-up, or a refund line.
+/// Units per meal — the shape of a balance, a top-up, or a refund line. The
+/// three built-ins are typed fields; anytime meals (ADR 0009) are keyed by
+/// their id in [anytime]. A missing key reads as 0.
 class UnitCounts {
-  const UnitCounts({this.lunch = 0, this.breakfast = 0, this.brunch = 0});
+  const UnitCounts({
+    this.lunch = 0,
+    this.breakfast = 0,
+    this.brunch = 0,
+    this.anytime = const {},
+  });
 
+  /// [n] units of one meal, built-in or anytime.
+  factory UnitCounts.single(String mealId, [int n = 1]) =>
+      switch (MealType.tryWire(mealId)) {
+        MealType.lunch => UnitCounts(lunch: n),
+        MealType.breakfast => UnitCounts(breakfast: n),
+        MealType.brunch => UnitCounts(brunch: n),
+        null => UnitCounts(anytime: {mealId: n}),
+      };
+
+  /// Every numeric key that isn't a built-in is an anytime balance, so a
+  /// pre-0009 document reads exactly as before.
   factory UnitCounts.fromJson(Map<String, dynamic> j) => UnitCounts(
         lunch: (j['lunch'] as num?)?.toInt() ?? 0,
         breakfast: (j['breakfast'] as num?)?.toInt() ?? 0,
         brunch: (j['brunch'] as num?)?.toInt() ?? 0,
+        anytime: {
+          for (final e in j.entries)
+            if (e.value is num && MealType.tryWire(e.key) == null)
+              e.key: (e.value as num).toInt(),
+        },
       );
 
   final int lunch;
   final int breakfast;
   final int brunch;
+  final Map<String, int> anytime;
 
   int forMeal(MealType m) => switch (m) {
         MealType.lunch => lunch,
@@ -24,12 +48,37 @@ class UnitCounts {
         MealType.brunch => brunch,
       };
 
-  bool get isAllZero => lunch == 0 && breakfast == 0 && brunch == 0;
+  int operator [](String mealId) => switch (MealType.tryWire(mealId)) {
+        final m? => forMeal(m),
+        null => anytime[mealId] ?? 0,
+      };
 
-  int get total => lunch + breakfast + brunch;
+  /// Every non-zero meal: built-ins first, then anytime ids.
+  Map<String, int> get byMeal => {
+        for (final e in toJson().entries)
+          if (e.value != 0) e.key: e.value as int,
+      };
 
-  Map<String, dynamic> toJson() =>
-      {'lunch': lunch, 'breakfast': breakfast, 'brunch': brunch};
+  UnitCounts operator +(UnitCounts o) => UnitCounts(
+        lunch: lunch + o.lunch,
+        breakfast: breakfast + o.breakfast,
+        brunch: brunch + o.brunch,
+        anytime: {
+          for (final id in {...anytime.keys, ...o.anytime.keys})
+            id: (anytime[id] ?? 0) + (o.anytime[id] ?? 0),
+        },
+      );
+
+  bool get isAllZero => byMeal.isEmpty;
+
+  int get total => byMeal.values.fold(0, (a, b) => a + b);
+
+  Map<String, dynamic> toJson() => {
+        'lunch': lunch,
+        'breakfast': breakfast,
+        'brunch': brunch,
+        ...anytime,
+      };
 }
 
 class Member {
