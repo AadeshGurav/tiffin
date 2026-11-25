@@ -134,6 +134,72 @@ describe('data access by phone role', () => {
   });
 });
 
+describe('anytime meals (ADR 0009 §6)', () => {
+  const at = '2026-01-01T00:00:00.000Z';
+  const m1 = 'canteens/c1/members/m1';
+  beforeEach(() => seed({
+    'canteens/c1/devices/scanner': approved('scanner'),
+    'canteens/c1/devices/counter': approved('counter'),
+    [m1]: { name: 'Asha', balances: { lunch: 2, breakfast: 0, brunch: 0, mtea00001: 3 } },
+  }));
+  const scanner = () => doc(phone('scanner'), m1);
+
+  test('a scanner lowers the anytime balance it names', async () => {
+    await assertSucceeds(updateDoc(scanner(),
+        { 'balances.mtea00001': increment(-1), lastScanMeal: 'mtea00001', updatedAt: at }));
+  });
+
+  test('a scanner lowers a balance it never had (grace, to -1)', async () => {
+    await assertSucceeds(updateDoc(scanner(),
+        { 'balances.mjuice001': increment(-1), lastScanMeal: 'mjuice001', updatedAt: at }));
+  });
+
+  test('a timed scan from a new build names its meal too', async () => {
+    await assertSucceeds(updateDoc(scanner(),
+        { 'balances.lunch': increment(-1), lastScanMeal: 'lunch', updatedAt: at }));
+  });
+
+  test('a scanner cannot raise an anytime balance', async () => {
+    await assertFails(updateDoc(scanner(),
+        { 'balances.mtea00001': increment(5), lastScanMeal: 'mtea00001', updatedAt: at }));
+    await assertFails(updateDoc(scanner(),
+        { 'balances.mtea00001': increment(5), updatedAt: at }));
+  });
+
+  test('a scanner cannot lower two balances, or one it did not name', async () => {
+    await assertFails(updateDoc(scanner(), {
+      'balances.mtea00001': increment(-1), 'balances.lunch': increment(-1),
+      lastScanMeal: 'mtea00001', updatedAt: at,
+    }));
+    await assertFails(updateDoc(scanner(),
+        { 'balances.lunch': increment(-1), lastScanMeal: 'mtea00001', updatedAt: at }));
+  });
+
+  test('a scanner cannot lower one balance and raise another', async () => {
+    await assertFails(updateDoc(scanner(), {
+      'balances.lunch': increment(-1), 'balances.mtea00001': increment(9),
+      lastScanMeal: 'lunch', updatedAt: at,
+    }));
+  });
+
+  test('a pre-0009 scan (lunch -1, no lastScanMeal) is still allowed', async () => {
+    await assertSucceeds(updateDoc(scanner(),
+        { 'balances.lunch': increment(-1), updatedAt: at }));
+  });
+
+  test('a pre-0009-shaped write that touches an anytime key is refused', async () => {
+    await assertFails(updateDoc(scanner(),
+        { 'balances.lunch': increment(-1), 'balances.mtea00001': increment(-1), updatedAt: at }));
+    await assertFails(updateDoc(scanner(),
+        { 'balances.mtea00001': increment(-1), updatedAt: at }));
+  });
+
+  test('a counter phone credits an anytime balance', async () => {
+    await assertSucceeds(updateDoc(doc(phone('counter'), m1),
+        { 'balances.mtea00001': increment(10), updatedAt: at }));
+  });
+});
+
 describe('the one-scan-per-meal lock', () => {
   beforeEach(() => seed({
     'canteens/c1/devices/a': approved('scanner'),

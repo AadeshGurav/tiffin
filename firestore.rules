@@ -112,9 +112,26 @@ service cloud.firestore {
         allow create: if isBilling();
         // Any staff phone moves balances (a scan); only billing phones credit
         // them (top-ups); everything else is the admin's.
+        //
+        // A scan names the meal it charges in lastScanMeal (ADR 0009 §6), and
+        // a scanner phone may lower exactly that one balance by any amount.
+        // Rules can't loop over map keys, so naming the key is what stops a
+        // scanner phone crediting itself an anytime meal (Tea).
+        function scanLowersOne() {
+          let m = request.resource.data.get('lastScanMeal', '');
+          return request.resource.data.balances.diff(resource.data.balances)
+                   .affectedKeys().hasOnly([m])
+              && request.resource.data.balances.get(m, 0) < resource.data.balances.get(m, 0);
+        }
         allow update: if isAdmin()
-            || (isBilling() && onlyChanges(['balances', 'updatedAt']))
+            || (isBilling() && onlyChanges(['balances', 'updatedAt', 'lastScanMeal']))
+            || (isStaff() && onlyChanges(['balances', 'updatedAt', 'lastScanMeal'])
+                && scanLowersOne())
+            // Pre-0009 builds: built-in keys only, none may rise.
+            // Remove once no pre-0009 build scans (ADR 0009 §6).
             || (isStaff() && onlyChanges(['balances', 'updatedAt'])
+                && request.resource.data.balances.diff(resource.data.balances)
+                     .affectedKeys().hasOnly(['lunch', 'breakfast', 'brunch'])
                 && request.resource.data.balances.lunch <= resource.data.balances.lunch
                 && request.resource.data.balances.breakfast <= resource.data.balances.breakfast
                 && request.resource.data.balances.brunch <= resource.data.balances.brunch);
@@ -123,7 +140,9 @@ service cloud.firestore {
 
       match /scans/{id} {
         allow read: if isStaff();
-        // The id is member_day_meal: create-only is the one-scan-per-meal lock.
+        // A timed scan's id is member_day_meal: create-only is the
+        // one-scan-per-meal lock. Anytime scans (ADR 0009) use auto ids that
+        // never collide, so they have no lock — which is the point.
         // A set() over an existing scan is an update, which nobody but an admin
         // may do — so a duplicate scan synced from an offline phone is refused,
         // and its balance decrement with it (same batch).
