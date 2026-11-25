@@ -1655,5 +1655,7 @@
   "searchSortOldest": "Oldest first",
   "membersScreenSearchLabel": "Search by name, QR code or category",
   "membersScreenSortBalance": "Most units left",
-  "membersScreenSortCategory": "Category"
+  "membersScreenSortCategory": "Category",
+  "ingredientsScreenSearchLabel": "Search ingredients",
+  "ingredientsScreenSortLowStock": "Low stock first"
 }
