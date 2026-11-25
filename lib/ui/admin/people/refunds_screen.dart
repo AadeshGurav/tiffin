@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/list_search.dart';
 import '../../../core/number_input.dart';
 import '../../../app/providers.dart';
 import '../../../domain/ledger.dart';
@@ -13,6 +14,7 @@ import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/labels.dart';
@@ -59,7 +61,23 @@ class RefundsScreen extends ConsumerWidget {
           actionLabel: AppText.of(context).refundsScreenProcessButton,
           onAction: () => _form(context, ref),
         ),
-        builder: (list) => ListView.separated(
+        builder: (all) => SearchSortList<Refund>(
+          items: all,
+          searchLabel: AppText.of(context).refundsScreenSearchLabel,
+          searchFields: (r) => [nameById[r.memberId], r.processedBy, r.reason],
+          sorts: [
+            SortOption(AppText.of(context).searchSortNewest,
+                (a, b) => b.createdAt.compareTo(a.createdAt)),
+            SortOption(AppText.of(context).searchSortOldest,
+                (a, b) => a.createdAt.compareTo(b.createdAt)),
+            SortOption(AppText.of(context).searchSortAmount,
+                (a, b) => b.refundAmount.compareTo(a.refundAmount)),
+            SortOption(
+                AppText.of(context).searchSortNameAz,
+                (a, b) => compareNames(
+                    nameById[a.memberId] ?? '', nameById[b.memberId] ?? '')),
+          ],
+          builder: (context, list) => ListView.separated(
           itemCount: list.length,
           separatorBuilder: nbRowSeparator,
           itemBuilder: (_, i) {
@@ -91,6 +109,7 @@ class RefundsScreen extends ConsumerWidget {
               ),
             );
           },
+        ),
         ),
       ),
     );
