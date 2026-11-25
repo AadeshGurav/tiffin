@@ -742,5 +742,12 @@
   "scannerCameraDeniedTitle": "कैमरा बंद है",
   "scannerCameraDenied": "Tiffin कैमरा इस्तेमाल नहीं कर पा रहा। फ़ोन की सेटिंग में Tiffin को कैमरे की अनुमति दें, फिर यह स्क्रीन दोबारा खोलें।",
   "scannerCameraUnavailable": "कैमरा चालू नहीं हो सका। यह स्क्रीन बंद करके फिर खोलें।",
-  "errNumberInvalid": "यह सही संख्या नहीं है। जो लिखा है उसे जाँचें और फिर कोशिश करें।"
+  "errNumberInvalid": "यह सही संख्या नहीं है। जो लिखा है उसे जाँचें और फिर कोशिश करें।",
+  "searchClear": "खोज हटाएँ",
+  "searchSortTooltip": "क्रम",
+  "searchNoMatches": "\"{query}\" से कुछ नहीं मिला",
+  "searchNoMatchesHint": "वर्तनी जाँचें या कम शब्द आज़माएँ।",
+  "searchSortNameAz": "नाम A से Z",
+  "searchSortNewest": "सबसे नया पहले",
+  "searchSortOldest": "सबसे पुराना पहले"
 }
