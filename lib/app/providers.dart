@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../core/config.dart';
+import '../core/error_report.dart';
 import '../core/logging.dart';
 import '../core/role.dart';
 import '../data/access.dart';
@@ -83,6 +84,25 @@ final accessServiceProvider = Provider<AccessService>((ref) {
 /// by itself.
 final accessProvider =
     StreamProvider<Access>((ref) => ref.watch(accessServiceProvider).watch());
+
+/// Why the last attempt to join from the setup screen failed, kept outside
+/// that screen: Firestore shows a join request before the server answers, so
+/// the phone is already on the waiting screen when a refusal arrives, and is
+/// back on a *new* setup screen once the request is rolled back. Without this
+/// the refusal was dropped and the phone silently started over.
+class SetupError extends Notifier<ErrorNotice?> {
+  @override
+  ErrorNotice? build() {
+    ref.watch(activeCanteenProvider); // a fresh start in another canteen
+    return null;
+  }
+
+  // ignore: use_setters_to_change_properties
+  void set(ErrorNotice? notice) => state = notice;
+}
+
+final setupErrorProvider =
+    NotifierProvider<SetupError, ErrorNotice?>(SetupError.new);
 
 /// The part of [accessProvider] that decides which data this phone may read:
 /// as a phone with a role, as an online account with a role, or not at all.

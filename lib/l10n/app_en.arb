@@ -1447,6 +1447,10 @@
     }
   },
   "waitingCode": "Phone code: {code}",
+  "waitingNotSent": "Your request has not reached the admin yet, so they cannot see this phone. Check this phone's internet; the request goes by itself once it connects.",
+  "@waitingNotSent": {
+    "description": "Waiting screen, while the join request is still only on this phone (offline or a slow connection)."
+  },
   "@waitingCode": {
     "description": "A short code the admin matches against the Devices list.",
     "placeholders": {

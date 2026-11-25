@@ -53,7 +53,8 @@ class AppGate extends ConsumerWidget {
     return switch (access.asData?.value) {
       null => BrandSplash(message: text.splashPreparing),
       SignedOut() || NotJoined() => const DeviceSetupScreen(),
-      PendingApproval(:final device) => WaitingScreen(device: device),
+      PendingApproval(:final device, :final delivered) =>
+        WaitingScreen(device: device, delivered: delivered),
       Removed(:final device) => WaitingScreen(device: device, removed: true),
       OnlineRefused(:final email, :final pending) =>
         WaitingScreen.onlineRefused(email: email, pending: pending),
