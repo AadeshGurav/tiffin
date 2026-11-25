@@ -39,7 +39,9 @@ class DevicesScreen extends ConsumerWidget {
               Text(text.devicesRoleExplainer,
                   style: t.text.body.copyWith(color: t.color.inkMuted)),
               const SizedBox(height: NbSpace.md),
-              if (ordered.length <= 1)
+              // Not a length check: an admin signed in online has no phone
+              // record of their own, so one row is already somebody else.
+              if (!ordered.any((d) => d.uid != me))
                 Text(text.devicesEmpty, style: t.text.body),
               for (final d in ordered) ...[
                 _DeviceCard(device: d, isMe: d.uid == me),
