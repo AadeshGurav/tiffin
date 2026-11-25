@@ -1662,5 +1662,6 @@
   "usersScreenSearchLabel": "Search by username or role",
   "usersScreenSortRole": "Role",
   "topupHistorySearchLabel": "Search by member, payment or cashier",
-  "topupHistorySortAmount": "Highest amount"
+  "topupHistorySortAmount": "Highest amount",
+  "scanLogScreenSearchLabel": "Search by member, meal or category"
 }
