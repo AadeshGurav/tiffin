@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -96,10 +98,11 @@ class RefundsScreen extends ConsumerWidget {
     final brunch = TextEditingController();
     final reason = TextEditingController();
 
+    // A meal on grace is below zero: there is nothing of it to refund.
     void prefill() {
-      lunch.text = '${selected.balances.lunch}';
-      breakfast.text = '${selected.balances.breakfast}';
-      brunch.text = '${selected.balances.brunch}';
+      lunch.text = '${max(0, selected.balances.lunch)}';
+      breakfast.text = '${max(0, selected.balances.breakfast)}';
+      brunch.text = '${max(0, selected.balances.brunch)}';
     }
 
     prefill();

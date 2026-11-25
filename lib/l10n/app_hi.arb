@@ -558,6 +558,7 @@
   "errTopupNeedsUnits": "टॉप-अप में कम से कम एक इकाई चाहिए।",
   "errTopupNotFound": "वह टॉप-अप अब मौजूद नहीं है।",
   "errRefundNeedsUnits": "धनवापसी में कम से कम एक इकाई चाहिए।",
+  "errRefundNegativeUnits": "धनवापसी की इकाइयां ऋणात्मक नहीं हो सकतीं। हर भोजन के लिए 0 या अधिक लिखें।",
   "errRefundExceedsBalance": "{requested} {meal} इकाइयां वापस नहीं हो सकतीं — सदस्य के पास केवल {available} हैं।",
   "errCategoryNameBlank": "श्रेणी को नाम दें।",
   "errCategoryExists": "{name} नाम की श्रेणी पहले से है।",

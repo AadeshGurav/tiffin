@@ -558,6 +558,7 @@
   "errTopupNeedsUnits": "टॉप-अपमध्ये किमान एक एकक हवे.",
   "errTopupNotFound": "ते टॉप-अप आता अस्तित्वात नाही.",
   "errRefundNeedsUnits": "परताव्यात किमान एक एकक हवे.",
+  "errRefundNegativeUnits": "परताव्याची एकके ऋण असू शकत नाहीत. प्रत्येक जेवणासाठी 0 किंवा जास्त लिहा.",
   "errRefundExceedsBalance": "{requested} {meal} एकके परत करता येत नाहीत — सदस्याकडे फक्त {available} आहेत.",
   "errCategoryNameBlank": "श्रेणीला नाव द्या.",
   "errCategoryExists": "{name} नावाची श्रेणी आधीच आहे.",
