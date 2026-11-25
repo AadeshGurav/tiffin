@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../data/backend.dart';
 import '../../../domain/settings.dart';
 import '../../shared_widgets/nb_button.dart';
+import 'anytime_meals_section.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_picker.dart';
 import '../../theme/tokens.dart';
@@ -106,6 +107,17 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
     if (ok) ref.invalidate(_settingsProvider);
   }
 
+  /// The catalogue saves on its own, straight from its dialog, so a new meal
+  /// doesn't wait on (or get lost with) the rest of this form.
+  Future<void> _saveMeals(List<AnytimeMeal> meals) async {
+    await ref
+        .read(backendProvider)
+        .updateSettings(SettingsPatch(anytimeMeals: meals));
+    if (!mounted) return;
+    showNbSnack(context, AppText.of(context).anytimeMealsSavedMessage);
+    ref.invalidate(_settingsProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
@@ -133,6 +145,12 @@ class _ConfigFormState extends ConsumerState<_ConfigForm> {
               label: AppText.of(context).settingsConfigScreenBrunchLabel,
               controller: _brunchPrice,
               keyboardType: TextInputType.number),
+          _section(
+              t, AppText.of(context).settingsConfigScreenSectionAnytimeMeals),
+          AnytimeMealsSection(
+            meals: widget.initial.anytimeMeals,
+            onSave: _saveMeals,
+          ),
           _section(
               t, AppText.of(context).settingsConfigScreenSectionMealWindows),
           // Meal key `m` doubles as the map key into `_windows` — it can't be

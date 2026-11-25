@@ -654,6 +654,36 @@
   "settingsConfigScreenSectionBranding": "Branding",
   "settingsConfigScreenAppNameLabel": "App name",
   "settingsConfigScreenSectionPrices": "Unit prices (₹)",
+  "settingsConfigScreenSectionAnytimeMeals": "ANYTIME MEALS",
+  "anytimeMealsIntro": "Tea, juice, snacks: served at any time, as often as the person has units. Each has its own balance and price.",
+  "anytimeMealsAddButton": "Add meal",
+  "anytimeMealsEditTitle": "Edit {name}",
+  "@anytimeMealsEditTitle": {
+    "description": "Dialog title. name = an anytime meal's name (Tea).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "anytimeMealsNameLabel": "Name",
+  "anytimeMealsPriceLabel": "Price per unit",
+  "anytimeMealsGroupLabel": "Group (optional)",
+  "anytimeMealsGroupHint": "e.g. Drinks, Snacks",
+  "anytimeMealsActiveLabel": "Served now",
+  "anytimeMealsRetireHelp": "Turn off to retire it. It leaves the scanner and top-ups, but balances, refunds and reports keep it.",
+  "anytimeMealsRetiredSubtitle": "{price} · Retired",
+  "@anytimeMealsRetiredSubtitle": {
+    "description": "Under a retired anytime meal in Settings. price = a formatted amount.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "anytimeMealsCancelButton": "Cancel",
+  "anytimeMealsSaveButton": "Save meal",
+  "anytimeMealsSavedMessage": "Meals saved.",
   "settingsConfigScreenLunchLabel": "Lunch",
   "settingsConfigScreenBreakfastLabel": "Breakfast",
   "settingsConfigScreenBrunchLabel": "Brunch",
