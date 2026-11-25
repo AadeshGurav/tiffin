@@ -200,7 +200,7 @@ class MenuScreen extends ConsumerWidget {
                           child: Text(m.group == null
                               ? m.name
                               : AppText.of(context)
-                                  .menuScreenGroupedMeal(m.group!, m.name))),
+                                  .mealWithGroup(m.group!, m.name))),
                   ],
                   onChanged: (m) => setLocal(() => meal = m ?? meal),
                 ),

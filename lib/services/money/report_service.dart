@@ -7,6 +7,7 @@ import '../../domain/ledger.dart';
 import '../../domain/member.dart';
 import '../../domain/menu.dart';
 import '../../domain/ops.dart';
+import '../../domain/settings.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/labels.dart';
 import 'expense_service.dart';
@@ -48,6 +49,16 @@ class ReportService {
         .add_Hm()
         .format(tz.TZDateTime.from(utc.toUtc(), zone));
     String day(DateTime d) => DateFormat.yMd(t.localeName).format(d);
+
+    // One column per catalogue meal, retired ones too (they may still hold
+    // units), in the grouped order and headed "Drinks · Juice" (ADR 0009 §8).
+    // The set comes from the catalogue, so every row has the same columns.
+    final anytime = groupMeals(settings.anytimeMeals);
+    final anytimeHeaders = [
+      for (final m in anytime)
+        m.group == null ? m.name : t.mealWithGroup(m.group!, m.name),
+    ];
+    List<int> anytimeCells(UnitCounts u) => [for (final m in anytime) u[m.id]];
 
     bool inRange(DateTime when) =>
         (start == null || !when.isBefore(start)) &&
@@ -109,6 +120,7 @@ class ReportService {
         t.mealLunch,
         t.mealBreakfast,
         t.mealBrunch,
+        ...anytimeHeaders,
         t.reportColTotal,
         t.reportColStatus,
       ]);
@@ -120,7 +132,8 @@ class ReportService {
           b.lunch,
           b.breakfast,
           b.brunch,
-          b.lunch + b.breakfast + b.brunch,
+          ...anytimeCells(b),
+          b.total,
           t.statusLabel(m.status),
         ]);
       }
@@ -160,6 +173,7 @@ class ReportService {
         t.mealLunch,
         t.mealBreakfast,
         t.mealBrunch,
+        ...anytimeHeaders,
         t.reportColAmount,
         t.reportColMethod,
         t.reportColStatus,
@@ -173,6 +187,7 @@ class ReportService {
           x.lunchUnits,
           x.breakfastUnits,
           x.brunchUnits,
+          ...anytimeCells(x.units),
           x.amount,
           t.paymentMethodLabel(x.paymentMethod),
           t.paymentStatusLabel(x.paymentStatus),
