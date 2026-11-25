@@ -1,3 +1,5 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +12,17 @@ void main() {
     test('typing is forgiving: case, spaces and dashes are ignored', () {
       expect(CanteenService.normalise('abcd-2345'), 'ABCD2345');
       expect(CanteenService.normalise(' abcd 2345 '), 'ABCD2345');
+    });
+
+    // Regression: a brand-new phone has no identity, and the rules refuse
+    // reading a canteen to anyone signed out, so its first join failed.
+    test('a new phone gets an identity before looking up a code', () async {
+      final db = FakeFirebaseFirestore();
+      await db.doc('canteens/ABCD2345').set({'name': 'Gate canteen'});
+      final auth = MockFirebaseAuth();
+      expect(
+          await CanteenService(db, auth).nameOf('abcd-2345'), 'Gate canteen');
+      expect(auth.currentUser?.isAnonymous, isTrue);
     });
   });
 
