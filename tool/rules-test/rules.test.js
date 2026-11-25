@@ -15,6 +15,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   runTransaction,
   setDoc,
   updateDoc,
@@ -106,6 +107,17 @@ describe('data access by phone role', () => {
         { balances: { lunch: 1, breakfast: 0, brunch: 0 } }));
     await assertFails(updateDoc(doc(db, 'canteens/c1/members/m1'),
         { balances: { lunch: 9, breakfast: 0, brunch: 0 } }));
+  });
+
+  test('an admin phone records a refund and lowers the balance in one batch', async () => {
+    const db = phone('admin');
+    const b = writeBatch(db);
+    b.set(doc(db, 'canteens/c1/refunds/r1'),
+        { memberId: 'm1', lunchUnits: 1, refundAmount: 40, createdAt: '2026-01-01T00:00:00.000Z' });
+    b.update(doc(db, 'canteens/c1/members/m1'),
+        { 'balances.lunch': increment(-1), updatedAt: '2026-01-01T00:00:00.000Z' });
+    await assertSucceeds(b.commit());
+    await assertSucceeds(getDocs(collection(db, 'canteens/c1/refunds')));
   });
 
   test('a counter phone can top up but not refund', async () => {
