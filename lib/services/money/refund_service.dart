@@ -27,6 +27,12 @@ class RefundService {
   }
 
   Future<Refund> create(RefundDraft draft) async {
+    // A negative refund would credit units (and record a negative payout).
+    if (draft.lunchUnits < 0 ||
+        draft.breakfastUnits < 0 ||
+        draft.brunchUnits < 0) {
+      throw const ValidationException(ErrorCode.refundNegativeUnits);
+    }
     if (draft.isAllZero) {
       throw const ValidationException(ErrorCode.refundNeedsUnits);
     }
@@ -72,8 +78,10 @@ class RefundService {
     return refund;
   }
 
+  /// Only meals actually being refunded are checked: a meal running on grace
+  /// (below zero) must not block refunding another one.
   void _rejectOverRefund(String meal, int requested, int available) {
-    if (requested > available) {
+    if (requested > 0 && requested > available) {
       throw ValidationException(ErrorCode.refundExceedsBalance,
           {'requested': requested, 'meal': meal, 'available': available});
     }
