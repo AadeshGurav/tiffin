@@ -44,6 +44,7 @@ enum ErrorCode {
   topupNotFound,
   refundNeedsUnits,
   refundExceedsBalance,
+  negativeUnits,
 
   // menu
   categoryNameBlank,

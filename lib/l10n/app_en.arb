@@ -132,6 +132,7 @@
   "expensesScreenTitle": "Expenses & revenue",
   "expensesScreenLogExpense": "Log expense",
   "expensesScreenRevenue": "Revenue",
+  "expensesScreenRefunds": "Refunds",
   "expensesScreenExpenses": "Expenses",
   "expensesScreenProfit": "Profit",
   "expensesScreenLoading": "Loading expenses…",
@@ -1170,6 +1171,7 @@
   "errTopupNeedsUnits": "A top-up needs at least one unit.",
   "errTopupNotFound": "That top-up no longer exists.",
   "errRefundNeedsUnits": "A refund needs at least one unit.",
+  "errNegativeUnits": "Units can't be negative. Enter 0 or more for each meal.",
   "errRefundExceedsBalance": "Can't refund {requested} {meal} units — the member has only {available}.",
   "@errRefundExceedsBalance": {
     "description": "On an error message. requested = a number of units; meal = a meal name (Breakfast, Lunch, Brunch); available = a number of units.",

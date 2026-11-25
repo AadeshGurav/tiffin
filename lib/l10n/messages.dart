@@ -114,6 +114,7 @@ extension AppTextMessages on AppText {
       ErrorCode.topupNeedsUnits => errTopupNeedsUnits,
       ErrorCode.topupNotFound => errTopupNotFound,
       ErrorCode.refundNeedsUnits => errRefundNeedsUnits,
+      ErrorCode.negativeUnits => errNegativeUnits,
       ErrorCode.refundExceedsBalance =>
         errRefundExceedsBalance(n('requested'), meal('meal'), n('available')),
       ErrorCode.categoryNameBlank => errCategoryNameBlank,

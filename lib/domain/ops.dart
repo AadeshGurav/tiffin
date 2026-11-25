@@ -80,22 +80,32 @@ class ExpenseDraft {
 class ProfitSummary {
   const ProfitSummary({
     required this.revenue,
+    this.refunds = 0,
     required this.expenses,
     required this.profit,
   });
 
   factory ProfitSummary.fromJson(Map<String, dynamic> j) => ProfitSummary(
         revenue: (j['revenue'] as num).toDouble(),
+        refunds: (j['refunds'] as num?)?.toDouble() ?? 0,
         expenses: (j['expenses'] as num).toDouble(),
         profit: (j['profit'] as num).toDouble(),
       );
 
   final double revenue;
+
+  /// Money paid back to members (PRD §6.7) — it leaves the till like an
+  /// expense, so it comes off profit.
+  final double refunds;
   final double expenses;
   final double profit;
 
-  Map<String, dynamic> toJson() =>
-      {'revenue': revenue, 'expenses': expenses, 'profit': profit};
+  Map<String, dynamic> toJson() => {
+        'revenue': revenue,
+        'refunds': refunds,
+        'expenses': expenses,
+        'profit': profit
+      };
 }
 
 // ---------------------------------------------------------------------------

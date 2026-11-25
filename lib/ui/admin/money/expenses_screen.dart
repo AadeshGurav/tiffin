@@ -45,11 +45,17 @@ class ExpensesScreen extends ConsumerWidget {
             data: (s) => NbSurface(
               intensity: NbIntensity.full,
               background: t.color.surfaceMuted,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+              // Wraps rather than overflows: four figures don't always fit
+              // one row at 320px.
+              child: Wrap(
+                alignment: WrapAlignment.spaceAround,
+                spacing: NbSpace.md,
+                runSpacing: NbSpace.sm,
                 children: [
                   _stat(
                       t, AppText.of(context).expensesScreenRevenue, s.revenue),
+                  _stat(
+                      t, AppText.of(context).expensesScreenRefunds, s.refunds),
                   _stat(t, AppText.of(context).expensesScreenExpenses,
                       s.expenses),
                   _stat(t, AppText.of(context).expensesScreenProfit, s.profit),

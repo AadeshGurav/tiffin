@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -30,6 +32,12 @@ class RefundsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final refunds = ref.watch(_refundsProvider);
+    // Whose refund it was; members are cached, so this is instant.
+    final nameById = {
+      for (final m in ref.watch(_activeMembersProvider).asData?.value ??
+          const <Member>[])
+        m.id: m.name,
+    };
     final fmt = DateFormat('MMM d, y');
     return Scaffold(
       appBar: AppBar(title: Text(AppText.of(context).refundsScreenTitle)),
@@ -60,6 +68,11 @@ class RefundsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                      nameById[r.memberId] ??
+                          AppText.of(context)
+                              .topupHistoryUnknownMember(shortCode(r.memberId)),
+                      style: t.text.body),
                   Text(
                       AppText.of(context).refundsScreenLineSummary(
                           r.lunchUnits,
@@ -96,10 +109,11 @@ class RefundsScreen extends ConsumerWidget {
     final brunch = TextEditingController();
     final reason = TextEditingController();
 
+    // A meal on grace is below zero: there is nothing of it to refund.
     void prefill() {
-      lunch.text = '${selected.balances.lunch}';
-      breakfast.text = '${selected.balances.breakfast}';
-      brunch.text = '${selected.balances.brunch}';
+      lunch.text = '${max(0, selected.balances.lunch)}';
+      breakfast.text = '${max(0, selected.balances.breakfast)}';
+      brunch.text = '${max(0, selected.balances.brunch)}';
     }
 
     prefill();
