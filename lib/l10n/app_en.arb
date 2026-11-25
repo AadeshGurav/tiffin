@@ -812,6 +812,32 @@
     }
   },
   "scannerAppBarTitlePlain": "SCAN",
+  "scannerModeByTime": "By time",
+  "@scannerModeByTime": {
+    "description": "On the scanner's meal bar: serve whichever built-in meal (breakfast, lunch, brunch) is open right now."
+  },
+  "scannerModeBarLabel": "Meal this phone serves",
+  "@scannerModeBarLabel": {
+    "description": "Screen-reader label for the scanner's meal bar."
+  },
+  "scannerModeSubtitle": "Serving: {meal}",
+  "@scannerModeSubtitle": {
+    "description": "Under the scanner's title. meal = an anytime meal's name (Tea), or 'By time'.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "scannerModeReset": "{meal} is no longer served, so this phone is back to serving by time.",
+  "@scannerModeReset": {
+    "description": "Shown on the scanner when the meal this phone was set to serve was retired. meal = an anytime meal's name (Tea).",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "scannerErrorTitle": "SCAN ERROR",
   "scannerAccepted": "ACCEPTED",
   "scannerRejected": "REJECTED",
