@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:tiffin/core/errors.dart';
-import 'package:tiffin/core/meal_type.dart';
 import 'package:tiffin/data/backend.dart';
 import 'package:tiffin/domain/member.dart';
 import 'package:tiffin/domain/settings.dart';
@@ -151,7 +150,7 @@ void main() {
       expect(topups.single.memberId, '7');
       expect(topups.single.amount, 200);
       final scans = await fresh.recentScans();
-      expect(scans.single.mealType, MealType.lunch);
+      expect(scans.single.meal, 'lunch');
       expect(scans.single.memberName, 'Meera');
     });
   });

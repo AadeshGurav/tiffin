@@ -7,6 +7,7 @@ import '../core/errors.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
 import '../domain/ops.dart';
+import '../domain/settings.dart' show AnytimeMeal;
 import 'app_localizations.dart';
 import 'labels.dart';
 
@@ -76,7 +77,7 @@ extension AppTextMessages on AppText {
   String _appError(AppException e) {
     String s(String k) => '${e.args[k] ?? ''}';
     int n(String k) => (e.args[k] as num?)?.toInt() ?? 0;
-    String meal(String k) => mealWire(s(k));
+    String meal(String k) => mealName(s(k));
     String role(String k) {
       try {
         return roleLabel(Role.fromWire(s(k)));
@@ -162,8 +163,9 @@ extension AppTextMessages on AppText {
     };
   }
 
-  String reversalText(ReversalResult r) {
-    final meal = r.mealType == null ? '' : mealLabel(r.mealType!);
+  String reversalText(ReversalResult r,
+      {List<AnytimeMeal> catalogue = const []}) {
+    final meal = r.meal == null ? '' : mealName(r.meal!, catalogue);
     return switch (r.code) {
       ReversalCode.scanReversed => reversalScanReversed(meal, r.restored ?? 0),
       ReversalCode.scanNotFound => reversalScanNotFound,
@@ -179,9 +181,9 @@ extension AppTextMessages on AppText {
   }
 
   /// The scanner's verdict as one sentence (the big result panel words it).
-  String scanText(ScanResult r) {
+  String scanText(ScanResult r, {List<AnytimeMeal> catalogue = const []}) {
     final name = r.memberName ?? '';
-    final meal = r.mealType == null ? '' : mealLabel(r.mealType!);
+    final meal = r.meal == null ? '' : mealName(r.meal!, catalogue);
     return switch (r.outcome) {
       // The grace allowance gets its own badge on the result panel.
       ScanOutcome.accepted => scanAccepted(name, meal, r.remainingBalance ?? 0),
@@ -198,7 +200,7 @@ extension AppTextMessages on AppText {
     String s(String k) => '${p[k] ?? ''}';
     int i(String k) => (p[k] as num?)?.toInt() ?? 0;
     String q(String k) => p[k] == null ? '' : number(p[k] as num);
-    String meal(String k) => mealWire(s(k));
+    String meal(String k) => mealName(s(k));
     return switch (n.type) {
       'prep_reminder' => (
           title: notifPrepTitle(meal('meal')),

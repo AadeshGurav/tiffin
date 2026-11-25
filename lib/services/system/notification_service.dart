@@ -94,15 +94,14 @@ class NotificationService {
       final served = (await _store.cached(_store
               .col(Col.scans)
               .where('day', isEqualTo: day)
-              .where('mealType', isEqualTo: entry.mealType.wire)
+              .where('mealType', isEqualTo: entry.meal)
               .where('memberCategory', isEqualTo: entry.category)
               .where('reversed', isEqualTo: false)))
           .length;
       if (served < entry.headcount) continue;
-      upsert('headcount_overrun',
-          '${day}_${entry.mealType.wire}_${entry.category}', {
+      upsert('headcount_overrun', '${day}_${entry.meal}_${entry.category}', {
         'category': entry.category,
-        'meal': entry.mealType.wire,
+        'meal': entry.meal,
         'planned': entry.headcount,
         'served': served,
       }, const [
@@ -163,14 +162,14 @@ class NotificationService {
   /// person was already served this meal on another phone.
   Future<void> raiseScanRejectedOnSync({
     required String memberName,
-    required MealType meal,
+    required String meal,
     required String day,
   }) async {
     final now = DateTime.now().toUtc();
     final b = _store.batch()
       ..set(_col.doc('scan_rejected_on_sync_${now.millisecondsSinceEpoch}'), {
         'type': 'scan_rejected_on_sync',
-        'params': {'name': memberName, 'meal': meal.wire, 'date': day},
+        'params': {'name': memberName, 'meal': meal, 'date': day},
         'visibleRoles': const ['admin', 'counter'],
         'createdAt': now.toIso8601String(),
       });

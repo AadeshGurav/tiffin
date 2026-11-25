@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/errors.dart';
-import '../../core/meal_type.dart';
 import '../../core/sentinels.dart';
 import '../../data/store.dart';
 import '../../domain/menu.dart';
@@ -16,8 +15,8 @@ class MenuService {
 
   /// One entry per (day, meal, category), so the id *is* the uniqueness rule
   /// and the scanner can look today's plate up without a query.
-  static String entryId(String day, MealType meal, String category) =>
-      '${day}_${meal.wire}_${category.trim().toLowerCase().replaceAll('/', '_')}';
+  static String entryId(String day, String meal, String category) =>
+      '${day}_${meal}_${category.trim().toLowerCase().replaceAll('/', '_')}';
 
   CollectionReference<Json> get _categories => _store.col(Col.menuCategories);
   CollectionReference<Json> get _entries => _store.col(Col.menu);
@@ -111,10 +110,10 @@ class MenuService {
           ErrorCode.unknownCategory, {'name': draft.category});
     }
 
-    final id = entryId(ymd(draft.date), draft.mealType, draft.category);
+    final id = entryId(ymd(draft.date), draft.meal, draft.category);
     if (await _store.cachedDoc(_entries.doc(id)) != null) {
       throw ConflictException(ErrorCode.menuEntryExists,
-          {'meal': draft.mealType.wire, 'category': draft.category});
+          {'meal': draft.meal, 'category': draft.category});
     }
     final json = {...draft.toJson(), 'id': id};
     await _store.commit(

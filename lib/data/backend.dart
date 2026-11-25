@@ -263,7 +263,7 @@ class Backend {
     _requireSession();
     return menu.addEntry(MenuEntryDraft(
       date: draft.date,
-      mealType: draft.mealType,
+      meal: draft.meal,
       category: draft.category,
       headcount: draft.headcount,
       items: draft.items,

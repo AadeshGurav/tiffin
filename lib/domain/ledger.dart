@@ -1,4 +1,3 @@
-import '../core/meal_type.dart';
 import 'member.dart';
 
 /// Scan, top-up and refund models — the unit ledger (PRD §5–§6). Plain,
@@ -41,7 +40,7 @@ class ScanResult {
     this.scanId,
     this.memberName,
     this.memberType,
-    this.mealType,
+    this.meal,
     this.remainingBalance,
     this.viaGrace = false,
     this.memberCategory,
@@ -54,9 +53,7 @@ class ScanResult {
         scanId: j['scanId'] as String?,
         memberName: j['memberName'] as String?,
         memberType: j['memberType'] as String?,
-        mealType: j['mealType'] == null
-            ? null
-            : MealType.fromWire(j['mealType'] as String),
+        meal: j['mealType'] as String?,
         remainingBalance: j['remainingBalance'] as int?,
         viaGrace: j['viaGrace'] as bool? ?? false,
         memberCategory: j['memberCategory'] as String?,
@@ -68,7 +65,9 @@ class ScanResult {
   final String? scanId;
   final String? memberName;
   final String? memberType;
-  final MealType? mealType;
+
+  /// A meal id (ADR 0009): a built-in's wire name or an anytime meal's id.
+  final String? meal;
   final int? remainingBalance;
   final bool viaGrace;
 
@@ -91,7 +90,7 @@ class ScanResult {
         'scanId': scanId,
         'memberName': memberName,
         'memberType': memberType,
-        'mealType': mealType?.wire,
+        'mealType': meal,
         'remainingBalance': remainingBalance,
         'viaGrace': viaGrace,
         'memberCategory': memberCategory,
@@ -106,7 +105,7 @@ class ScanRecord {
     required this.id,
     required this.memberId,
     required this.memberName,
-    required this.mealType,
+    required this.meal,
     required this.scannedAt,
     required this.result,
     required this.viaGrace,
@@ -120,7 +119,7 @@ class ScanRecord {
         id: j['id'] as String,
         memberId: j['memberId'] as String,
         memberName: j['memberName'] as String,
-        mealType: MealType.fromWire(j['mealType'] as String),
+        meal: j['mealType'] as String,
         scannedAt: DateTime.parse(j['scannedAt'] as String),
         result: j['result'] as String,
         viaGrace: j['viaGrace'] as bool,
@@ -135,7 +134,9 @@ class ScanRecord {
   final String id;
   final String memberId;
   final String memberName;
-  final MealType mealType;
+
+  /// A meal id (ADR 0009). Unknown ids parse; the label falls back to the id.
+  final String meal;
   final DateTime scannedAt;
   final String result;
   final bool viaGrace;
@@ -148,7 +149,7 @@ class ScanRecord {
         'id': id,
         'memberId': memberId,
         'memberName': memberName,
-        'mealType': mealType.wire,
+        'mealType': meal,
         'scannedAt': scannedAt.toUtc().toIso8601String(),
         'result': result,
         'viaGrace': viaGrace,
@@ -174,13 +175,13 @@ enum ReversalCode {
 
 class ReversalResult {
   const ReversalResult(this.code,
-      {this.restored, this.mealType, this.windowMinutes});
+      {this.restored, this.meal, this.windowMinutes});
 
   final ReversalCode code;
 
   /// Units put back, for [ReversalCode.scanReversed].
   final int? restored;
-  final MealType? mealType;
+  final String? meal;
 
   /// The configured window, for [ReversalCode.scanWindowExpired].
   final int? windowMinutes;

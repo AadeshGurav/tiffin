@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tiffin/core/errors.dart';
-import 'package:tiffin/core/meal_type.dart';
 import 'package:tiffin/domain/ledger.dart';
 import 'package:tiffin/domain/ops.dart';
 import 'package:tiffin/l10n/app_localizations.dart';
@@ -126,7 +125,7 @@ void main() {
         const r = ScanResult(
           outcome: ScanOutcome.accepted,
           memberName: 'Asha',
-          mealType: MealType.lunch,
+          meal: 'lunch',
           remainingBalance: 2,
         );
         expect(t.scanText(r), allOf(contains('Asha'), contains(t.mealLunch)));

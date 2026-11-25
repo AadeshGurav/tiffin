@@ -105,7 +105,7 @@ class MenuScreen extends ConsumerWidget {
               .where((e) => _sameDay(e.date, selected))
               .toList()
             ..sort((a, b) {
-              final byMeal = a.mealType.index.compareTo(b.mealType.index);
+              final byMeal = _mealOrder(a.meal).compareTo(_mealOrder(b.meal));
               return byMeal != 0 ? byMeal : a.category.compareTo(b.category);
             });
 
@@ -119,7 +119,7 @@ class MenuScreen extends ConsumerWidget {
                 },
                 mealsByDay: {
                   for (final d in byDay.keys)
-                    d: byDay[d]!.map((e) => e.mealType).toSet()
+                    d: byDay[d]!.map((e) => e.meal).toSet()
                 },
                 onSelect: (day) =>
                     ref.read(_selectedDayProvider.notifier).state = day,
@@ -286,7 +286,7 @@ class MenuScreen extends ConsumerWidget {
       context,
       () => ref.read(backendProvider).addMenuEntry(MenuEntryDraft(
             date: date,
-            mealType: meal,
+            meal: meal.wire,
             category: category!,
             headcount: parseWholeNumber(headcount.text),
             items: parseItems(),
@@ -307,7 +307,7 @@ class MenuScreen extends ConsumerWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: Text(
-            '${AppText.of(context).mealLabel(entry.mealType)} · ${entry.category}',
+            '${AppText.of(context).mealName(entry.meal)} · ${entry.category}',
             style: t.text.heading),
         content: SingleChildScrollView(
           child: Column(
@@ -383,11 +383,17 @@ class MenuScreen extends ConsumerWidget {
 
 /// A colour + a letter per meal — never colour alone (PRD §14.3).
 /// Resolved from the palette rather than a const map, so it follows the theme.
-Color _mealColor(TiffinPalette c, MealType meal) => switch (meal) {
+Color _mealColor(TiffinPalette c, String meal) =>
+    switch (MealType.tryWire(meal)) {
       MealType.breakfast => c.warn,
       MealType.lunch => c.accent,
       MealType.brunch => c.accept,
+      null => c.inkMuted, // anytime meals share one neutral mark
     };
+
+/// Built-ins in their fixed order, anytime meals after them.
+int _mealOrder(String meal) =>
+    MealType.tryWire(meal)?.index ?? MealType.values.length;
 
 class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
@@ -401,7 +407,7 @@ class _MonthGrid extends StatelessWidget {
   final DateTime month;
   final DateTime selected;
   final Map<int, int> entryCountByDay;
-  final Map<int, Set<MealType>> mealsByDay;
+  final Map<int, Set<String>> mealsByDay;
   final ValueChanged<DateTime> onSelect;
 
   @override
@@ -456,7 +462,7 @@ class _MonthGrid extends StatelessWidget {
     final date = DateTime(month.year, month.month, day);
     final isSelected = _sameDay(date, selected);
     final isToday = _sameDay(date, today);
-    final meals = mealsByDay[day] ?? const <MealType>{};
+    final meals = mealsByDay[day] ?? const <String>{};
     final count = entryCountByDay[day] ?? 0;
 
     return AspectRatio(
@@ -488,12 +494,12 @@ class _MonthGrid extends StatelessWidget {
                   Row(
                     children: [
                       for (final m in MealType.values)
-                        if (meals.contains(m))
+                        if (meals.contains(m.wire))
                           Container(
                             width: 6,
                             height: 6,
                             margin: const EdgeInsets.only(right: 2),
-                            color: _mealColor(t.color, m),
+                            color: _mealColor(t.color, m.wire),
                           ),
                       const Spacer(),
                       Text('$count',
@@ -561,7 +567,7 @@ class _DayPanel extends StatelessWidget {
                     Container(
                       width: 10,
                       height: 40,
-                      color: _mealColor(t.color, e.mealType),
+                      color: _mealColor(t.color, e.meal),
                     ),
                     const SizedBox(width: NbSpace.sm),
                     Expanded(
@@ -570,7 +576,7 @@ class _DayPanel extends StatelessWidget {
                         children: [
                           Text(
                               AppText.of(context).menuScreenDayEntrySummary(
-                                  AppText.of(context).mealLabel(e.mealType),
+                                  AppText.of(context).mealName(e.meal),
                                   e.category,
                                   e.headcount),
                               style: t.text.label),

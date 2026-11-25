@@ -92,7 +92,7 @@ class ScanService {
         outcome: ScanOutcome.rejectedAlreadyScanned,
         memberName: member.name,
         memberType: member.type,
-        mealType: mealType,
+        meal: mealType.wire,
       );
     }
 
@@ -105,7 +105,7 @@ class ScanService {
         outcome: ScanOutcome.rejectedZeroBalance,
         memberName: member.name,
         memberType: member.type,
-        mealType: mealType,
+        meal: mealType.wire,
         remainingBalance: balance,
       );
     }
@@ -115,7 +115,7 @@ class ScanService {
 
     // What one plate of this member's category gets today, and what it uses.
     final entryRow = await _store.cachedDoc(_store.doc(
-        Col.menu, MenuService.entryId(day, mealType, member.category)));
+        Col.menu, MenuService.entryId(day, mealType.wire, member.category)));
     final entry = entryRow == null ? null : MenuEntry.fromJson(entryRow);
     final consumed = await _platesCost(entry);
 
@@ -132,8 +132,10 @@ class ScanService {
         'memberCategory': member.category,
         'consumed': consumed,
       })
-      ..update(_store.doc(Col.members, member.id),
-          MemberService.balanceDelta(_single(mealType), sign: -1));
+      ..update(
+          _store.doc(Col.members, member.id),
+          MemberService.balanceDelta(UnitCounts.single(mealType.wire),
+              sign: -1));
     consumed.forEach((ingredientId, qty) =>
         b.update(_store.doc(Col.ingredients, ingredientId), {
           'stockQty': FieldValue.increment(-qty),
@@ -143,7 +145,7 @@ class ScanService {
     try {
       await _store.commit(b, 'scan ${lockRef.id}',
           onRejected: (_) => _notifications.raiseScanRejectedOnSync(
-              memberName: member.name, meal: mealType, day: day));
+              memberName: member.name, meal: mealType.wire, day: day));
     } on ForbiddenException {
       // Refused online. Either another phone recorded this meal a moment
       // earlier (the lock now exists), or this phone lost its access.
@@ -152,7 +154,7 @@ class ScanService {
         outcome: ScanOutcome.rejectedAlreadyScanned,
         memberName: member.name,
         memberType: member.type,
-        mealType: mealType,
+        meal: mealType.wire,
       );
     }
 
@@ -165,7 +167,7 @@ class ScanService {
     int? served;
     if (entry != null && entry.headcount > 0) {
       planned = entry.headcount;
-      served = await servedCount(day, mealType, member.category);
+      served = await servedCount(day, mealType.wire, member.category);
     }
 
     return ScanResult(
@@ -173,7 +175,7 @@ class ScanService {
       scanId: lockRef.id,
       memberName: member.name,
       memberType: member.type,
-      mealType: mealType,
+      meal: mealType.wire,
       remainingBalance: newBalance,
       viaGrace: usedGrace,
       memberCategory: member.category,
@@ -184,11 +186,11 @@ class ScanService {
 
   /// Accepted, unreversed scans for one day / meal / category, from the warm
   /// cache (today's scans are always kept synced).
-  Future<int> servedCount(String day, MealType meal, String category) async =>
+  Future<int> servedCount(String day, String meal, String category) async =>
       (await _store.cached(_store
               .col(Col.scans)
               .where('day', isEqualTo: day)
-              .where('mealType', isEqualTo: meal.wire)
+              .where('mealType', isEqualTo: meal)
               .where('memberCategory', isEqualTo: category)
               .where('reversed', isEqualTo: false)))
           .length;
@@ -246,7 +248,7 @@ class ScanService {
     if (memberRow == null) {
       return const ReversalResult(ReversalCode.memberNotFound);
     }
-    final meal = MealType.fromWire(scan['mealType'] as String);
+    final meal = scan['mealType'] as String;
     final now = DateTime.now().toUtc();
     final consumed =
         Map<String, dynamic>.from(scan['consumed'] as Map? ?? const {});
@@ -263,7 +265,7 @@ class ScanService {
           archived)
       ..delete(ref)
       ..update(_store.doc(Col.members, memberId),
-          MemberService.balanceDelta(_single(meal)));
+          MemberService.balanceDelta(UnitCounts.single(meal)));
     consumed.forEach((ingredientId, qty) =>
         b.update(_store.doc(Col.ingredients, ingredientId), {
           'stockQty': FieldValue.increment((qty as num).toDouble()),
@@ -271,11 +273,11 @@ class ScanService {
         }));
     await _store.commit(b, 'scan.reverse $scanId');
 
-    final restored = Member.fromJson(memberRow).balances.forMeal(meal) + 1;
-    _log.info('reversed scan_id=$scanId member_id=$memberId meal=${meal.wire} '
+    final restored = Member.fromJson(memberRow).balances[meal] + 1;
+    _log.info('reversed scan_id=$scanId member_id=$memberId meal=$meal '
         'restored=$restored by=$reversedBy');
     return ReversalResult(ReversalCode.scanReversed,
-        restored: restored, mealType: meal);
+        restored: restored, meal: meal);
   }
 
   /// Recent scans, newest first — backs the scan log and reversal picker.
@@ -296,12 +298,6 @@ class ScanService {
       return null;
     }
   }
-
-  static UnitCounts _single(MealType meal) => UnitCounts(
-        lunch: meal == MealType.lunch ? 1 : 0,
-        breakfast: meal == MealType.breakfast ? 1 : 0,
-        brunch: meal == MealType.brunch ? 1 : 0,
-      );
 }
 
 /// `YYYY-MM-DD` of a local date — the day key scans, menu entries and

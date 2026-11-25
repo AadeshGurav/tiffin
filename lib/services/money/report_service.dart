@@ -142,7 +142,7 @@ class ReportService {
         sheet.add([
           at(s.scannedAt),
           s.memberName,
-          t.mealLabel(s.mealType),
+          t.mealName(s.meal, settings.anytimeMeals),
           t.yesNo(s.viaGrace),
           t.yesNo(s.reversed),
           s.reversedBy,
@@ -242,7 +242,7 @@ class ReportService {
       for (final e in entries.where((e) => inRange(e.date))) {
         sheet.add([
           day(e.date),
-          t.mealLabel(e.mealType),
+          t.mealName(e.meal, settings.anytimeMeals),
           e.category,
           e.headcount,
           e.items.join(', '),

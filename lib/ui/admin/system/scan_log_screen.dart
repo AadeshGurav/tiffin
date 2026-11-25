@@ -44,7 +44,7 @@ class ScanLogScreen extends ConsumerWidget {
           searchLabel: AppText.of(context).scanLogScreenSearchLabel,
           searchFields: (s) => [
             s.memberName,
-            AppText.of(context).mealLabel(s.mealType),
+            AppText.of(context).mealName(s.meal),
             s.memberCategory,
           ],
           sorts: [
@@ -69,7 +69,7 @@ class ScanLogScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Text(
-                              '${s.memberName} · ${AppText.of(context).mealLabel(s.mealType)}',
+                              '${s.memberName} · ${AppText.of(context).mealName(s.meal)}',
                               style: t.text.body),
                         ),
                         if (s.reversed)

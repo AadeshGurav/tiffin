@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../core/meal_type.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
+import '../domain/settings.dart' show AnytimeMeal;
 import '../ui/theme/category_palette.dart';
 import '../ui/theme/theme_catalog.dart';
 import 'app_localizations.dart';
@@ -17,12 +18,15 @@ extension AppTextLabels on AppText {
         MealType.brunch => mealBrunch,
       };
 
-  /// For wire strings read back from storage; unknown values pass through.
-  String mealWire(String wire) {
-    for (final m in MealType.values) {
-      if (m.wire == wire) return mealLabel(m);
+  /// Any stored meal id (ADR 0009): a built-in's localised label, else the
+  /// admin's name for it in [catalogue], else the raw id — history that
+  /// names a meal this phone doesn't know still shows, never crashes.
+  String mealName(String id, [List<AnytimeMeal> catalogue = const []]) {
+    if (MealType.tryWire(id) case final m?) return mealLabel(m);
+    for (final a in catalogue) {
+      if (a.id == id) return a.name;
     }
-    return wire;
+    return id;
   }
 
   String roleLabel(Role role) => switch (role) {
