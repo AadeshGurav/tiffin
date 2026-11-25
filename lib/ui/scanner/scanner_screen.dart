@@ -8,6 +8,9 @@ import '../../core/error_report.dart';
 import '../../app/providers.dart';
 import '../../core/screen_awake.dart';
 import '../../domain/ledger.dart';
+import '../../domain/settings.dart';
+import '../../l10n/labels.dart';
+import 'meal_mode_bar.dart';
 import '../shared_widgets/app_shell.dart';
 import '../shared_widgets/motion.dart';
 import '../shared_widgets/nb_button.dart';
@@ -45,6 +48,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _busy = false;
   String? _lastCode;
   DateTime _lastAt = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _droppingMode = false;
 
   // A scan point sits open for a whole meal service; it must not dim.
   static const _screen = ScreenAwake();
@@ -77,7 +81,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
     setState(() => _busy = true);
     try {
-      final result = await ref.read(backendProvider).scan(code);
+      final catalogue = await ref.read(anytimeMealsProvider.future);
+      final mode = liveMode(ref.read(scannerModeProvider), catalogue);
+      final result =
+          await ref.read(backendProvider).scan(code, anytimeMealId: mode);
       if (mounted) setState(() => _result = result);
     } catch (e, st) {
       if (mounted) {
@@ -87,6 +94,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// A saved mode whose meal was retired goes back to "by time" — visibly,
+  /// before any scan could use it.
+  void _dropRetiredMode(String mealName) {
+    if (_droppingMode) return; // one notice, however many rebuilds
+    _droppingMode = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _droppingMode = false;
+      if (!mounted) return;
+      ref.read(scannerModeProvider.notifier).set(null);
+      showNbSnack(context, AppText.of(context).scannerModeReset(mealName),
+          ok: false);
+    });
   }
 
   void _clear() => setState(() {
@@ -112,15 +133,40 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       ),
     ];
     final username = ref.watch(sessionProvider)?.username ?? '';
+    final catalogue = ref.watch(anytimeMealsProvider).asData?.value;
+    final saved = ref.watch(scannerModeProvider);
+    final mode = liveMode(saved, catalogue ?? const []);
+    if (catalogue != null && saved != null && mode == null) {
+      _dropRetiredMode(text.mealName(saved, catalogue));
+    }
+    // Always on screen once anytime meals exist, so a phone left on Tea
+    // during lunch is obvious before the first wrong charge.
+    final subtitle = catalogue == null || catalogue.every((m) => !m.active)
+        ? null
+        : text.scannerModeSubtitle(mode == null
+            ? text.scannerModeByTime
+            : text.mealName(mode, catalogue));
     return Scaffold(
       backgroundColor: t.color.ink,
       // As a role home there is no back button, so use the shared bar that
       // carries sign-out; pushed from admin/counter the parent already has it.
       appBar: widget.isRoleHome
           ? NbAppBar(
-              title: text.scannerAppBarTitle(username), actions: cameraActions)
+              title: text.scannerAppBarTitle(username),
+              subtitle: subtitle,
+              actions: cameraActions)
           : AppBar(
-              title: Text(text.scannerAppBarTitlePlain),
+              title: subtitle == null
+                  ? Text(text.scannerAppBarTitlePlain)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(text.scannerAppBarTitlePlain),
+                        Text(subtitle,
+                            style: Theme.of(context).textTheme.labelMedium),
+                      ],
+                    ),
               actions: cameraActions),
       body: Stack(
         fit: StackFit.expand,
@@ -154,6 +200,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 ),
               ),
             ),
+          if (catalogue != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: MealModeBar(
+                catalogue: catalogue,
+                selected: mode,
+                onSelect: (id) =>
+                    ref.read(scannerModeProvider.notifier).set(id),
+              ),
+            ),
           if (_busy)
             Center(
               child: CircularProgressIndicator(color: t.color.surface),
@@ -167,6 +223,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               child: _ResultOverlay(
                 key: ValueKey(_result!.outcome),
                 result: _result!,
+                catalogue: catalogue ?? const [],
                 onNext: _clear,
               ),
             ),
@@ -203,9 +260,15 @@ class _ReticleOverlay extends StatelessWidget {
 }
 
 class _ResultOverlay extends StatelessWidget {
-  const _ResultOverlay({super.key, required this.result, required this.onNext});
+  const _ResultOverlay({
+    super.key,
+    required this.result,
+    required this.catalogue,
+    required this.onNext,
+  });
 
   final ScanResult result;
+  final List<AnytimeMeal> catalogue;
   final VoidCallback onNext;
 
   @override
@@ -241,7 +304,7 @@ class _ResultOverlay extends StatelessWidget {
                     style: t.text.heading.copyWith(color: fg)),
               const SizedBox(height: NbSpace.sm),
               Text(
-                text.scanText(result),
+                text.scanText(result, catalogue: catalogue),
                 textAlign: TextAlign.center,
                 style: t.text.body.copyWith(color: fg, fontSize: 18),
               ),

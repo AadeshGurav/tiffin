@@ -1,4 +1,3 @@
-import '../core/meal_type.dart';
 import 'member.dart';
 
 /// Scan, top-up and refund models — the unit ledger (PRD §5–§6). Plain,
@@ -41,7 +40,7 @@ class ScanResult {
     this.scanId,
     this.memberName,
     this.memberType,
-    this.mealType,
+    this.meal,
     this.remainingBalance,
     this.viaGrace = false,
     this.memberCategory,
@@ -54,9 +53,7 @@ class ScanResult {
         scanId: j['scanId'] as String?,
         memberName: j['memberName'] as String?,
         memberType: j['memberType'] as String?,
-        mealType: j['mealType'] == null
-            ? null
-            : MealType.fromWire(j['mealType'] as String),
+        meal: j['mealType'] as String?,
         remainingBalance: j['remainingBalance'] as int?,
         viaGrace: j['viaGrace'] as bool? ?? false,
         memberCategory: j['memberCategory'] as String?,
@@ -68,7 +65,9 @@ class ScanResult {
   final String? scanId;
   final String? memberName;
   final String? memberType;
-  final MealType? mealType;
+
+  /// A meal id (ADR 0009): a built-in's wire name or an anytime meal's id.
+  final String? meal;
   final int? remainingBalance;
   final bool viaGrace;
 
@@ -91,7 +90,7 @@ class ScanResult {
         'scanId': scanId,
         'memberName': memberName,
         'memberType': memberType,
-        'mealType': mealType?.wire,
+        'mealType': meal,
         'remainingBalance': remainingBalance,
         'viaGrace': viaGrace,
         'memberCategory': memberCategory,
@@ -106,7 +105,7 @@ class ScanRecord {
     required this.id,
     required this.memberId,
     required this.memberName,
-    required this.mealType,
+    required this.meal,
     required this.scannedAt,
     required this.result,
     required this.viaGrace,
@@ -120,7 +119,7 @@ class ScanRecord {
         id: j['id'] as String,
         memberId: j['memberId'] as String,
         memberName: j['memberName'] as String,
-        mealType: MealType.fromWire(j['mealType'] as String),
+        meal: j['mealType'] as String,
         scannedAt: DateTime.parse(j['scannedAt'] as String),
         result: j['result'] as String,
         viaGrace: j['viaGrace'] as bool,
@@ -135,7 +134,9 @@ class ScanRecord {
   final String id;
   final String memberId;
   final String memberName;
-  final MealType mealType;
+
+  /// A meal id (ADR 0009). Unknown ids parse; the label falls back to the id.
+  final String meal;
   final DateTime scannedAt;
   final String result;
   final bool viaGrace;
@@ -148,7 +149,7 @@ class ScanRecord {
         'id': id,
         'memberId': memberId,
         'memberName': memberName,
-        'mealType': mealType.wire,
+        'mealType': meal,
         'scannedAt': scannedAt.toUtc().toIso8601String(),
         'result': result,
         'viaGrace': viaGrace,
@@ -174,13 +175,13 @@ enum ReversalCode {
 
 class ReversalResult {
   const ReversalResult(this.code,
-      {this.restored, this.mealType, this.windowMinutes});
+      {this.restored, this.meal, this.windowMinutes});
 
   final ReversalCode code;
 
   /// Units put back, for [ReversalCode.scanReversed].
   final int? restored;
-  final MealType? mealType;
+  final String? meal;
 
   /// The configured window, for [ReversalCode.scanWindowExpired].
   final int? windowMinutes;
@@ -192,6 +193,12 @@ class ReversalResult {
 // ---------------------------------------------------------------------------
 // Top-up
 // ---------------------------------------------------------------------------
+
+/// `{mealId: units}` from a stored `anytimeUnits` map; absent reads as none.
+Map<String, int> anytimeUnitsFromJson(Object? j) => {
+      for (final e in (j as Map? ?? const {}).entries)
+        e.key as String: (e.value as num).toInt(),
+    };
 
 enum PaymentMethod {
   cash,
@@ -211,6 +218,7 @@ class TopupDraft {
     this.lunchUnits = 0,
     this.breakfastUnits = 0,
     this.brunchUnits = 0,
+    this.anytimeUnits = const {},
     required this.paymentMethod,
     required this.createdBy,
   });
@@ -220,6 +228,7 @@ class TopupDraft {
         lunchUnits: (j['lunchUnits'] as num?)?.toInt() ?? 0,
         breakfastUnits: (j['breakfastUnits'] as num?)?.toInt() ?? 0,
         brunchUnits: (j['brunchUnits'] as num?)?.toInt() ?? 0,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         paymentMethod: PaymentMethod.fromWire(j['paymentMethod'] as String),
         createdBy: j['createdBy'] as String,
       );
@@ -228,17 +237,26 @@ class TopupDraft {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id (ADR 0009 §4).
+  final Map<String, int> anytimeUnits;
   final PaymentMethod paymentMethod;
   final String createdBy;
 
-  bool get isAllZero =>
-      lunchUnits == 0 && breakfastUnits == 0 && brunchUnits == 0;
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
+  bool get isAllZero => units.isAllZero;
 
   Map<String, dynamic> toJson() => {
         'memberId': memberId,
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'paymentMethod': paymentMethod.wire,
         'createdBy': createdBy,
       };
@@ -251,6 +269,7 @@ class Topup {
     required this.lunchUnits,
     required this.breakfastUnits,
     required this.brunchUnits,
+    this.anytimeUnits = const {},
     required this.amount,
     required this.paymentMethod,
     required this.paymentStatus,
@@ -270,6 +289,7 @@ class Topup {
         lunchUnits: j['lunchUnits'] as int,
         breakfastUnits: j['breakfastUnits'] as int,
         brunchUnits: j['brunchUnits'] as int,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         amount: (j['amount'] as num).toDouble(),
         paymentMethod: PaymentMethod.fromWire(j['paymentMethod'] as String),
         paymentStatus: j['paymentStatus'] as String,
@@ -292,6 +312,9 @@ class Topup {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id; absent on pre-0009 records.
+  final Map<String, int> anytimeUnits;
   final double amount;
   final PaymentMethod paymentMethod;
   final String paymentStatus; // 'pending' | 'confirmed'
@@ -306,12 +329,21 @@ class Topup {
   /// The member's balances right after this top-up — printed on the bill.
   final UnitCounts? balancesAfter;
 
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'memberId': memberId,
+        // The flat built-in fields stay: older builds read them as non-null
+        // ints, so a Tea-only top-up still parses there (ADR 0009 §4).
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'amount': amount,
         'paymentMethod': paymentMethod.wire,
         'paymentStatus': paymentStatus,
@@ -336,6 +368,7 @@ class RefundDraft {
     this.lunchUnits = 0,
     this.breakfastUnits = 0,
     this.brunchUnits = 0,
+    this.anytimeUnits = const {},
     this.reason,
     required this.processedBy,
   });
@@ -345,6 +378,7 @@ class RefundDraft {
         lunchUnits: (j['lunchUnits'] as num?)?.toInt() ?? 0,
         breakfastUnits: (j['breakfastUnits'] as num?)?.toInt() ?? 0,
         brunchUnits: (j['brunchUnits'] as num?)?.toInt() ?? 0,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         reason: j['reason'] as String?,
         processedBy: j['processedBy'] as String,
       );
@@ -353,17 +387,26 @@ class RefundDraft {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id (ADR 0009 §4).
+  final Map<String, int> anytimeUnits;
   final String? reason;
   final String processedBy;
 
-  bool get isAllZero =>
-      lunchUnits == 0 && breakfastUnits == 0 && brunchUnits == 0;
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
+  bool get isAllZero => units.isAllZero;
 
   Map<String, dynamic> toJson() => {
         'memberId': memberId,
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'reason': reason,
         'processedBy': processedBy,
       };
@@ -376,6 +419,7 @@ class Refund {
     required this.lunchUnits,
     required this.breakfastUnits,
     required this.brunchUnits,
+    this.anytimeUnits = const {},
     required this.refundAmount,
     this.reason,
     required this.processedBy,
@@ -388,6 +432,7 @@ class Refund {
         lunchUnits: j['lunchUnits'] as int,
         breakfastUnits: j['breakfastUnits'] as int,
         brunchUnits: j['brunchUnits'] as int,
+        anytimeUnits: anytimeUnitsFromJson(j['anytimeUnits']),
         refundAmount: (j['refundAmount'] as num).toDouble(),
         reason: j['reason'] as String?,
         processedBy: j['processedBy'] as String,
@@ -399,17 +444,28 @@ class Refund {
   final int lunchUnits;
   final int breakfastUnits;
   final int brunchUnits;
+
+  /// Units of anytime meals, by meal id; absent on pre-0009 records.
+  final Map<String, int> anytimeUnits;
   final double refundAmount;
   final String? reason;
   final String processedBy;
   final DateTime createdAt;
 
+  UnitCounts get units => UnitCounts(
+      lunch: lunchUnits,
+      breakfast: breakfastUnits,
+      brunch: brunchUnits,
+      anytime: anytimeUnits);
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'memberId': memberId,
+        // Flat built-in fields kept for older builds, as on top-ups.
         'lunchUnits': lunchUnits,
         'breakfastUnits': breakfastUnits,
         'brunchUnits': brunchUnits,
+        if (anytimeUnits.isNotEmpty) 'anytimeUnits': anytimeUnits,
         'refundAmount': refundAmount,
         'reason': reason,
         'processedBy': processedBy,

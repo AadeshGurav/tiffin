@@ -7,6 +7,7 @@ import '../../../core/number_input.dart';
 import '../../../app/providers.dart';
 import '../../../core/meal_type.dart';
 import '../../../domain/menu.dart';
+import '../../../domain/settings.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_surface.dart';
@@ -48,6 +49,7 @@ class MenuScreen extends ConsumerWidget {
     final month = ref.watch(_monthProvider);
     final selected = ref.watch(_selectedDayProvider);
     final entries = ref.watch(_menuProvider);
+    final meals = ref.watch(anytimeMealsProvider).asData?.value ?? const [];
 
     return Scaffold(
       appBar: AppBar(
@@ -105,7 +107,7 @@ class MenuScreen extends ConsumerWidget {
               .where((e) => _sameDay(e.date, selected))
               .toList()
             ..sort((a, b) {
-              final byMeal = a.mealType.index.compareTo(b.mealType.index);
+              final byMeal = _mealOrder(a.meal).compareTo(_mealOrder(b.meal));
               return byMeal != 0 ? byMeal : a.category.compareTo(b.category);
             });
 
@@ -119,7 +121,7 @@ class MenuScreen extends ConsumerWidget {
                 },
                 mealsByDay: {
                   for (final d in byDay.keys)
-                    d: byDay[d]!.map((e) => e.mealType).toSet()
+                    d: byDay[d]!.map((e) => e.meal).toSet()
                 },
                 onSelect: (day) =>
                     ref.read(_selectedDayProvider.notifier).state = day,
@@ -129,7 +131,8 @@ class MenuScreen extends ConsumerWidget {
                 child: _DayPanel(
                   day: selected,
                   entries: dayEntries,
-                  onEdit: (e) => _editEntry(context, ref, e),
+                  catalogue: meals,
+                  onEdit: (e) => _editEntry(context, ref, e, meals),
                   onDelete: (id) async {
                     final ok = await runGuarded(
                       context,
@@ -152,9 +155,11 @@ class MenuScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, DateTime day) async {
     final t = context.tokens;
     final categories = [...await ref.read(_categoriesProvider.future)];
+    final anytime = groupMeals(
+        (await ref.read(anytimeMealsProvider.future)).where((m) => m.active));
     if (!context.mounted) return;
     final date = day;
-    var meal = MealType.lunch;
+    var meal = MealType.lunch.wire;
     String? category = categories.isEmpty ? null : categories.first.name;
     final headcount = TextEditingController();
     final items = TextEditingController();
@@ -179,14 +184,23 @@ class MenuScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButton<MealType>(
+                DropdownButton<String>(
                   value: meal,
                   isExpanded: true,
                   items: [
                     for (final m in MealType.values)
                       DropdownMenuItem(
-                          value: m,
+                          value: m.wire,
                           child: Text(AppText.of(context).mealLabel(m))),
+                    // Anytime meals can be planned on any day (no Saturday
+                    // rule); the group, when set, says which kind it is.
+                    for (final m in anytime)
+                      DropdownMenuItem(
+                          value: m.id,
+                          child: Text(m.group == null
+                              ? m.name
+                              : AppText.of(context)
+                                  .mealWithGroup(m.group!, m.name))),
                   ],
                   onChanged: (m) => setLocal(() => meal = m ?? meal),
                 ),
@@ -286,7 +300,7 @@ class MenuScreen extends ConsumerWidget {
       context,
       () => ref.read(backendProvider).addMenuEntry(MenuEntryDraft(
             date: date,
-            mealType: meal,
+            meal: meal,
             category: category!,
             headcount: parseWholeNumber(headcount.text),
             items: parseItems(),
@@ -297,8 +311,8 @@ class MenuScreen extends ConsumerWidget {
     if (saved) ref.invalidate(_menuProvider);
   }
 
-  Future<void> _editEntry(
-      BuildContext context, WidgetRef ref, MenuEntry entry) async {
+  Future<void> _editEntry(BuildContext context, WidgetRef ref, MenuEntry entry,
+      List<AnytimeMeal> catalogue) async {
     final t = context.tokens;
     final headcount = TextEditingController(text: '${entry.headcount}');
     final items = TextEditingController(text: entry.items.join(', '));
@@ -307,7 +321,7 @@ class MenuScreen extends ConsumerWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: Text(
-            '${AppText.of(context).mealLabel(entry.mealType)} · ${entry.category}',
+            '${AppText.of(context).mealName(entry.meal, catalogue)} · ${entry.category}',
             style: t.text.heading),
         content: SingleChildScrollView(
           child: Column(
@@ -383,11 +397,17 @@ class MenuScreen extends ConsumerWidget {
 
 /// A colour + a letter per meal — never colour alone (PRD §14.3).
 /// Resolved from the palette rather than a const map, so it follows the theme.
-Color _mealColor(TiffinPalette c, MealType meal) => switch (meal) {
+Color _mealColor(TiffinPalette c, String meal) =>
+    switch (MealType.tryWire(meal)) {
       MealType.breakfast => c.warn,
       MealType.lunch => c.accent,
       MealType.brunch => c.accept,
+      null => c.inkMuted, // anytime meals share one neutral mark
     };
+
+/// Built-ins in their fixed order, anytime meals after them.
+int _mealOrder(String meal) =>
+    MealType.tryWire(meal)?.index ?? MealType.values.length;
 
 class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
@@ -401,7 +421,7 @@ class _MonthGrid extends StatelessWidget {
   final DateTime month;
   final DateTime selected;
   final Map<int, int> entryCountByDay;
-  final Map<int, Set<MealType>> mealsByDay;
+  final Map<int, Set<String>> mealsByDay;
   final ValueChanged<DateTime> onSelect;
 
   @override
@@ -456,7 +476,7 @@ class _MonthGrid extends StatelessWidget {
     final date = DateTime(month.year, month.month, day);
     final isSelected = _sameDay(date, selected);
     final isToday = _sameDay(date, today);
-    final meals = mealsByDay[day] ?? const <MealType>{};
+    final meals = mealsByDay[day] ?? const <String>{};
     final count = entryCountByDay[day] ?? 0;
 
     return AspectRatio(
@@ -488,13 +508,20 @@ class _MonthGrid extends StatelessWidget {
                   Row(
                     children: [
                       for (final m in MealType.values)
-                        if (meals.contains(m))
+                        if (meals.contains(m.wire))
                           Container(
                             width: 6,
                             height: 6,
                             margin: const EdgeInsets.only(right: 2),
-                            color: _mealColor(t.color, m),
+                            color: _mealColor(t.color, m.wire),
                           ),
+                      if (meals.any((m) => MealType.tryWire(m) == null))
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.only(right: 2),
+                          color: _mealColor(t.color, ''),
+                        ),
                       const Spacer(),
                       Text('$count',
                           style: t.text.label.copyWith(
@@ -516,6 +543,7 @@ class _DayPanel extends StatelessWidget {
   const _DayPanel({
     required this.day,
     required this.entries,
+    required this.catalogue,
     required this.onEdit,
     required this.onDelete,
     required this.onAdd,
@@ -523,6 +551,7 @@ class _DayPanel extends StatelessWidget {
 
   final DateTime day;
   final List<MenuEntry> entries;
+  final List<AnytimeMeal> catalogue;
   final ValueChanged<MenuEntry> onEdit;
   final ValueChanged<String> onDelete;
   final VoidCallback onAdd;
@@ -561,7 +590,7 @@ class _DayPanel extends StatelessWidget {
                     Container(
                       width: 10,
                       height: 40,
-                      color: _mealColor(t.color, e.mealType),
+                      color: _mealColor(t.color, e.meal),
                     ),
                     const SizedBox(width: NbSpace.sm),
                     Expanded(
@@ -570,7 +599,8 @@ class _DayPanel extends StatelessWidget {
                         children: [
                           Text(
                               AppText.of(context).menuScreenDayEntrySummary(
-                                  AppText.of(context).mealLabel(e.mealType),
+                                  AppText.of(context)
+                                      .mealName(e.meal, catalogue),
                                   e.category,
                                   e.headcount),
                               style: t.text.label),

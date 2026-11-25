@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../domain/ledger.dart';
 import '../../../domain/member.dart';
+import '../../../domain/settings.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/labels.dart';
 
@@ -24,11 +25,15 @@ class BillView extends StatelessWidget {
     required this.topup,
     required this.member,
     required this.appName,
+    this.catalogue = const [],
   });
 
   final Topup topup;
   final Member member;
   final String appName;
+
+  /// Names anytime meals (ADR 0009); built-ins are named by the locale.
+  final List<AnytimeMeal> catalogue;
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +41,12 @@ class BillView extends StatelessWidget {
     const ink = Color(0xFF1A1A1A);
     const body = TextStyle(color: ink, fontSize: 14, height: 1.4);
     final bold = body.copyWith(fontWeight: FontWeight.w700);
-    String units(int l, int b, int br) => '${text.mealLunch}: $l   '
-        '${text.mealBreakfast}: $b   ${text.mealBrunch}: $br';
+    // One line per meal that moved, so a Tea-only bill isn't three zeros.
+    List<Widget> lines(UnitCounts u) => [
+          for (final e in u.byMeal.entries)
+            Text(text.mealUnits(text.mealName(e.key, catalogue), e.value),
+                style: body),
+        ];
     final after = topup.balancesAfter;
 
     return Container(
@@ -56,8 +65,7 @@ class BillView extends StatelessWidget {
               style: body),
           const SizedBox(height: 12),
           Text(text.billUnitsPurchased, style: bold),
-          Text(units(topup.lunchUnits, topup.breakfastUnits, topup.brunchUnits),
-              style: body),
+          ...lines(topup.units),
           const SizedBox(height: 8),
           Text(
               '${text.billAmount}: ${text.money(topup.amount)} '
@@ -66,8 +74,7 @@ class BillView extends StatelessWidget {
           if (after != null) ...[
             const SizedBox(height: 12),
             Text(text.billNewBalances, style: bold),
-            Text(units(after.lunch, after.breakfast, after.brunch),
-                style: body),
+            ...lines(after),
           ],
         ],
       ),

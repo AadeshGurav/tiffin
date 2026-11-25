@@ -19,11 +19,15 @@ class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const NbAppBar({
     super.key,
     required this.title,
+    this.subtitle,
     this.actions,
     this.showSettingsButton = true,
   });
 
   final String title;
+
+  /// A second, smaller line under the title (the scanner's meal mode).
+  final String? subtitle;
   final List<Widget>? actions;
 
   /// The admin turns this off — its dashboard already has a Settings tile.
@@ -38,7 +42,16 @@ class NbAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return AppBar(
-      title: Text(title),
+      title: subtitle == null
+          ? Text(title)
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title),
+                Text(subtitle!, style: Theme.of(context).textTheme.labelMedium),
+              ],
+            ),
       actions: [
         ...?actions,
         const _SyncIndicator(),

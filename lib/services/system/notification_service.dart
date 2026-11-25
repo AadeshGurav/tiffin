@@ -43,7 +43,7 @@ class NotificationService {
     await _prepReminders(localNow, s, upsert);
     await _purchaseReminders(localNow, s, upsert);
     await _lowStock(upsert);
-    await _headcountOverrun(localNow, upsert);
+    await _headcountOverrun(localNow, s, upsert);
 
     // Every open phone polls, so writing unconditionally would spend the free
     // tier's daily write budget on no-ops. Only new or changed reminders are
@@ -84,7 +84,8 @@ class NotificationService {
     }
   }
 
-  Future<void> _headcountOverrun(DateTime localNow, _Upsert upsert) async {
+  Future<void> _headcountOverrun(
+      DateTime localNow, SettingsSnapshot s, _Upsert upsert) async {
     final day = ymd(localNow);
     final entries = (await _store
             .cached(_store.col(Col.menu).where('date', isEqualTo: day)))
@@ -94,15 +95,17 @@ class NotificationService {
       final served = (await _store.cached(_store
               .col(Col.scans)
               .where('day', isEqualTo: day)
-              .where('mealType', isEqualTo: entry.mealType.wire)
+              .where('mealType', isEqualTo: entry.meal)
               .where('memberCategory', isEqualTo: entry.category)
               .where('reversed', isEqualTo: false)))
           .length;
       if (served < entry.headcount) continue;
-      upsert('headcount_overrun',
-          '${day}_${entry.mealType.wire}_${entry.category}', {
+      upsert('headcount_overrun', '${day}_${entry.meal}_${entry.category}', {
         'category': entry.category,
-        'meal': entry.mealType.wire,
+        'meal': entry.meal,
+        // An anytime meal's name travels with it: phones word notifications
+        // without reading the catalogue (ADR 0009).
+        if (s.anytimeMeal(entry.meal) case final a?) 'mealName': a.name,
         'planned': entry.headcount,
         'served': served,
       }, const [
@@ -163,18 +166,45 @@ class NotificationService {
   /// person was already served this meal on another phone.
   Future<void> raiseScanRejectedOnSync({
     required String memberName,
-    required MealType meal,
+    required String meal,
     required String day,
   }) async {
     final now = DateTime.now().toUtc();
     final b = _store.batch()
       ..set(_col.doc('scan_rejected_on_sync_${now.millisecondsSinceEpoch}'), {
         'type': 'scan_rejected_on_sync',
-        'params': {'name': memberName, 'meal': meal.wire, 'date': day},
+        'params': {'name': memberName, 'meal': meal, 'date': day},
         'visibleRoles': const ['admin', 'counter'],
         'createdAt': now.toIso8601String(),
       });
     await _store.commit(b, 'notifications.scanRejected');
+  }
+
+  /// An offline anytime scan the server refused. Unlike a timed meal there is
+  /// no lock to collide with, so the only cause is this phone losing its
+  /// access before it synced — "already served" would be wrong (ADR 0009 §5).
+  Future<void> raiseAnytimeScanRejectedOnSync({
+    required String memberName,
+    required AnytimeMeal meal,
+    required String day,
+  }) async {
+    final now = DateTime.now().toUtc();
+    final b = _store.batch()
+      ..set(
+          _col.doc(
+              'anytime_scan_rejected_on_sync_${now.millisecondsSinceEpoch}'),
+          {
+            'type': 'anytime_scan_rejected_on_sync',
+            'params': {
+              'name': memberName,
+              'meal': meal.id,
+              'mealName': meal.name,
+              'date': day,
+            },
+            'visibleRoles': const ['admin', 'counter'],
+            'createdAt': now.toIso8601String(),
+          });
+    await _store.commit(b, 'notifications.anytimeScanRejected');
   }
 
   /// Visible to [role] and not dismissed by [username], newest first.

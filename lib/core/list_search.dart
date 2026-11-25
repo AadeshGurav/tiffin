@@ -18,9 +18,8 @@ String foldForSearch(String input) {
 /// True when every whitespace-separated word of [query] occurs somewhere in
 /// the combined [fields] — order-free, so "sharma 7b" finds "7B · Sharma".
 bool matchesQuery(String query, Iterable<String?> fields) {
-  final words = foldForSearch(query)
-      .split(RegExp(r'\s+'))
-      .where((w) => w.isNotEmpty);
+  final words =
+      foldForSearch(query).split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
   if (words.isEmpty) return true;
   final haystack = foldForSearch(fields.whereType<String>().join(' '));
   return words.every(haystack.contains);

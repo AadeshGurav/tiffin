@@ -187,7 +187,7 @@ class LegacyImport {
           final meal = MealType.fromWire(r['meal_type'] as String);
           final category = r['category'] as String? ?? 'Normal';
           return <String, dynamic>{
-            'id': MenuService.entryId(date, meal, category),
+            'id': MenuService.entryId(date, meal.wire, category),
             'date': date,
             'mealType': meal.wire,
             'category': category,

@@ -6,9 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:tiffin/core/errors.dart';
-import 'package:tiffin/core/meal_type.dart';
 import 'package:tiffin/data/backend.dart';
 import 'package:tiffin/domain/member.dart';
+import 'package:tiffin/domain/settings.dart';
 import 'package:tiffin/services/system/backup_service.dart';
 
 import '../support/fake_backend.dart';
@@ -45,6 +45,24 @@ void main() {
     expect(back.balances.lunch, 4);
     expect((await other.login('admin', 'lunchtime99')).username, 'admin',
         reason: 'accounts come across and still sign in');
+  });
+
+  test('the anytime-meal catalogue and anytime balances come across', () async {
+    await b.updateSettings(const SettingsPatch(anytimeMeals: [
+      AnytimeMeal(id: 'mtea00001', name: 'Tea', price: 10, group: 'Drinks'),
+    ]));
+    final asha = await b.createMember(const MemberDraft(
+        type: 'staff',
+        name: 'Asha',
+        balances: UnitCounts(lunch: 1, anytime: {'mtea00001': 7})));
+    final bytes = await b.backups.export();
+
+    final other = (await fakeBackend()).backend;
+    await other.backups.restore(await other.backups.read(bytes));
+    final tea = (await other.getSettings()).anytimeMeal('mtea00001')!;
+    expect((tea.name, tea.group), ('Tea', 'Drinks'));
+    final back = (await other.getMember(asha.id)).balances;
+    expect((back.lunch, back['mtea00001']), (1, 7));
   });
 
   test('restore replaces what was there instead of merging', () async {
@@ -132,7 +150,7 @@ void main() {
       expect(topups.single.memberId, '7');
       expect(topups.single.amount, 200);
       final scans = await fresh.recentScans();
-      expect(scans.single.mealType, MealType.lunch);
+      expect(scans.single.meal, 'lunch');
       expect(scans.single.memberName, 'Meera');
     });
   });

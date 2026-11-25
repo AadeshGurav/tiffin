@@ -249,6 +249,18 @@
   "recipesScreenSave": "Save",
   "recipesScreenSaveSuccess": "Saved.",
   "menuScreenTitle": "Menu calendar",
+  "mealWithGroup": "{group} · {meal}",
+  "@mealWithGroup": {
+    "description": "An anytime meal with its group, in the menu's meal picker and report column headers. group = a meal group (Drinks); meal = an anytime meal's name (Juice).",
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "menuScreenManageCategoriesTooltip": "Manage categories",
   "menuScreenAddFab": "Add · {date}",
   "@menuScreenAddFab": {
@@ -645,6 +657,30 @@
     },
     "description": "amount/price arrive already formatted as money, e.g. ₹1,250.00."
   },
+  "topupScreenAnytimeLabel": "{meal}  ({price})",
+  "@topupScreenAnytimeLabel": {
+    "description": "A unit row on the top-up screen. meal = an anytime meal's name (Tea); price = a formatted amount per unit.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "mealUnits": "{meal}: {count}",
+  "@mealUnits": {
+    "description": "Units of one meal, on bills and summaries. meal = a meal name; count = a whole number, may be negative.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "topupScreenPaymentCash": "Cash",
   "topupScreenPaymentUpi": "UPI",
   "topupScreenTotalLabel": "TOTAL",
@@ -654,6 +690,36 @@
   "settingsConfigScreenSectionBranding": "Branding",
   "settingsConfigScreenAppNameLabel": "App name",
   "settingsConfigScreenSectionPrices": "Unit prices (₹)",
+  "settingsConfigScreenSectionAnytimeMeals": "ANYTIME MEALS",
+  "anytimeMealsIntro": "Tea, juice, snacks: served at any time, as often as the person has units. Each has its own balance and price.",
+  "anytimeMealsAddButton": "Add meal",
+  "anytimeMealsEditTitle": "Edit {name}",
+  "@anytimeMealsEditTitle": {
+    "description": "Dialog title. name = an anytime meal's name (Tea).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "anytimeMealsNameLabel": "Name",
+  "anytimeMealsPriceLabel": "Price per unit",
+  "anytimeMealsGroupLabel": "Group (optional)",
+  "anytimeMealsGroupHint": "e.g. Drinks, Snacks",
+  "anytimeMealsActiveLabel": "Served now",
+  "anytimeMealsRetireHelp": "Turn off to retire it. It leaves the scanner and top-ups, but balances, refunds and reports keep it.",
+  "anytimeMealsRetiredSubtitle": "{price} · Retired",
+  "@anytimeMealsRetiredSubtitle": {
+    "description": "Under a retired anytime meal in Settings. price = a formatted amount.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "anytimeMealsCancelButton": "Cancel",
+  "anytimeMealsSaveButton": "Save meal",
+  "anytimeMealsSavedMessage": "Meals saved.",
   "settingsConfigScreenLunchLabel": "Lunch",
   "settingsConfigScreenBreakfastLabel": "Breakfast",
   "settingsConfigScreenBrunchLabel": "Brunch",
@@ -719,6 +785,15 @@
   "refundsScreenLunchUnitsLabel": "Lunch units",
   "refundsScreenBreakfastUnitsLabel": "Breakfast units",
   "refundsScreenBrunchUnitsLabel": "Brunch units",
+  "refundsScreenAnytimeUnitsLabel": "{meal} units",
+  "@refundsScreenAnytimeUnitsLabel": {
+    "description": "A field on the refund form. meal = an anytime meal's name (Tea).",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "refundsScreenReasonLabel": "Reason (optional)",
   "refundsScreenCancelButton": "Cancel",
   "refundsScreenProcessConfirmButton": "Process",
@@ -812,6 +887,32 @@
     }
   },
   "scannerAppBarTitlePlain": "SCAN",
+  "scannerModeByTime": "By time",
+  "@scannerModeByTime": {
+    "description": "On the scanner's meal bar: serve whichever built-in meal (breakfast, lunch, brunch) is open right now."
+  },
+  "scannerModeBarLabel": "Meal this phone serves",
+  "@scannerModeBarLabel": {
+    "description": "Screen-reader label for the scanner's meal bar."
+  },
+  "scannerModeSubtitle": "Serving: {meal}",
+  "@scannerModeSubtitle": {
+    "description": "Under the scanner's title. meal = an anytime meal's name (Tea), or 'By time'.",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "scannerModeReset": "{meal} is no longer served, so this phone is back to serving by time.",
+  "@scannerModeReset": {
+    "description": "Shown on the scanner when the meal this phone was set to serve was retired. meal = an anytime meal's name (Tea).",
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "scannerErrorTitle": "SCAN ERROR",
   "scannerAccepted": "ACCEPTED",
   "scannerRejected": "REJECTED",
@@ -1291,6 +1392,26 @@
     }
   },
   "errSettingsBlank": "The canteen name can't be empty.",
+  "errMealNameBlank": "Give the meal a name.",
+  "errMealNameTaken": "There is already a meal called {name}.",
+  "@errMealNameTaken": {
+    "description": "On an error message. name = an anytime meal's name (Tea, Juice).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errMealCannotBeRemoved": "{name} can't be deleted because members may still hold its units. Retire it instead.",
+  "@errMealCannotBeRemoved": {
+    "description": "On an error message. name = an anytime meal's name (Tea, Juice).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errUnknownMeal": "That meal no longer exists or has been retired. Pick another.",
   "errNotificationNotFound": "That notification has already gone.",
   "errBackupUnreadable": "That backup is damaged or incomplete.",
   "errBackupNotTiffin": "That isn't a Tiffin backup file.",
@@ -1417,6 +1538,21 @@
   "notifScanRejectedBody": "{name} had already been served {meal} on {date} on another phone, so this scan was dropped and the unit kept.",
   "@notifScanRejectedBody": {
     "description": "On a notification. name = a person's or item's name; meal = a meal name (Breakfast, Lunch, Brunch); date = a formatted date.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifAnytimeScanRejectedBody": "{name}'s {meal} scan on {date} was not counted: this phone lost its access before it synced. The unit was kept.",
+  "@notifAnytimeScanRejectedBody": {
+    "description": "On a notification. name = a person's or item's name; meal = an anytime meal's name (Tea, Juice); date = a formatted date.",
     "placeholders": {
       "name": {
         "type": "String"

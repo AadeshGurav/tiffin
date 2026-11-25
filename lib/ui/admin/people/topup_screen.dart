@@ -67,16 +67,18 @@ class _ChargeTab extends ConsumerStatefulWidget {
 class _ChargeTabState extends ConsumerState<_ChargeTab> {
   Member? _member;
   int _lunch = 0, _breakfast = 0, _brunch = 0;
+  var _anytime = <String, int>{}; // anytime meal id → units (ADR 0009)
   PaymentMethod _method = PaymentMethod.cash;
   bool _busy = false;
 
-  double _amount(SettingsSnapshot s) =>
-      _lunch * s.unitPrices.lunch +
-      _breakfast * s.unitPrices.breakfast +
-      _brunch * s.unitPrices.brunch;
+  UnitCounts get _units => UnitCounts(
+      lunch: _lunch, breakfast: _breakfast, brunch: _brunch, anytime: _anytime);
 
-  bool get _canSubmit =>
-      _member != null && (_lunch + _breakfast + _brunch) > 0 && !_busy;
+  // A preview only: the backend computes the charged amount the same way.
+  double _amount(SettingsSnapshot s) => _units.byMeal.entries
+      .fold(0.0, (total, e) => total + e.value * s.priceOf(e.key));
+
+  bool get _canSubmit => _member != null && !_units.isAllZero && !_busy;
 
   Future<void> _submit(SettingsSnapshot s) async {
     setState(() => _busy = true);
@@ -87,6 +89,10 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             lunchUnits: _lunch,
             breakfastUnits: _breakfast,
             brunchUnits: _brunch,
+            anytimeUnits: {
+              for (final e in _anytime.entries)
+                if (e.value > 0) e.key: e.value,
+            },
             paymentMethod: _method,
             createdBy: '', // the backend stamps the signed-in name
           ));
@@ -97,6 +103,7 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
     if (mounted) {
       setState(() {
         _lunch = _breakfast = _brunch = 0;
+        _anytime = {};
         _member = null;
       });
       ref.invalidate(_membersProvider);
@@ -132,7 +139,11 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
             // The bill itself, which is also exactly what "Share bill" sends.
             RepaintBoundary(
               key: billKey,
-              child: BillView(topup: topup, member: member, appName: s.appName),
+              child: BillView(
+                  topup: topup,
+                  member: member,
+                  appName: s.appName,
+                  catalogue: s.anytimeMeals),
             ),
             const SizedBox(height: NbSpace.sm),
             Text(text.topupScreenBillStatus(
@@ -239,6 +250,13 @@ class _ChargeTabState extends ConsumerState<_ChargeTab> {
               value: _brunch,
               onChanged: (v) => setState(() => _brunch = v),
             ),
+            for (final m in groupMeals(s.activeAnytimeMeals))
+              _UnitRow(
+                label: AppText.of(context).topupScreenAnytimeLabel(
+                    m.name, AppText.of(context).money(m.price)),
+                value: _anytime[m.id] ?? 0,
+                onChanged: (v) => setState(() => _anytime[m.id] = v),
+              ),
             const SizedBox(height: NbSpace.md),
             SegmentedButton<PaymentMethod>(
               segments: [

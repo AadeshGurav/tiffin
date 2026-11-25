@@ -41,10 +41,9 @@ class TopupService {
   }
 
   Future<Topup> create(TopupDraft draft) async {
+    final units = draft.units;
     // A negative top-up would debit units while billing a negative amount.
-    if (draft.lunchUnits < 0 ||
-        draft.breakfastUnits < 0 ||
-        draft.brunchUnits < 0) {
+    if (units.byMeal.values.any((n) => n < 0)) {
       throw const ValidationException(ErrorCode.negativeUnits);
     }
     if (draft.isAllZero) {
@@ -58,15 +57,14 @@ class TopupService {
     final member = Member.fromJson(memberRow);
 
     final settings = await _settings.read();
-    final prices = settings.unitPrices;
-    final amount = draft.lunchUnits * prices.lunch +
-        draft.breakfastUnits * prices.breakfast +
-        draft.brunchUnits * prices.brunch;
-    final units = UnitCounts(
-      lunch: draft.lunchUnits,
-      breakfast: draft.breakfastUnits,
-      brunch: draft.brunchUnits,
-    );
+    // Only meals on sale can be bought; a retired one is refunded, not sold.
+    for (final id in units.anytime.keys) {
+      if (settings.anytimeMeal(id)?.active != true) {
+        throw ValidationException(ErrorCode.unknownMeal, {'meal': id});
+      }
+    }
+    final amount = units.byMeal.entries
+        .fold(0.0, (total, e) => total + e.value * settings.priceOf(e.key));
 
     final topup = Topup(
       id: _store.newId(Col.topups),
@@ -74,6 +72,10 @@ class TopupService {
       lunchUnits: draft.lunchUnits,
       breakfastUnits: draft.breakfastUnits,
       brunchUnits: draft.brunchUnits,
+      anytimeUnits: {
+        for (final e in units.anytime.entries)
+          if (e.value != 0) e.key: e.value,
+      },
       amount: amount,
       paymentMethod: draft.paymentMethod,
       // Cash settles now; UPI is pending until the admin confirms receipt.
@@ -84,11 +86,7 @@ class TopupService {
           draft.paymentMethod == PaymentMethod.upi && settings.upiId.isNotEmpty,
       createdBy: draft.createdBy,
       createdAt: DateTime.now().toUtc(),
-      balancesAfter: UnitCounts(
-        lunch: member.balances.lunch + units.lunch,
-        breakfast: member.balances.breakfast + units.breakfast,
-        brunch: member.balances.brunch + units.brunch,
-      ),
+      balancesAfter: member.balances + units,
     );
 
     final b = _store.batch()
@@ -130,9 +128,7 @@ class TopupService {
       return const ReversalResult(ReversalCode.memberNotFound);
     }
     final balances = Member.fromJson(memberRow).balances;
-    if (balances.lunch < topup.lunchUnits ||
-        balances.breakfast < topup.breakfastUnits ||
-        balances.brunch < topup.brunchUnits) {
+    if (topup.units.byMeal.entries.any((e) => balances[e.key] < e.value)) {
       return const ReversalResult(ReversalCode.topupUnitsUsed);
     }
 
@@ -143,15 +139,8 @@ class TopupService {
         'reversedAt': now,
         'reversedBy': reversedBy,
       })
-      ..update(
-          _store.doc(Col.members, topup.memberId),
-          MemberService.balanceDelta(
-              UnitCounts(
-                lunch: topup.lunchUnits,
-                breakfast: topup.breakfastUnits,
-                brunch: topup.brunchUnits,
-              ),
-              sign: -1));
+      ..update(_store.doc(Col.members, topup.memberId),
+          MemberService.balanceDelta(topup.units, sign: -1));
     await _store.commit(b, 'topups.reverse $topupId');
     _log.info('reversed topup_id=$topupId by=$reversedBy');
     return const ReversalResult(ReversalCode.topupReversed);

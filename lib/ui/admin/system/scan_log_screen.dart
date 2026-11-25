@@ -26,6 +26,7 @@ class ScanLogScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final scans = ref.watch(_scansProvider);
+    final meals = ref.watch(anytimeMealsProvider).asData?.value ?? const [];
     final fmt = DateFormat('MMM d, HH:mm');
 
     return Scaffold(
@@ -44,7 +45,7 @@ class ScanLogScreen extends ConsumerWidget {
           searchLabel: AppText.of(context).scanLogScreenSearchLabel,
           searchFields: (s) => [
             s.memberName,
-            AppText.of(context).mealLabel(s.mealType),
+            AppText.of(context).mealName(s.meal, meals),
             s.memberCategory,
           ],
           sorts: [
@@ -69,7 +70,7 @@ class ScanLogScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Text(
-                              '${s.memberName} · ${AppText.of(context).mealLabel(s.mealType)}',
+                              '${s.memberName} · ${AppText.of(context).mealName(s.meal, meals)}',
                               style: t.text.body),
                         ),
                         if (s.reversed)
@@ -98,7 +99,9 @@ class ScanLogScreen extends ConsumerWidget {
                           if (!ran || r == null || !context.mounted) return;
                           // Refused reversals are answers, not crashes: say why.
                           showNbSnack(
-                              context, AppText.of(context).reversalText(r!),
+                              context,
+                              AppText.of(context)
+                                  .reversalText(r!, catalogue: meals),
                               ok: r!.success);
                           if (r!.success) ref.invalidate(_scansProvider);
                         },

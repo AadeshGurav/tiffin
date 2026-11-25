@@ -98,7 +98,7 @@ void main() {
       ]));
       await b.addMenuEntry(MenuEntryDraft(
         date: DateTime.now(),
-        mealType: MealType.lunch,
+        meal: 'lunch',
         category: 'Normal',
         headcount: 1,
         items: const ['dal rice'],

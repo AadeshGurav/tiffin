@@ -1,6 +1,5 @@
-import '../core/meal_type.dart';
-
 /// Menu planning models (PRD §6.5).
+library;
 
 class MenuCategory {
   const MenuCategory({
@@ -47,7 +46,7 @@ class MenuEntry {
   const MenuEntry({
     required this.id,
     required this.date,
-    required this.mealType,
+    required this.meal,
     required this.category,
     required this.headcount,
     required this.items,
@@ -57,7 +56,7 @@ class MenuEntry {
   factory MenuEntry.fromJson(Map<String, dynamic> j) => MenuEntry(
         id: j['id'] as String,
         date: DateTime.parse(j['date'] as String),
-        mealType: MealType.fromWire(j['mealType'] as String),
+        meal: j['mealType'] as String,
         category: j['category'] as String,
         headcount: (j['headcount'] as num?)?.toInt() ?? 0,
         items: (j['items'] as List<dynamic>).map((e) => e as String).toList(),
@@ -66,7 +65,9 @@ class MenuEntry {
 
   final String id;
   final DateTime date;
-  final MealType mealType;
+
+  /// A meal id (ADR 0009); the JSON key stays `mealType`.
+  final String meal;
 
   /// The single serving group this entry is for (e.g. 'Jain').
   final String category;
@@ -79,7 +80,7 @@ class MenuEntry {
   Map<String, dynamic> toJson() => {
         'id': id,
         'date': _ymd(date),
-        'mealType': mealType.wire,
+        'mealType': meal,
         'category': category,
         'headcount': headcount,
         'items': items,
@@ -90,7 +91,7 @@ class MenuEntry {
 class MenuEntryDraft {
   const MenuEntryDraft({
     required this.date,
-    required this.mealType,
+    required this.meal,
     required this.category,
     required this.headcount,
     required this.items,
@@ -99,7 +100,7 @@ class MenuEntryDraft {
 
   factory MenuEntryDraft.fromJson(Map<String, dynamic> j) => MenuEntryDraft(
         date: DateTime.parse(j['date'] as String),
-        mealType: MealType.fromWire(j['mealType'] as String),
+        meal: j['mealType'] as String,
         category: (j['category'] as String).trim(),
         headcount: (j['headcount'] as num?)?.toInt() ?? 0,
         items: (j['items'] as List<dynamic>).map((e) => e as String).toList(),
@@ -107,7 +108,9 @@ class MenuEntryDraft {
       );
 
   final DateTime date;
-  final MealType mealType;
+
+  /// A meal id (ADR 0009); the JSON key stays `mealType`.
+  final String meal;
   final String category;
   final int headcount;
   final List<String> items;
@@ -115,7 +118,7 @@ class MenuEntryDraft {
 
   Map<String, dynamic> toJson() => {
         'date': _ymd(date),
-        'mealType': mealType.wire,
+        'mealType': meal,
         'category': category,
         'headcount': headcount,
         'items': items,

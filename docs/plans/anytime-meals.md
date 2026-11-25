@@ -55,7 +55,8 @@ S13 docs + graphify (last)
 
 ## S2 — The catalogue in settings
 
-- `lib/domain/settings.dart`: `AnytimeMeal {id, name, price, active}`,
+- `lib/domain/settings.dart`: `AnytimeMeal {id, name, price, active, group}`
+  (`group` optional, trimmed, `null` when blank),
   `SettingsSnapshot.anytimeMeals` (default `const []`), `priceOf(String mealId)`,
   `anytimeMeal(String id)`, `activeAnytimeMeals`.
 - `lib/services/system/settings_service.dart`: `SettingsPatch.anytimeMeals`
@@ -67,7 +68,11 @@ S13 docs + graphify (last)
 - `lib/core/meal_type.dart`: `static MealType? tryWire(String)`.
 - Test `test/services/system/settings_service_test.dart`: each validation
   branch, retiring allowed, defaults read `[]` when the document lacks the key,
-  and `priceOf` for built-in, anytime and unknown ids.
+  and `priceOf` for built-in, anytime and unknown ids. `group` round-trips
+  and a blank group reads as none.
+- `SettingsSnapshot.anytimeMealsGrouped` (or a pure helper next to it):
+  ungrouped first, then groups in first-seen order, case-insensitive. One
+  helper, used by the scanner bar, the settings list and the report.
 
 ## S3 — Balances carry anytime keys
 
@@ -149,6 +154,8 @@ S13 docs + graphify (last)
   preferences, `lib/app/session_memory.dart` or its prefs store, keyed by
   canteen.
 - ARB strings for the bar, the subtitle and the reset notice.
+- The bar lists meals in the grouped order; a group shows as a small text
+  label before its first meal (never colour alone).
 - Test `test/ui/scanner/meal_mode_bar_test.dart`: hidden with no catalogue,
   the selection is passed to `scan()`, and a retired saved mode resets.
 
@@ -156,12 +163,13 @@ S13 docs + graphify (last)
 
 - A new `lib/ui/admin/system/anytime_meals_section.dart`, used from
   `settings_config_screen.dart` (which is already 227 lines). The section
-  lists the meals with name, price and an active switch, and has an "Add
-  meal" button. There is no delete button, only Retire, with copy explaining
+  lists the meals with name, price, group and an active switch, grouped
+  under their group headings, and has an "Add meal" button. The group field
+  is free text with suggestions from the groups already in use. There is no delete button, only Retire, with copy explaining
   that balances are kept.
 - ARB strings.
-- Test `test/ui/admin/system/anytime_meals_section_test.dart`: add, rename
-  and retire produce the expected `SettingsPatch.anytimeMeals`.
+- Test `test/ui/admin/system/anytime_meals_section_test.dart`: add, rename,
+  regroup and retire produce the expected `SettingsPatch.anytimeMeals`.
 
 ## S8 — Top-ups with anytime units
 
@@ -203,7 +211,8 @@ S13 docs + graphify (last)
 ## S11 — Report columns
 
 - `lib/services/money/report_service.dart`: the Balances and Top-ups sheets
-  add one column per catalogue meal (retired ones included), and the totals
+  add one column per catalogue meal (retired ones included), in the grouped
+  order, headed `Group · Name` when the meal has a group, and the totals
   include them. The Refunds sheet's columns wait for S12, which owns the
   `Refund` model.
 - Test `test/services/money/report_service_test.dart`: with a two-meal
@@ -230,7 +239,6 @@ S13 docs + graphify (last)
   catalogue), §8.
 - `docs/USER_GUIDE.md`: how to add Tea, put a phone in Tea mode, top up, and
   refund. `docs/DEVELOPER_GUIDE.md`: meal ids and `UnitCounts.anytime`.
-- Set ADR 0009's status to `accepted`.
 - `graphify . --update`, committed with the docs (user standard §19.1).
 
 ---

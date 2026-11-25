@@ -28,6 +28,12 @@ import '../system/settings_service.dart';
 /// decrement included, because a batch is all-or-nothing. That phone then
 /// raises a notification so someone can follow up.
 ///
+/// Anytime meals (ADR 0009 §5) have no window and no lock: the operator picks
+/// the meal on the scanner, the scan gets an auto id, and the same person can
+/// be served again at once. Every scan names its meal in the member's
+/// `lastScanMeal`, which is how the rules let a scanner phone lower that one
+/// balance and no other.
+///
 /// Balance checks use the cached member, so two offline phones can each let
 /// the same person spend their last unit on different meals; the balance then
 /// goes below zero and shows up in reports. That's the accepted cost of
@@ -45,13 +51,24 @@ class ScanService {
 
   /// Resolve a code, decide accept/reject, and on accept deduct one unit and
   /// record the scan. Rejections are logged, not stored.
+  ///
+  /// [anytimeMealId] serves that anytime meal instead of the timed one; it
+  /// throws [ErrorCode.unknownMeal] when the meal is unknown or retired.
   Future<ScanResult> processScan(
     String qrCodeId, {
     MealType? mealTypeOverride,
+    String? anytimeMealId,
   }) async {
+    assert(mealTypeOverride == null || anytimeMealId == null,
+        'a scan is timed or anytime, not both');
     final nowUtc = DateTime.now().toUtc();
     final settings = await _settings.read();
     final nowLocal = toLocal(nowUtc, settings.localTimezone);
+    final anytime =
+        anytimeMealId == null ? null : settings.anytimeMeal(anytimeMealId);
+    if (anytimeMealId != null && anytime?.active != true) {
+      throw ValidationException(ErrorCode.unknownMeal, {'meal': anytimeMealId});
+    }
 
     final rows = await _store
         .cached(_store.col(Col.members).where('qrCodeId', isEqualTo: qrCodeId));
@@ -70,42 +87,50 @@ class ScanService {
       );
     }
 
-    final windows = settings.mealWindows.map(
-      (k, v) => MapEntry(k, MealWindow.parse(v.toJson())),
-    );
-    final mealType = mealTypeOverride ?? currentMealType(nowLocal, windows);
-    if (mealType == null) {
-      _log.info('rejected reason=no_meal_window member_id=${member.id}');
-      return ScanResult(
-        outcome: ScanOutcome.rejectedNoMealWindow,
-        memberName: member.name,
-        memberType: member.type,
-      );
-    }
-
     final day = ymd(nowLocal);
-    final lockRef = _store.doc(Col.scans, lockId(member.id, day, mealType));
-    if (await _store.cachedDoc(lockRef) != null) {
-      _log.info('rejected reason=already_scanned member_id=${member.id} '
-          'meal=${mealType.wire}');
-      return ScanResult(
-        outcome: ScanOutcome.rejectedAlreadyScanned,
-        memberName: member.name,
-        memberType: member.type,
-        mealType: mealType,
+    final String meal;
+    final DocumentReference<Json> scanRef;
+    if (anytime != null) {
+      meal = anytime.id;
+      scanRef = _store.doc(Col.scans, _store.newId(Col.scans));
+    } else {
+      final windows = settings.mealWindows.map(
+        (k, v) => MapEntry(k, MealWindow.parse(v.toJson())),
       );
+      final mealType = mealTypeOverride ?? currentMealType(nowLocal, windows);
+      if (mealType == null) {
+        _log.info('rejected reason=no_meal_window member_id=${member.id}');
+        return ScanResult(
+          outcome: ScanOutcome.rejectedNoMealWindow,
+          memberName: member.name,
+          memberType: member.type,
+        );
+      }
+      meal = mealType.wire;
+      scanRef = _store.doc(Col.scans, lockId(member.id, day, mealType));
+      if (await _store.cachedDoc(scanRef) != null) {
+        _log.info('rejected reason=already_scanned member_id=${member.id} '
+            'meal=$meal');
+        return ScanResult(
+          outcome: ScanOutcome.rejectedAlreadyScanned,
+          memberName: member.name,
+          memberType: member.type,
+          meal: meal,
+        );
+      }
     }
 
-    final balance = member.balances.forMeal(mealType);
+    // Grace applies to anytime meals exactly as to built-ins (ADR 0009).
+    final balance = member.balances[meal];
     final grace = settings.effectiveGrace(member.graceAllowanceOverride);
     if (balance <= -grace) {
       _log.info('rejected reason=zero_balance member_id=${member.id} '
-          'meal=${mealType.wire} balance=$balance');
+          'meal=$meal balance=$balance');
       return ScanResult(
         outcome: ScanOutcome.rejectedZeroBalance,
         memberName: member.name,
         memberType: member.type,
-        mealType: mealType,
+        meal: meal,
         remainingBalance: balance,
       );
     }
@@ -114,16 +139,16 @@ class ScanService {
     final usedGrace = newBalance < 0;
 
     // What one plate of this member's category gets today, and what it uses.
-    final entryRow = await _store.cachedDoc(_store.doc(
-        Col.menu, MenuService.entryId(day, mealType, member.category)));
+    final entryRow = await _store.cachedDoc(
+        _store.doc(Col.menu, MenuService.entryId(day, meal, member.category)));
     final entry = entryRow == null ? null : MenuEntry.fromJson(entryRow);
     final consumed = await _platesCost(entry);
 
     final b = _store.batch()
-      ..set(lockRef, {
+      ..set(scanRef, {
         'memberId': member.id,
         'memberName': member.name,
-        'mealType': mealType.wire,
+        'mealType': meal,
         'day': day,
         'scannedAt': nowUtc.toIso8601String(),
         'result': 'accepted',
@@ -132,8 +157,10 @@ class ScanService {
         'memberCategory': member.category,
         'consumed': consumed,
       })
-      ..update(_store.doc(Col.members, member.id),
-          MemberService.balanceDelta(_single(mealType), sign: -1));
+      ..update(_store.doc(Col.members, member.id), {
+        ...MemberService.balanceDelta(UnitCounts.single(meal), sign: -1),
+        'lastScanMeal': meal,
+      });
     consumed.forEach((ingredientId, qty) =>
         b.update(_store.doc(Col.ingredients, ingredientId), {
           'stockQty': FieldValue.increment(-qty),
@@ -141,22 +168,25 @@ class ScanService {
         }));
 
     try {
-      await _store.commit(b, 'scan ${lockRef.id}',
-          onRejected: (_) => _notifications.raiseScanRejectedOnSync(
-              memberName: member.name, meal: mealType, day: day));
+      await _store.commit(b, 'scan ${scanRef.id}',
+          onRejected: (_) => anytime != null
+              ? _notifications.raiseAnytimeScanRejectedOnSync(
+                  memberName: member.name, meal: anytime, day: day)
+              : _notifications.raiseScanRejectedOnSync(
+                  memberName: member.name, meal: meal, day: day));
     } on ForbiddenException {
-      // Refused online. Either another phone recorded this meal a moment
-      // earlier (the lock now exists), or this phone lost its access.
-      if (await _freshOrNull(lockRef) == null) rethrow;
+      // Refused online. Either another phone recorded this timed meal a
+      // moment earlier (the lock now exists), or this phone lost its access.
+      if (anytime != null || await _freshOrNull(scanRef) == null) rethrow;
       return ScanResult(
         outcome: ScanOutcome.rejectedAlreadyScanned,
         memberName: member.name,
         memberType: member.type,
-        mealType: mealType,
+        meal: meal,
       );
     }
 
-    _log.info('accepted member_id=${member.id} meal=${mealType.wire} '
+    _log.info('accepted member_id=${member.id} meal=$meal '
         'new_balance=$newBalance via_grace=$usedGrace '
         'consumed=${consumed.length} online=${_store.online}');
 
@@ -165,15 +195,15 @@ class ScanService {
     int? served;
     if (entry != null && entry.headcount > 0) {
       planned = entry.headcount;
-      served = await servedCount(day, mealType, member.category);
+      served = await servedCount(day, meal, member.category);
     }
 
     return ScanResult(
       outcome: ScanOutcome.accepted,
-      scanId: lockRef.id,
+      scanId: scanRef.id,
       memberName: member.name,
       memberType: member.type,
-      mealType: mealType,
+      meal: meal,
       remainingBalance: newBalance,
       viaGrace: usedGrace,
       memberCategory: member.category,
@@ -184,11 +214,11 @@ class ScanService {
 
   /// Accepted, unreversed scans for one day / meal / category, from the warm
   /// cache (today's scans are always kept synced).
-  Future<int> servedCount(String day, MealType meal, String category) async =>
+  Future<int> servedCount(String day, String meal, String category) async =>
       (await _store.cached(_store
               .col(Col.scans)
               .where('day', isEqualTo: day)
-              .where('mealType', isEqualTo: meal.wire)
+              .where('mealType', isEqualTo: meal)
               .where('memberCategory', isEqualTo: category)
               .where('reversed', isEqualTo: false)))
           .length;
@@ -246,7 +276,7 @@ class ScanService {
     if (memberRow == null) {
       return const ReversalResult(ReversalCode.memberNotFound);
     }
-    final meal = MealType.fromWire(scan['mealType'] as String);
+    final meal = scan['mealType'] as String;
     final now = DateTime.now().toUtc();
     final consumed =
         Map<String, dynamic>.from(scan['consumed'] as Map? ?? const {});
@@ -263,7 +293,7 @@ class ScanService {
           archived)
       ..delete(ref)
       ..update(_store.doc(Col.members, memberId),
-          MemberService.balanceDelta(_single(meal)));
+          MemberService.balanceDelta(UnitCounts.single(meal)));
     consumed.forEach((ingredientId, qty) =>
         b.update(_store.doc(Col.ingredients, ingredientId), {
           'stockQty': FieldValue.increment((qty as num).toDouble()),
@@ -271,11 +301,11 @@ class ScanService {
         }));
     await _store.commit(b, 'scan.reverse $scanId');
 
-    final restored = Member.fromJson(memberRow).balances.forMeal(meal) + 1;
-    _log.info('reversed scan_id=$scanId member_id=$memberId meal=${meal.wire} '
+    final restored = Member.fromJson(memberRow).balances[meal] + 1;
+    _log.info('reversed scan_id=$scanId member_id=$memberId meal=$meal '
         'restored=$restored by=$reversedBy');
     return ReversalResult(ReversalCode.scanReversed,
-        restored: restored, mealType: meal);
+        restored: restored, meal: meal);
   }
 
   /// Recent scans, newest first — backs the scan log and reversal picker.
@@ -296,12 +326,6 @@ class ScanService {
       return null;
     }
   }
-
-  static UnitCounts _single(MealType meal) => UnitCounts(
-        lunch: meal == MealType.lunch ? 1 : 0,
-        breakfast: meal == MealType.breakfast ? 1 : 0,
-        brunch: meal == MealType.brunch ? 1 : 0,
-      );
 }
 
 /// `YYYY-MM-DD` of a local date — the day key scans, menu entries and

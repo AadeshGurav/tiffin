@@ -18,6 +18,7 @@ import '../data/canteens.dart';
 import '../data/store.dart';
 import '../domain/menu.dart';
 import '../domain/ops.dart';
+import '../domain/settings.dart';
 import 'bootstrap.dart';
 import 'canteen_book.dart';
 import 'shared_project.dart';
@@ -161,6 +162,13 @@ final backendReadyProvider = FutureProvider<void>((ref) async {
   await ref.watch(cacheWarmerProvider.future);
   await ref.watch(_scratchDirProvider.future);
 });
+
+/// The anytime-meal catalogue, retired meals included (ADR 0009), for naming
+/// and picking meals. Re-read whenever a screen that shows meals opens; the
+/// settings document is kept warm, so this is a cache read.
+final anytimeMealsProvider = FutureProvider.autoDispose<List<AnytimeMeal>>(
+    (ref) async =>
+        (await ref.watch(backendProvider).getSettings()).anytimeMeals);
 
 /// True while the canteen has no offline accounts, i.e. first-run setup is
 /// still owed. Derived on every read, so it is right after a reset too.

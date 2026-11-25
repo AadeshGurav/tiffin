@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/number_input.dart';
 import '../../../app/providers.dart';
+import '../../../l10n/labels.dart';
 import '../../../core/list_search.dart';
 import '../../../domain/member.dart';
 import '../../shared_widgets/nb_button.dart';
@@ -123,6 +124,8 @@ class _MemberTile extends ConsumerWidget {
     );
     final balances =
         text.membersScreenBalancesSummary(b.lunch, b.breakfast, b.brunch);
+    final meals = ref.watch(anytimeMealsProvider).asData?.value ?? const [];
+    final anytime = text.unitsLine(b, meals, anytimeOnly: true);
     return ColoredBox(
       color: t.color.surface,
       child: ListTile(
@@ -134,6 +137,7 @@ class _MemberTile extends ConsumerWidget {
             if (!member.isActive) text.membersScreenInactiveBadge,
             summary,
             balances,
+            if (anytime.isNotEmpty) anytime,
           ].join('\n'),
           style: t.text.body.copyWith(color: t.color.inkMuted, fontSize: 14),
         ),

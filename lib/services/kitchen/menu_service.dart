@@ -1,23 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/errors.dart';
-import '../../core/meal_type.dart';
 import '../../core/sentinels.dart';
 import '../../data/store.dart';
 import '../../domain/menu.dart';
+import '../../core/meal_type.dart';
 import '../scanning/scan_service.dart' show ymd;
+import '../system/settings_service.dart';
 
 /// Menu categories + menu entries (PRD §6.5). Categories are an editable
 /// list, not an enum.
 class MenuService {
-  MenuService(this._store);
+  MenuService(this._store, this._settings);
 
   final Store _store;
+  final SettingsService _settings;
 
   /// One entry per (day, meal, category), so the id *is* the uniqueness rule
   /// and the scanner can look today's plate up without a query.
-  static String entryId(String day, MealType meal, String category) =>
-      '${day}_${meal.wire}_${category.trim().toLowerCase().replaceAll('/', '_')}';
+  static String entryId(String day, String meal, String category) =>
+      '${day}_${meal}_${category.trim().toLowerCase().replaceAll('/', '_')}';
 
   CollectionReference<Json> get _categories => _store.col(Col.menuCategories);
   CollectionReference<Json> get _entries => _store.col(Col.menu);
@@ -105,16 +107,22 @@ class MenuService {
     if (draft.headcount < 0) {
       throw const ValidationException(ErrorCode.headcountNegative);
     }
+    // The meal is part of the document id, so only a real one gets through:
+    // a built-in, or an anytime meal still on sale (ADR 0009 §7).
+    if (MealType.tryWire(draft.meal) == null &&
+        (await _settings.read()).anytimeMeal(draft.meal)?.active != true) {
+      throw ValidationException(ErrorCode.unknownMeal, {'meal': draft.meal});
+    }
     final known = (await listCategories()).any((c) => c.name == draft.category);
     if (!known) {
       throw ValidationException(
           ErrorCode.unknownCategory, {'name': draft.category});
     }
 
-    final id = entryId(ymd(draft.date), draft.mealType, draft.category);
+    final id = entryId(ymd(draft.date), draft.meal, draft.category);
     if (await _store.cachedDoc(_entries.doc(id)) != null) {
       throw ConflictException(ErrorCode.menuEntryExists,
-          {'meal': draft.mealType.wire, 'category': draft.category});
+          {'meal': draft.meal, 'category': draft.category});
     }
     final json = {...draft.toJson(), 'id': id};
     await _store.commit(

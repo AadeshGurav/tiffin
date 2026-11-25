@@ -81,6 +81,10 @@ enum ErrorCode {
   settingsBadTime,
   settingsWindowOrder,
   settingsBlank,
+  mealNameBlank,
+  mealNameTaken,
+  mealCannotBeRemoved,
+  unknownMeal,
 
   // notifications
   notificationNotFound,

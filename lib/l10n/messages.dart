@@ -7,6 +7,7 @@ import '../core/errors.dart';
 import '../core/role.dart';
 import '../domain/ledger.dart';
 import '../domain/ops.dart';
+import '../domain/settings.dart' show AnytimeMeal;
 import 'app_localizations.dart';
 import 'labels.dart';
 
@@ -76,7 +77,11 @@ extension AppTextMessages on AppText {
   String _appError(AppException e) {
     String s(String k) => '${e.args[k] ?? ''}';
     int n(String k) => (e.args[k] as num?)?.toInt() ?? 0;
-    String meal(String k) => mealWire(s(k));
+    // An anytime meal's name may ride along in the args (ADR 0009).
+    String meal(String k) => mealName(s(k), [
+          if (e.args['mealName'] case final String name)
+            AnytimeMeal(id: s(k), name: name, price: 0),
+        ]);
     String role(String k) {
       try {
         return roleLabel(Role.fromWire(s(k)));
@@ -147,6 +152,10 @@ extension AppTextMessages on AppText {
       ErrorCode.settingsWindowOrder =>
         errSettingsWindowOrder(meal('meal'), s('start'), s('end')),
       ErrorCode.settingsBlank => errSettingsBlank,
+      ErrorCode.mealNameBlank => errMealNameBlank,
+      ErrorCode.mealNameTaken => errMealNameTaken(s('name')),
+      ErrorCode.mealCannotBeRemoved => errMealCannotBeRemoved(s('name')),
+      ErrorCode.unknownMeal => errUnknownMeal,
       ErrorCode.notificationNotFound => errNotificationNotFound,
       ErrorCode.backupUnreadable => errBackupUnreadable,
       ErrorCode.backupNotTiffin => errBackupNotTiffin,
@@ -158,8 +167,9 @@ extension AppTextMessages on AppText {
     };
   }
 
-  String reversalText(ReversalResult r) {
-    final meal = r.mealType == null ? '' : mealLabel(r.mealType!);
+  String reversalText(ReversalResult r,
+      {List<AnytimeMeal> catalogue = const []}) {
+    final meal = r.meal == null ? '' : mealName(r.meal!, catalogue);
     return switch (r.code) {
       ReversalCode.scanReversed => reversalScanReversed(meal, r.restored ?? 0),
       ReversalCode.scanNotFound => reversalScanNotFound,
@@ -175,9 +185,9 @@ extension AppTextMessages on AppText {
   }
 
   /// The scanner's verdict as one sentence (the big result panel words it).
-  String scanText(ScanResult r) {
+  String scanText(ScanResult r, {List<AnytimeMeal> catalogue = const []}) {
     final name = r.memberName ?? '';
-    final meal = r.mealType == null ? '' : mealLabel(r.mealType!);
+    final meal = r.meal == null ? '' : mealName(r.meal!, catalogue);
     return switch (r.outcome) {
       // The grace allowance gets its own badge on the result panel.
       ScanOutcome.accepted => scanAccepted(name, meal, r.remainingBalance ?? 0),
@@ -194,7 +204,11 @@ extension AppTextMessages on AppText {
     String s(String k) => '${p[k] ?? ''}';
     int i(String k) => (p[k] as num?)?.toInt() ?? 0;
     String q(String k) => p[k] == null ? '' : number(p[k] as num);
-    String meal(String k) => mealWire(s(k));
+    // An anytime meal's name rides in the params (ADR 0009).
+    String meal(String k) => mealName(s(k), [
+          if (p['mealName'] case final String name)
+            AnytimeMeal(id: s(k), name: name, price: 0),
+        ]);
     return switch (n.type) {
       'prep_reminder' => (
           title: notifPrepTitle(meal('meal')),
@@ -216,6 +230,11 @@ extension AppTextMessages on AppText {
       'scan_rejected_on_sync' => (
           title: notifScanRejectedTitle,
           body: notifScanRejectedBody(s('name'), meal('meal'), s('date')),
+        ),
+      'anytime_scan_rejected_on_sync' => (
+          title: notifScanRejectedTitle,
+          body:
+              notifAnytimeScanRejectedBody(s('name'), meal('meal'), s('date')),
         ),
       _ => (title: notifUnknown, body: ''),
     };

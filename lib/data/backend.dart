@@ -65,7 +65,7 @@ class Backend {
     scans = ScanService(store, settings, notifications);
     topups = TopupService(store, settings, billing, qr);
     refunds = RefundService(store, settings);
-    menu = MenuService(store);
+    menu = MenuService(store, settings);
     users = UserService(store, auth);
     ingredients = IngredientService(store);
     recipes = RecipeService(store);
@@ -189,8 +189,10 @@ class Backend {
 
   // ---- scanning ----------------------------------------------
 
-  Future<ScanResult> scan(String qrCodeId, {MealType? mealTypeOverride}) =>
-      scans.processScan(qrCodeId, mealTypeOverride: mealTypeOverride);
+  Future<ScanResult> scan(String qrCodeId,
+          {MealType? mealTypeOverride, String? anytimeMealId}) =>
+      scans.processScan(qrCodeId,
+          mealTypeOverride: mealTypeOverride, anytimeMealId: anytimeMealId);
 
   Future<ReversalResult> reverseScan(String scanId) {
     _requireSession();
@@ -212,6 +214,7 @@ class Backend {
       lunchUnits: draft.lunchUnits,
       breakfastUnits: draft.breakfastUnits,
       brunchUnits: draft.brunchUnits,
+      anytimeUnits: draft.anytimeUnits,
       paymentMethod: draft.paymentMethod,
       createdBy: _username,
     ));
@@ -238,6 +241,7 @@ class Backend {
       lunchUnits: draft.lunchUnits,
       breakfastUnits: draft.breakfastUnits,
       brunchUnits: draft.brunchUnits,
+      anytimeUnits: draft.anytimeUnits,
       reason: draft.reason,
       processedBy: _username,
     ));
@@ -263,7 +267,7 @@ class Backend {
     _requireSession();
     return menu.addEntry(MenuEntryDraft(
       date: draft.date,
-      mealType: draft.mealType,
+      meal: draft.meal,
       category: draft.category,
       headcount: draft.headcount,
       items: draft.items,
