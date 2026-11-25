@@ -1,6 +1,6 @@
 # ADR 0009 — Anytime meals (admin-defined, no window, no daily lock)
 
-Status: proposed · 2026-11-25
+Status: accepted · 2026-11-25
 
 Extends PRD §5 ("three balances", "one scan per meal window") and §6.3–§6.8.
 ADR 0005 (offline batches, increments, the lock-by-document-id) and ADR 0006
@@ -62,10 +62,12 @@ scan, and on any backup that carries a meal this build has not seen.
 
 ```
 meta/settings.anytimeMeals: [
-  { id: 'm3k9x2p7q', name: 'Tea', price: 10, active: true },
+  { id: 'm3k9x2p7q', name: 'Tea', price: 10, active: true, group: 'Drinks' },
   ...
 ]
 ```
+
+`group` is optional free text (absent or blank = no group). See §7.
 
 A list, replaced whole by the admin's save, in display order. No `kind`
 field: in this design every catalogue entry is anytime and every built-in is
@@ -201,10 +203,22 @@ headcount-overrun alert all work unchanged. Anytime meals can be planned on
 any day (no Saturday rule). Prep reminders stay timed-only, because an
 anytime meal has no start time to count down to.
 
-"Categorised" is read as the existing serving-group categories (Jain /
-Normal / Staff) of ADR 0003. If the user meant grouping meals themselves
-(Drinks / Snacks), it is one optional `group` string on the catalogue entry,
-added later.
+"Categorised" means both (user decision, 2026-11-25):
+
+- **Serving groups.** An anytime meal is planned per member category
+  (Jain / Normal / Staff) exactly like a built-in (ADR 0003).
+- **Meal groups.** Each catalogue entry has an optional `group` string
+  (Drinks / Snacks / Desserts...). It is free text; the settings editor
+  suggests the groups already in use so the admin doesn't type "Drink" and
+  "Drinks". It only orders and labels: the scanner meal bar, the settings
+  list and the report columns show meals grouped by it (ungrouped first,
+  then groups in first-seen order). It has no effect on price, balance or
+  scanning. Trimmed; compared ignoring case when grouping.
+
+*Why a string on the entry and not a collection:* a group has no data of
+its own (no price, no rules). A `mealGroups` collection would need its own
+rules, cache, backup entry and a rename flow, for a label. Renaming a group
+is editing the meals that carry it.
 
 ### 8. Reports and exports
 
@@ -245,6 +259,8 @@ the meal through the lookup in §1. The report stays export-only, as today.
   pointer anyway. Naming the meal directly is enough, because the invariant is
   "a scanner phone only lowers one balance".
 - **Hard-delete meals.** It strands paid units (§2).
+- **A `mealGroups` collection (or a fixed group list).** A group is only a
+  label; a collection costs rules, cache and backup for no behaviour (§7).
 
 ---
 
@@ -262,8 +278,8 @@ the meal through the lookup in §1. The report stays export-only, as today.
   anytime meals.
 - **New app versions require the rules deploy first** (§6).
 - **Grace** applies to anytime balances the same way as to built-ins: one
-  balance rule. If a canteen wants no credit on Tea, make grace per-meal
-  later.
+  balance rule (user decision, 2026-11-25). If a canteen wants no credit on
+  Tea, make grace per-meal later.
 - **Prices:** a top-up stores its computed amount, and a refund uses today's
   price, both as before.
 - Cost: the meal name lookup needs the catalogue wherever a meal is shown
