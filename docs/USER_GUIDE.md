@@ -117,21 +117,34 @@ Open **Scan**, point at the QR. The verdict fills the screen:
   no meal being served now, already collected today, no units left).
 
 Tap **Next** for the next person. A member can only be scanned once per meal
-per day.
+per day — breakfast, lunch and brunch. Anytime meals (below) have no limit.
+
+**Serving Tea (or any anytime meal).** Once the admin has added anytime meals
+(3.8), a bar appears at the bottom of the scan screen: **By time** (the usual
+breakfast/lunch/brunch by the clock) followed by each meal — Tea, Juice… —
+grouped under their group names (Drinks, Snacks). Tap **Tea** and every scan
+on this phone serves Tea, at any hour, as often as the person has Tea units.
+The phone remembers the choice, so the tea counter stays on Tea all day.
+**Serving: Tea** shows under the screen title and the verdict says
+"Asha — Tea. 4 units left", so a wrong setting is obvious at once. Tap **By
+time** to go back. If the admin retires a meal, phones set to it go back to
+By time on their own and say so.
 
 **No internet?** Keep scanning. A yellow **Offline — changes will sync**
 banner shows on the scan screen (a cloud-off icon on other screens), and every
 scan goes up when the connection returns. If the same person was served the
 same meal on another offline phone, the later scan is dropped when it syncs —
 their unit is given back — and a **Offline scan not counted** notification
-says who.
+says who. (Anytime meals can be served on two offline phones at once — that
+is what "no limit" means.)
 
 ### 3.2 Top-up & bill (counter / admin)
 
 **Top-up & bill** → tap the member field to open a searchable picker (name,
 class, roll number or staff ID). Not on the list yet? **+ New member** adds a
 walk-up member without leaving the screen. Then set units per meal type with
-+/− → pick **Cash** or **UPI**. The amount is calculated from the unit prices
++/− — breakfast, lunch, brunch, then one row per anytime meal (Tea…) with its
+price → pick **Cash** or **UPI**. The amount is calculated from the unit prices
 in Settings — you never type it. **Charge & generate bill** credits the
 balance immediately and shows the bill; **Share bill** sends it as a PDF
 (WhatsApp, email, print) in this phone's language. For UPI it also shows a payment QR for
@@ -168,7 +181,9 @@ row stays in the log, marked reversed.
   lunch" for 3 groups is 3 entries. Tap an entry to edit its plates/headcount;
   the `(date, meal, category)` combination is unique so you edit rather than
   duplicate. Manage the category list from the **⊞** button in the top bar or
-  **Settings ▸ Menu categories**.
+  **Settings ▸ Menu categories**. Anytime meals (Tea, "Drinks · Juice") are
+  in the meal list too and can be planned on any day, so their recipes come
+  off stock and their plates count against the plan like any meal.
 - **Recipes** hold **per-plate** quantities. The purchase schedule multiplies
   them by each entry's headcount.
 - **Ingredients = inventory.** Each row shows on-hand **stock** and a **LOW**
@@ -205,7 +220,8 @@ row stays in the log, marked reversed.
   (confirmed top-ups), refunds paid back, expenses, and profit (revenue
   minus refunds and expenses) for the period.
 - **Refunds** — deduct units from a leaving member and record it. Units
-  pre-fill from their balance and can't exceed it. The actual payout happens
+  pre-fill from their balance and can't exceed it — a field per anytime meal
+  they hold is added too, retired meals included. The actual payout happens
   outside the app.
 
 ### 3.7 Notifications
@@ -225,6 +241,13 @@ Settings is a short menu of rows, not one long form. Each opens its own screen:
 - **Canteen configuration** — app name, unit prices, meal windows, timezone,
   grace allowance, scan-reversal window, reminder lead times, UPI. All runtime,
   no reinstall; one **Save** button, kept in reach at the bottom.
+  - **Anytime meals** (same screen) — meals with no time and no daily limit:
+    Tea, Juice, Samosa. **Add meal** asks for a name, a price per unit and an
+    optional **group** (Drinks, Snacks — tap a group already in use rather
+    than retyping it). Each meal saves straight away. A meal can't be deleted,
+    because people may hold paid units of it: switch **Served now** off to
+    retire it. It leaves the scanner, top-ups and menu, but balances, refunds
+    and reports keep it. Grace allowance applies to these meals too.
 - **Users & access** — see 3.9.
 - **Menu categories** — the tag list for menu entries (also editable from the
   menu planner's top bar).
@@ -273,7 +296,9 @@ The same screen lists **saved logins** and clears them.
 **Reports** — an `.xlsx` for Excel or Google Sheets, with a tab per area
 (summary, members, balances, scans, top-ups, refunds, expenses, menu). Pick a
 date range and which tabs you want, then it goes out through the normal share
-sheet, with headings in this phone's language. It is for reading and printing; it is *not* a way to put data back —
+sheet, with headings in this phone's language. Balances, top-ups and refunds
+get a column per anytime meal (retired ones too), headed "Drinks · Juice"
+when the meal has a group. It is for reading and printing; it is *not* a way to put data back —
 that is what **Backup & restore** is for.
 
 **Backup** — a complete copy of the canteen in one `.tiffin` file: members,

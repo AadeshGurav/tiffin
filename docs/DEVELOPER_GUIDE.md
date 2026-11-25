@@ -57,6 +57,15 @@ Dependencies point down only.
   go in the canteen's settings document.
 - **Theme through tokens**, not literals: [THEME_SPEC.md](THEME_SPEC.md).
 - **Reversals, never deletes**, for scans, top-ups and refunds (audit trail).
+- **A meal is a string id** (ADR 0009). `'breakfast' | 'lunch' | 'brunch'`
+  are the timed built-ins (`MealType`, used only for clock rules);
+  anytime meals are `m` + 8 lowercase alphanumerics from the settings
+  catalogue. Name any id with `AppText.mealName(id, catalogue)`, never
+  `MealType.fromWire`, so history with an unknown meal still shows. Balances
+  are `UnitCounts`: three typed fields plus `anytime` (`u[id]`, `byMeal`).
+  A meal id becomes a field path (`balances.<id>`), so only accept one that
+  `SettingsService` validated. Every scan writes `lastScanMeal`; the rules
+  use it, so deploy `firestore.rules` before any build that scans.
 
 ## Typical changes
 

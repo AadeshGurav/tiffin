@@ -67,11 +67,12 @@ UI) — from then on, all account management happens through the admin-only
 
 ## 5. Core Concepts
 
-- **Unit, not currency.** Every member entity has three balances: `lunch`, `breakfast`, `brunch`. A scan deducts exactly one unit of the relevant type. Top-ups add units. Nothing here is a monetary wallet.
+- **Unit, not currency.** Every member entity has three built-in balances: `lunch`, `breakfast`, `brunch`, **plus one balance per admin-defined anytime meal** (Tea, Juice… — see below). A scan deducts exactly one unit of the relevant meal. Top-ups add units. Nothing here is a monetary wallet.
+- **Anytime meals** *(added by ADR 0009, 2026-11-25)*. The admin defines extra meals in Settings, each with a name, its own unit price and an optional **meal group** (free text such as Drinks / Snacks, used only to group meals on screen and in reports). They have **no meal window, no Saturday rule and no daily limit**: each scan of one deducts one unit, as often as the member has units (grace applies exactly as for built-ins). A counter phone is put on an anytime meal with the scanner's meal bar and stays on it. Anytime meals are **retired, never deleted**, so units already paid for stay visible, refundable and reported.
 - **No automatic resets, ever.** Balances are never reset at month-end, term-end, or on any schedule. A balance only changes because of a scan, a scan reversal, a top-up, or a refund. If a member is out of units, they're out — the only thing that changes that is a top-up (or the grace allowance, see below). This is intentional: units purchased don't expire or get wiped by the calendar.
 - **Saturday is different.** On Saturdays there is no separate breakfast/lunch — only a single **brunch** meal. Brunch is a third, independent unit type, only consumable on Saturdays.
 - **Meal windows are configurable, not hardcoded.** Breakfast, lunch, and brunch each have a start/end time. These live in a `settings` document in the database and are editable by the admin — never hardcoded constants in source. Start/end times are the canteen's own local wall-clock hours (e.g. "07:00" means 7am at the canteen) — the server converts its internal UTC clock to the canteen's timezone (also admin-editable, in that same settings document) before checking these, not the other way around.
-- **One scan per meal window.** A member cannot be scanned twice for the same meal on the same day. This is enforced by checking for an existing accepted, non-reversed scan for that member/meal within the calendar day — not by a separate cooldown timer, so it naturally resets each day with no scheduled job required — and not by the meal's configured clock window, so a counter operator's manual meal-type override (for edge cases) can't fall outside those hours and silently defeat the lock.
+- **One scan per meal window** *(timed meals only)*. A member cannot be scanned twice for the same built-in meal on the same day; anytime meals have no such lock. This is enforced by checking for an existing accepted, non-reversed scan for that member/meal within the calendar day — not by a separate cooldown timer, so it naturally resets each day with no scheduled job required — and not by the meal's configured clock window, so a counter operator's manual meal-type override (for edge cases) can't fall outside those hours and silently defeat the lock.
 - **Grace allowance.** A member may be allowed to go negative on a balance by a configurable number of units before a hard stop, so a kid isn't turned away mid-week while a parent sorts out payment. This is a **global default in settings**, with an optional **per-member override** for exceptions the admin sets individually. Any scan that was only possible because of the grace allowance (i.e., it pushed the balance negative) must be clearly flagged — both in the stored scan record (`via_grace`) and as a visible badge/indicator wherever scans are shown, so the admin can immediately spot who's eating on credit.
 - **Scan reversal.** If a scan was a mistake (wrong code, operator error, member changes their mind), it can be undone within a configurable window (default 10 minutes) after the scan. Reversing restores the unit and marks the scan as reversed — it does not delete the scan record (audit trail must be preserved).
 - **QR codes are permanent per member.** A member's QR/barcode value is generated once at creation and never changes. Reprinting (lost/damaged card) re-renders the same code — it never issues a new one. This prevents duplicate member entities from lost-card situations.
@@ -94,8 +95,8 @@ UI) — from then on, all account management happens through the admin-only
 - Admin can **reprint** a lost/damaged code — this must reuse the existing code identifier, never generate a new one.
 
 ### 6.3 Top-ups & Billing
-- Admin or counter operator selects a member, enters units to add per meal type, and a payment method: `cash` or `upi`. **The amount is never typed in** — it's calculated automatically from the per-meal-type unit prices set in Settings (§6.8), and the submit action is disabled while every unit is still zero (a zero-unit top-up is meaningless and rejected server-side too).
-- On submit: balances are credited immediately, and a **PDF bill** is generated showing units purchased and the member's new balances.
+- Admin or counter operator selects a member, enters units to add per meal type (the three built-ins and each active anytime meal), and a payment method: `cash` or `upi`. **The amount is never typed in** — it's calculated automatically from the per-meal-type unit prices set in Settings (§6.8), and the submit action is disabled while every unit is still zero (a zero-unit top-up is meaningless and rejected server-side too).
+- On submit: balances are credited immediately, and a **PDF bill** is generated showing units purchased and the member's new balances (one line per meal that changed).
 - If payment method is `upi`: generate a UPI payment QR (standard `upi://pay` URI scheme — no payment gateway integration) and show it in a pop-up at the moment of payment, so the payer can scan it right there — it does **not** appear on the bill PDF itself. Payment status starts `pending`.
 - If payment method is `cash`: payment status is `confirmed` immediately; no UPI QR needed.
 - Admin can manually mark a pending UPI top-up as `confirmed` once they've verified receipt in their own UPI app. There is no automated payment webhook in this build.
@@ -111,6 +112,7 @@ UI) — from then on, all account management happens through the admin-only
   4. Already scanned for this meal window → reject, clear message.
   5. Balance check (including grace allowance) → reject if exhausted, clear message.
   6. Otherwise → accept, deduct one unit, log the scan, show member name + meal + remaining balance.
+- **Anytime meals (ADR 0009).** A bar at the bottom of the scanner offers *By time* (the default, the flow above) and each active anytime meal, grouped by meal group. The choice is kept on that phone and shown under the screen title and in every verdict. On an anytime meal the order of checks is: unknown code → inactive member → balance check (with grace) → accept. There is no window check and no once-a-day lock. A phone whose chosen meal is retired returns to *By time* with a notice.
 - Every scan (accepted or rejected) should be clear at a glance to the counter operator — big, unambiguous accept/reject state, no reading required beyond a glance. This is the highest-frequency interaction in the whole system and must be fast and foolproof.
 - Admin can reverse a specific accepted scan within the configured reversal window.
 
@@ -119,6 +121,7 @@ UI) — from then on, all account management happens through the admin-only
 - Admin logs what's being served as **one entry per (date, meal, category)** — "Monday lunch, Jain" — carrying the items one plate of that category gets and an **approx headcount** (planned plates). The `(date, meal, category)` triple is unique, so a category's meal is a single editable row. A new category can be created from the add-entry dialog.
 - **Members carry a category** too (the same list — Jain / Normal / Staff …), set at creation and editable later. An accepted scan records the member's category as-of-scan, so planned headcount vs actual plates can be compared per category. The student/staff **type** is also editable now (converting one clears the fields that don't apply to the new type).
 - The primary planning surface is an interactive month calendar (prev/next navigation, current day highlighted, each day's logged meals shown as tags at a glance) — clicking any day opens a dialog pre-filled with that date to log a new entry or review/delete what's already logged there.
+- Anytime meals are planned the same way — one entry per (date, anytime meal, category) — on any day; their stock use and headcount alerts work as for built-ins. Prep reminders stay timed-only (an anytime meal has no start time).
 - This is a planning/record tool only — no student- or staff-facing view.
 
 ### 6.5.1 Ingredients, Recipes & Purchase Schedule (Admin manages; admin + counter use)
@@ -140,7 +143,7 @@ UI) — from then on, all account management happens through the admin-only
 - System should provide a simple revenue-vs-expense summary (revenue = confirmed top-ups in a date range, refunds = money paid back in that range (§6.7), expenses = logged expenses in that range, profit = revenue − refunds − expenses).
 
 ### 6.7 Refunds (Admin)
-- If a member leaves the school or otherwise stops using the canteen, the admin can process a refund: specify how many lunch/breakfast/brunch units are being refunded. Unit inputs pre-fill from that member's actual current balance (capped there, so a refund can't exceed what they have) and the refund amount is calculated automatically from the same unit prices used for top-ups — never typed in.
+- If a member leaves the school or otherwise stops using the canteen, the admin can process a refund: specify how many lunch/breakfast/brunch units — and units of each anytime meal the member holds, retired ones included — are being refunded. Unit inputs pre-fill from that member's actual current balance (capped there, so a refund can't exceed what they have) and the refund amount is calculated automatically from the same unit prices used for top-ups — never typed in.
 - The **actual money movement is handled by the admin outside the app** (cash back, bank transfer, etc.) — the system's job is to keep the unit ledger accurate and to keep a record of what was refunded, when, and why.
 - Refunding deducts the specified units from the member's balance immediately. A refund cannot request more units than the member currently has.
 - This does not automatically deactivate the member — deactivation (if the member is leaving for good) is a separate action via the member's `status` field.
@@ -151,6 +154,7 @@ All of the following must be stored in the database and editable at runtime — 
 - Meal windows: start/end time for breakfast, lunch, and brunch (brunch applies Saturday only).
 - The canteen's own local timezone (IANA name) — what meal window start/end times above are actually measured in. Chosen from a dropdown listing every IANA zone the server's Python runtime knows (`zoneinfo.available_timezones()`), not freehand text a typo could silently break meal-window matching against.
 - Unit prices — price per lunch/breakfast/brunch unit — used to compute top-up and refund amounts automatically (§6.3, §6.7) instead of an admin typing an amount by hand.
+- The **anytime-meal catalogue** (ADR 0009): name, unit price, optional meal group and a served-now switch per meal. Names are unique; a meal is retired (switched off), never deleted.
 - UPI ID and payee name used to generate a top-up's payment QR (§6.3).
 - Scan reversal window (minutes).
 - Application name (branding) — shown in the dashboard's nav bar and browser tab title. Purely cosmetic, but stored the same way as everything else here: DB-backed, editable at runtime, no code change or restart needed.
@@ -180,7 +184,8 @@ See `app/schemas/` and `app/core/database.py` in the codebase for the authoritat
 - `menu_categories` — admin-managed list of categories (e.g. Jain, Normal, Staff) used to tag menu entries.
 - `refunds` — one record per refund: units deducted, amount, reason, who processed it. The payout itself happens outside the app.
 - `expenses` — logged business expenses.
-- `settings` — single global document: grace allowance config, meal windows, unit prices, timezone, UPI details, reversal window, app name.
+- `settings` — single global document: grace allowance config, meal windows, unit prices, timezone, UPI details, reversal window, app name, and `anytimeMeals` (the catalogue: `{id, name, price, active, group?}`).
+- Anytime meals (ADR 0009) add no collection: a member's `balances` map gains one key per anytime meal id, top-ups and refunds carry an optional `anytimeUnits` map beside the flat built-in fields, and scans/menu entries keep `mealType` holding any meal id. Every scan writes the member's `lastScanMeal`, which the rules use to let a scanner phone lower only that one balance.
 - `users` — login accounts: username, hashed password, role (admin/counter/scanner), active status.
 - `sessions` — opaque server-side session tokens (not JWT), one per login, auto-expiring via a MongoDB TTL index (`SESSION_TTL_HOURS`).
 - `ingredients` — admin-managed master list: name + unit.
