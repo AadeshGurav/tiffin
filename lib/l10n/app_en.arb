@@ -1660,5 +1660,7 @@
   "ingredientsScreenSortLowStock": "Low stock first",
   "recipesScreenSearchLabel": "Search recipes",
   "usersScreenSearchLabel": "Search by username or role",
-  "usersScreenSortRole": "Role"
+  "usersScreenSortRole": "Role",
+  "topupHistorySearchLabel": "Search by member, payment or cashier",
+  "topupHistorySortAmount": "Highest amount"
 }

@@ -757,5 +757,7 @@
   "ingredientsScreenSortLowStock": "कम स्टॉक पहले",
   "recipesScreenSearchLabel": "रेसिपी खोजें",
   "usersScreenSearchLabel": "यूज़रनेम या भूमिका से खोजें",
-  "usersScreenSortRole": "भूमिका"
+  "usersScreenSortRole": "भूमिका",
+  "topupHistorySearchLabel": "सदस्य, भुगतान या कैशियर से खोजें",
+  "topupHistorySortAmount": "सबसे ज़्यादा राशि"
 }
