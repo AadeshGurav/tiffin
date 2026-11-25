@@ -200,7 +200,11 @@ extension AppTextMessages on AppText {
     String s(String k) => '${p[k] ?? ''}';
     int i(String k) => (p[k] as num?)?.toInt() ?? 0;
     String q(String k) => p[k] == null ? '' : number(p[k] as num);
-    String meal(String k) => mealName(s(k));
+    // An anytime meal's name rides in the params (ADR 0009).
+    String meal(String k) => mealName(s(k), [
+          if (p['mealName'] case final String name)
+            AnytimeMeal(id: s(k), name: name, price: 0),
+        ]);
     return switch (n.type) {
       'prep_reminder' => (
           title: notifPrepTitle(meal('meal')),
@@ -222,6 +226,11 @@ extension AppTextMessages on AppText {
       'scan_rejected_on_sync' => (
           title: notifScanRejectedTitle,
           body: notifScanRejectedBody(s('name'), meal('meal'), s('date')),
+        ),
+      'anytime_scan_rejected_on_sync' => (
+          title: notifScanRejectedTitle,
+          body:
+              notifAnytimeScanRejectedBody(s('name'), meal('meal'), s('date')),
         ),
       _ => (title: notifUnknown, body: ''),
     };

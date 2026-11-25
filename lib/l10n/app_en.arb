@@ -1449,6 +1449,21 @@
       }
     }
   },
+  "notifAnytimeScanRejectedBody": "{name}'s {meal} scan on {date} was not counted: this phone lost its access before it synced. The unit was kept.",
+  "@notifAnytimeScanRejectedBody": {
+    "description": "On a notification. name = a person's or item's name; meal = an anytime meal's name (Tea, Juice); date = a formatted date.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "notifUnknown": "Notice",
   "@notifUnknown": {
     "description": "Title for a notification type this app version does not know."

@@ -621,6 +621,7 @@
   "notifOverrunBody": "लगभग {planned} की योजना थी, अब तक {served} परोसी गईं।",
   "notifScanRejectedTitle": "ऑफ़लाइन स्कैन नहीं गिना गया",
   "notifScanRejectedBody": "{name} को {date} को दूसरे फ़ोन पर पहले ही {meal} परोसा जा चुका था, इसलिए यह स्कैन हटाया गया और इकाई नहीं कटी।",
+  "notifAnytimeScanRejectedBody": "{date} को {name} का {meal} स्कैन नहीं गिना गया: सिंक होने से पहले इस फ़ोन की पहुँच हट गई। यूनिट बची रही।",
   "notifUnknown": "सूचना",
   "deviceSetupTitle": "इस फ़ोन को सेट करें",
   "deviceSetupBody": "इस फ़ोन को ऐसा नाम दें जिसे एडमिन पहचान सके, फिर जुड़ें। इसके लिए एक बार इंटरनेट चाहिए; उसके बाद फ़ोन ऑफ़लाइन भी चलता है।",

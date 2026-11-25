@@ -189,8 +189,10 @@ class Backend {
 
   // ---- scanning ----------------------------------------------
 
-  Future<ScanResult> scan(String qrCodeId, {MealType? mealTypeOverride}) =>
-      scans.processScan(qrCodeId, mealTypeOverride: mealTypeOverride);
+  Future<ScanResult> scan(String qrCodeId,
+          {MealType? mealTypeOverride, String? anytimeMealId}) =>
+      scans.processScan(qrCodeId,
+          mealTypeOverride: mealTypeOverride, anytimeMealId: anytimeMealId);
 
   Future<ReversalResult> reverseScan(String scanId) {
     _requireSession();

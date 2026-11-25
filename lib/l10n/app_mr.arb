@@ -621,6 +621,7 @@
   "notifOverrunBody": "सुमारे {planned} चे नियोजन होते, आतापर्यंत {served} दिली.",
   "notifScanRejectedTitle": "ऑफलाइन स्कॅन मोजले नाही",
   "notifScanRejectedBody": "{name} यांना {date} रोजी दुसऱ्या फोनवर आधीच {meal} दिले होते, त्यामुळे हे स्कॅन रद्द झाले आणि एकक कापले नाही.",
+  "notifAnytimeScanRejectedBody": "{date} रोजी {name} चे {meal} स्कॅन मोजले गेले नाही: सिंक होण्यापूर्वी या फोनचा प्रवेश काढला गेला. युनिट शिल्लक राहिले.",
   "notifUnknown": "सूचना",
   "deviceSetupTitle": "हा फोन सेट करा",
   "deviceSetupBody": "या फोनला अ‍ॅडमिन ओळखेल असे नाव द्या, मग जोडा. यासाठी एकदा इंटरनेट हवे; त्यानंतर फोन ऑफलाइनही चालतो.",
