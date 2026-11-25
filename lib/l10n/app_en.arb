@@ -1639,5 +1639,38 @@
   "scannerCameraDeniedTitle": "CAMERA OFF",
   "scannerCameraDenied": "Tiffin can't use the camera. Allow camera access for Tiffin in the phone's settings, then open this screen again.",
   "scannerCameraUnavailable": "The camera could not start. Close this screen and open it again.",
-  "errNumberInvalid": "That isn't a valid number. Check what you typed and try again."
+  "errNumberInvalid": "That isn't a valid number. Check what you typed and try again.",
+  "searchClear": "Clear search",
+  "searchSortTooltip": "Sort",
+  "searchNoMatches": "Nothing matches \"{query}\"",
+  "@searchNoMatches": {
+    "description": "Title when a list search finds nothing. query = what the user typed.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchNoMatchesHint": "Check the spelling or try fewer words.",
+  "searchSortNameAz": "Name A to Z",
+  "searchSortNewest": "Newest first",
+  "searchSortOldest": "Oldest first",
+  "membersScreenSearchLabel": "Search by name, QR code or category",
+  "membersScreenSortBalance": "Most units left",
+  "membersScreenSortCategory": "Category",
+  "ingredientsScreenSearchLabel": "Search ingredients",
+  "ingredientsScreenSortLowStock": "Low stock first",
+  "recipesScreenSearchLabel": "Search recipes",
+  "usersScreenSearchLabel": "Search by username or role",
+  "usersScreenSortRole": "Role",
+  "topupHistorySearchLabel": "Search by member, payment or cashier",
+  "searchSortAmount": "Highest amount",
+  "scanLogScreenSearchLabel": "Search by member, meal or category",
+  "expensesScreenSearchLabel": "Search by category or description",
+  "expensesScreenSortCategory": "Category",
+  "purchaseScheduleScreenSearchLabel": "Search items to buy",
+  "purchaseScheduleScreenSortDate": "By date",
+  "purchaseScheduleScreenSortName": "By name within each day",
+  "purchaseScheduleScreenSortPending": "Not bought first within each day",
+  "refundsScreenSearchLabel": "Search by member, staff or reason"
 }

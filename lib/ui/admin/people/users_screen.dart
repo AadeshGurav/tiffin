@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../core/role.dart';
 import '../../../domain/ops.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/labels.dart';
@@ -43,43 +45,60 @@ class UsersScreen extends ConsumerWidget {
           actionLabel: AppText.of(context).usersScreenEmptyAction,
           onAction: () => _form(context, ref, null),
         ),
-        builder: (list) => ListView.separated(
-          itemCount: list.length,
-          separatorBuilder: nbRowSeparator,
-          itemBuilder: (_, i) {
-            final u = list[i];
-            return NbRow(
-              onTap: () => _form(context, ref, u),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(u.username, style: t.text.body),
-                        Text(
-                            '${AppText.of(context).roleLabel(u.role)} · ${AppText.of(context).statusLabel(u.status)}',
-                            style: t.text.label),
-                      ],
+        builder: (all) => SearchSortList<AppUser>(
+          items: all,
+          searchLabel: AppText.of(context).usersScreenSearchLabel,
+          searchFields: (u) => [
+            u.username,
+            AppText.of(context).roleLabel(u.role),
+            AppText.of(context).statusLabel(u.status),
+          ],
+          sorts: [
+            SortOption(AppText.of(context).searchSortNameAz,
+                (a, b) => compareNames(a.username, b.username)),
+            SortOption(AppText.of(context).usersScreenSortRole,
+                (a, b) => a.role.index.compareTo(b.role.index)),
+            SortOption(AppText.of(context).searchSortNewest,
+                (a, b) => b.createdAt.compareTo(a.createdAt)),
+          ],
+          builder: (context, list) => ListView.separated(
+            itemCount: list.length,
+            separatorBuilder: nbRowSeparator,
+            itemBuilder: (_, i) {
+              final u = list[i];
+              return NbRow(
+                onTap: () => _form(context, ref, u),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(u.username, style: t.text.body),
+                          Text(
+                              '${AppText.of(context).roleLabel(u.role)} · ${AppText.of(context).statusLabel(u.status)}',
+                              style: t.text.label),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: AppText.of(context).tooltipDelete,
-                    onPressed: () async {
-                      final ok = await runGuarded(
-                        context,
-                        () => ref.read(backendProvider).deleteUser(u.id),
-                        successMessage:
-                            AppText.of(context).usersScreenDeleteSuccess,
-                      );
-                      if (ok) ref.invalidate(_usersProvider);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: AppText.of(context).tooltipDelete,
+                      onPressed: () async {
+                        final ok = await runGuarded(
+                          context,
+                          () => ref.read(backendProvider).deleteUser(u.id),
+                          successMessage:
+                              AppText.of(context).usersScreenDeleteSuccess,
+                        );
+                        if (ok) ref.invalidate(_usersProvider);
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

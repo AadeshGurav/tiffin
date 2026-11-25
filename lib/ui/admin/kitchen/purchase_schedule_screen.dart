@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../core/role.dart';
 import '../../../domain/inventory.dart';
 import '../../shared_widgets/ingredient_quick_add.dart';
@@ -10,6 +11,7 @@ import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import 'ingredients_screen.dart';
 import '../../../l10n/app_localizations.dart';
@@ -63,74 +65,98 @@ class PurchaseScheduleScreen extends ConsumerWidget {
               AppText.of(context).purchaseScheduleScreenGenerateFromMenu,
           onAction: () => _generate(context, ref),
         ),
-        builder: (list) {
-          final byDay = <String, List<PurchaseScheduleItem>>{};
-          for (final it in list) {
-            byDay.putIfAbsent(fmt.format(it.date), () => []).add(it);
-          }
-          return ListView(
-            padding: const EdgeInsets.all(NbSpace.md),
-            children: [
-              // One box per day; its items are rows inside it.
-              for (final day in byDay.entries)
-                NbGroup(
-                  title: day.key,
-                  children: [
-                    for (final it in day.value)
-                      NbRow(
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: it.purchased,
-                              onChanged: (v) => _togglePurchased(
-                                  context, ref, it, v ?? false),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                      '${it.ingredientName} — ${it.quantityNote} '
-                                      '(${AppText.of(context).unitLabel(it.ingredientUnit)})',
-                                      style: t.text.body),
-                                  Text(
-                                      it.source == 'manual'
-                                          ? AppText.of(context)
-                                              .purchaseScheduleScreenSourceManual
-                                          : (it.purchased
-                                              ? AppText.of(context)
-                                                  .purchaseScheduleScreenSourceFromMenuBy(
-                                                      it.purchasedBy ?? '')
-                                              : AppText.of(context)
-                                                  .purchaseScheduleScreenSourceFromMenu),
-                                      style: t.text.label),
-                                ],
+        // Every sort keeps days in date order (the list is grouped by day);
+        // it only reorders the rows inside each day.
+        builder: (all) => SearchSortList<PurchaseScheduleItem>(
+          items: all,
+          searchLabel: AppText.of(context).purchaseScheduleScreenSearchLabel,
+          searchFields: (it) => [it.ingredientName, it.quantityNote],
+          sorts: [
+            SortOption(AppText.of(context).purchaseScheduleScreenSortDate,
+                (a, b) => a.date.compareTo(b.date)),
+            SortOption(AppText.of(context).purchaseScheduleScreenSortName,
+                (a, b) {
+              final byDate = a.date.compareTo(b.date);
+              return byDate != 0
+                  ? byDate
+                  : compareNames(a.ingredientName, b.ingredientName);
+            }),
+            SortOption(AppText.of(context).purchaseScheduleScreenSortPending,
+                (a, b) {
+              final byDate = a.date.compareTo(b.date);
+              if (byDate != 0) return byDate;
+              return a.purchased == b.purchased ? 0 : (a.purchased ? 1 : -1);
+            }),
+          ],
+          builder: (context, list) {
+            final byDay = <String, List<PurchaseScheduleItem>>{};
+            for (final it in list) {
+              byDay.putIfAbsent(fmt.format(it.date), () => []).add(it);
+            }
+            return ListView(
+              padding: const EdgeInsets.all(NbSpace.md),
+              children: [
+                // One box per day; its items are rows inside it.
+                for (final day in byDay.entries)
+                  NbGroup(
+                    title: day.key,
+                    children: [
+                      for (final it in day.value)
+                        NbRow(
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: it.purchased,
+                                onChanged: (v) => _togglePurchased(
+                                    context, ref, it, v ?? false),
                               ),
-                            ),
-                            if (isAdmin)
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                tooltip: AppText.of(context).tooltipDelete,
-                                onPressed: () async {
-                                  final ok = await runGuarded(
-                                    context,
-                                    () => ref
-                                        .read(backendProvider)
-                                        .deletePurchaseItem(it.id),
-                                    successMessage: AppText.of(context)
-                                        .purchaseScheduleScreenRemoved,
-                                  );
-                                  if (ok) ref.invalidate(_scheduleProvider);
-                                },
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        '${it.ingredientName} — ${it.quantityNote} '
+                                        '(${AppText.of(context).unitLabel(it.ingredientUnit)})',
+                                        style: t.text.body),
+                                    Text(
+                                        it.source == 'manual'
+                                            ? AppText.of(context)
+                                                .purchaseScheduleScreenSourceManual
+                                            : (it.purchased
+                                                ? AppText.of(context)
+                                                    .purchaseScheduleScreenSourceFromMenuBy(
+                                                        it.purchasedBy ?? '')
+                                                : AppText.of(context)
+                                                    .purchaseScheduleScreenSourceFromMenu),
+                                        style: t.text.label),
+                                  ],
+                                ),
                               ),
-                          ],
+                              if (isAdmin)
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline),
+                                  tooltip: AppText.of(context).tooltipDelete,
+                                  onPressed: () async {
+                                    final ok = await runGuarded(
+                                      context,
+                                      () => ref
+                                          .read(backendProvider)
+                                          .deletePurchaseItem(it.id),
+                                      successMessage: AppText.of(context)
+                                          .purchaseScheduleScreenRemoved,
+                                    );
+                                    if (ok) ref.invalidate(_scheduleProvider);
+                                  },
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
-                ),
-            ],
-          );
-        },
+                    ],
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

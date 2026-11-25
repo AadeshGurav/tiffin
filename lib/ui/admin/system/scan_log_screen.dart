@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../domain/ledger.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/labels.dart';
@@ -37,54 +39,76 @@ class ScanLogScreen extends ConsumerWidget {
           title: AppText.of(context).scanLogScreenEmptyTitle,
           quips: EmptyQuips.scans(context),
         ),
-        builder: (list) => ListView.separated(
-          itemCount: list.length,
-          separatorBuilder: nbRowSeparator,
-          itemBuilder: (_, i) {
-            final s = list[i];
-            final reversible = s.result == 'accepted' && !s.reversed;
-            return NbRow(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                            '${s.memberName} · ${AppText.of(context).mealLabel(s.mealType)}',
-                            style: t.text.body),
-                      ),
-                      if (s.reversed)
-                        Text(AppText.of(context).scanLogScreenReversedLabel,
-                            style: t.text.label.copyWith(color: t.color.reject))
-                      else if (s.viaGrace)
-                        Text(AppText.of(context).scanLogScreenGraceLabel,
-                            style: t.text.label.copyWith(color: t.color.warn)),
-                    ],
-                  ),
-                  Text(fmt.format(s.scannedAt.toLocal()), style: t.text.label),
-                  if (reversible) ...[
-                    const SizedBox(height: NbSpace.sm),
-                    NbButton.secondary(
-                      label: AppText.of(context).scanLogScreenReverseButton,
-                      onPressed: () async {
-                        ReversalResult? r;
-                        final ran = await runGuarded(context, () async {
-                          r = await ref.read(backendProvider).reverseScan(s.id);
-                        });
-                        if (!ran || r == null || !context.mounted) return;
-                        // Refused reversals are answers, not crashes: say why.
-                        showNbSnack(
-                            context, AppText.of(context).reversalText(r!),
-                            ok: r!.success);
-                        if (r!.success) ref.invalidate(_scansProvider);
-                      },
+        builder: (all) => SearchSortList<ScanRecord>(
+          items: all,
+          searchLabel: AppText.of(context).scanLogScreenSearchLabel,
+          searchFields: (s) => [
+            s.memberName,
+            AppText.of(context).mealLabel(s.mealType),
+            s.memberCategory,
+          ],
+          sorts: [
+            SortOption(AppText.of(context).searchSortNewest,
+                (a, b) => b.scannedAt.compareTo(a.scannedAt)),
+            SortOption(AppText.of(context).searchSortOldest,
+                (a, b) => a.scannedAt.compareTo(b.scannedAt)),
+            SortOption(AppText.of(context).searchSortNameAz,
+                (a, b) => compareNames(a.memberName, b.memberName)),
+          ],
+          builder: (context, list) => ListView.separated(
+            itemCount: list.length,
+            separatorBuilder: nbRowSeparator,
+            itemBuilder: (_, i) {
+              final s = list[i];
+              final reversible = s.result == 'accepted' && !s.reversed;
+              return NbRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                              '${s.memberName} · ${AppText.of(context).mealLabel(s.mealType)}',
+                              style: t.text.body),
+                        ),
+                        if (s.reversed)
+                          Text(AppText.of(context).scanLogScreenReversedLabel,
+                              style:
+                                  t.text.label.copyWith(color: t.color.reject))
+                        else if (s.viaGrace)
+                          Text(AppText.of(context).scanLogScreenGraceLabel,
+                              style:
+                                  t.text.label.copyWith(color: t.color.warn)),
+                      ],
                     ),
+                    Text(fmt.format(s.scannedAt.toLocal()),
+                        style: t.text.label),
+                    if (reversible) ...[
+                      const SizedBox(height: NbSpace.sm),
+                      NbButton.secondary(
+                        label: AppText.of(context).scanLogScreenReverseButton,
+                        onPressed: () async {
+                          ReversalResult? r;
+                          final ran = await runGuarded(context, () async {
+                            r = await ref
+                                .read(backendProvider)
+                                .reverseScan(s.id);
+                          });
+                          if (!ran || r == null || !context.mounted) return;
+                          // Refused reversals are answers, not crashes: say why.
+                          showNbSnack(
+                              context, AppText.of(context).reversalText(r!),
+                              ok: r!.success);
+                          if (r!.success) ref.invalidate(_scansProvider);
+                        },
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            );
-          },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

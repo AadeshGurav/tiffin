@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../domain/inventory.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../shared_widgets/unit_field.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
@@ -39,58 +41,73 @@ class IngredientsTab extends ConsumerWidget {
         actionLabel: AppText.of(context).ingredientsScreenAddIngredient,
         onAction: () => openIngredientForm(context, ref, null),
       ),
-      builder: (list) => ListView.separated(
-        padding: const EdgeInsets.all(NbSpace.md),
-        itemCount: list.length,
-        separatorBuilder: nbRowSeparator,
-        itemBuilder: (_, i) {
-          final ing = list[i];
-          return NbRow(
-            onTap: () => openIngredientForm(context, ref, ing),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(ing.name, style: t.text.body),
-                      Text(
-                          AppText.of(context).ingredientsScreenInStock(
-                              _num(ing.stockQty),
-                              AppText.of(context).unitLabel(ing.unit)),
-                          style: t.text.label),
-                    ],
+      builder: (all) => SearchSortList<Ingredient>(
+        items: all,
+        searchLabel: AppText.of(context).ingredientsScreenSearchLabel,
+        searchFields: (i) => [i.name],
+        sorts: [
+          SortOption(AppText.of(context).searchSortNameAz,
+              (a, b) => compareNames(a.name, b.name)),
+          // Low-stock rows first, then the least stock: what to buy next.
+          SortOption(AppText.of(context).ingredientsScreenSortLowStock, (a, b) {
+            if (a.isLow != b.isLow) return a.isLow ? -1 : 1;
+            return a.stockQty.compareTo(b.stockQty);
+          }),
+        ],
+        builder: (context, list) => ListView.separated(
+          padding: const EdgeInsets.all(NbSpace.md),
+          itemCount: list.length,
+          separatorBuilder: nbRowSeparator,
+          itemBuilder: (_, i) {
+            final ing = list[i];
+            return NbRow(
+              onTap: () => openIngredientForm(context, ref, ing),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(ing.name, style: t.text.body),
+                        Text(
+                            AppText.of(context).ingredientsScreenInStock(
+                                _num(ing.stockQty),
+                                AppText.of(context).unitLabel(ing.unit)),
+                            style: t.text.label),
+                      ],
+                    ),
                   ),
-                ),
-                if (ing.isLow)
-                  Padding(
-                    padding: const EdgeInsets.only(right: NbSpace.sm),
-                    child: Text(AppText.of(context).ingredientsScreenLowLabel,
-                        style: t.text.label.copyWith(color: t.color.reject)),
+                  if (ing.isLow)
+                    Padding(
+                      padding: const EdgeInsets.only(right: NbSpace.sm),
+                      child: Text(AppText.of(context).ingredientsScreenLowLabel,
+                          style: t.text.label.copyWith(color: t.color.reject)),
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.tune),
+                    tooltip:
+                        AppText.of(context).ingredientsScreenAdjustStockTooltip,
+                    onPressed: () => _adjustStock(context, ref, ing),
                   ),
-                IconButton(
-                  icon: const Icon(Icons.tune),
-                  tooltip:
-                      AppText.of(context).ingredientsScreenAdjustStockTooltip,
-                  onPressed: () => _adjustStock(context, ref, ing),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  tooltip: AppText.of(context).tooltipDelete,
-                  onPressed: () async {
-                    final ok = await runGuarded(
-                      context,
-                      () => ref.read(backendProvider).deleteIngredient(ing.id),
-                      successMessage:
-                          AppText.of(context).ingredientsScreenDeleteSuccess,
-                    );
-                    if (ok) ref.invalidate(ingredientsProvider);
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: AppText.of(context).tooltipDelete,
+                    onPressed: () async {
+                      final ok = await runGuarded(
+                        context,
+                        () =>
+                            ref.read(backendProvider).deleteIngredient(ing.id),
+                        successMessage:
+                            AppText.of(context).ingredientsScreenDeleteSuccess,
+                      );
+                      if (ok) ref.invalidate(ingredientsProvider);
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

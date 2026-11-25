@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../domain/inventory.dart';
 import '../../shared_widgets/ingredient_quick_add.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import 'ingredients_screen.dart';
 import '../../../l10n/app_localizations.dart';
@@ -38,26 +40,37 @@ class RecipesTab extends ConsumerWidget {
         actionLabel: AppText.of(context).recipesScreenAddRecipe,
         onAction: () => openRecipeForm(context, ref, null),
       ),
-      builder: (list) => ListView.separated(
-        padding: const EdgeInsets.all(NbSpace.md),
-        itemCount: list.length,
-        separatorBuilder: nbRowSeparator,
-        itemBuilder: (_, i) {
-          final r = list[i];
-          return NbRow(
-            onTap: () => openRecipeForm(context, ref, r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(r.dishName, style: t.text.body),
-                Text(
-                    AppText.of(context)
-                        .recipesScreenIngredientCount(r.ingredients.length),
-                    style: t.text.label),
-              ],
-            ),
-          );
-        },
+      builder: (all) => SearchSortList<Recipe>(
+        items: all,
+        searchLabel: AppText.of(context).recipesScreenSearchLabel,
+        searchFields: (r) => [r.dishName],
+        sorts: [
+          SortOption(AppText.of(context).searchSortNameAz,
+              (a, b) => compareNames(a.dishName, b.dishName)),
+          SortOption(AppText.of(context).searchSortNewest,
+              (a, b) => b.createdAt.compareTo(a.createdAt)),
+        ],
+        builder: (context, list) => ListView.separated(
+          padding: const EdgeInsets.all(NbSpace.md),
+          itemCount: list.length,
+          separatorBuilder: nbRowSeparator,
+          itemBuilder: (_, i) {
+            final r = list[i];
+            return NbRow(
+              onTap: () => openRecipeForm(context, ref, r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(r.dishName, style: t.text.body),
+                  Text(
+                      AppText.of(context)
+                          .recipesScreenIngredientCount(r.ingredients.length),
+                      style: t.text.label),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

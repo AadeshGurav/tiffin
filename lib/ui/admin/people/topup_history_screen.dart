@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/list_search.dart';
 import '../../../domain/ledger.dart';
 import '../../../domain/member.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/messages.dart';
@@ -47,60 +49,83 @@ class TopupHistoryTab extends ConsumerWidget {
         title: AppText.of(context).topupHistoryEmptyTitle,
         quips: [AppText.of(context).topupHistoryEmptyQuip],
       ),
-      builder: (data) => ListView.separated(
-        padding: const EdgeInsets.all(NbSpace.md),
-        itemCount: data.topups.length,
-        separatorBuilder: nbRowSeparator,
-        itemBuilder: (_, i) {
-          final tp = data.topups[i];
-          final name = data.membersById[tp.memberId]?.name ??
-              AppText.of(context)
-                  .topupHistoryUnknownMember(shortCode(tp.memberId));
-          return NbRow(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text(name, style: t.text.body)),
-                    if (tp.reversed)
-                      Text(AppText.of(context).topupHistoryReversedBadge,
-                          style: t.text.label.copyWith(color: t.color.reject)),
-                  ],
-                ),
-                Text(
-                    AppText.of(context).topupHistoryLineSummary(
-                        tp.lunchUnits,
-                        tp.breakfastUnits,
-                        tp.brunchUnits,
-                        AppText.of(context).money(tp.amount),
-                        AppText.of(context)
-                            .paymentMethodLabel(tp.paymentMethod),
-                        AppText.of(context)
-                            .paymentStatusLabel(tp.paymentStatus)),
-                    style: t.text.label),
-                Text(
-                    AppText.of(context).topupHistoryCreatedInfo(
-                        fmt.format(tp.createdAt.toLocal()), tp.createdBy),
-                    style: t.text.label),
-                if (tp.reversed && tp.reversedAt != null)
-                  Text(
-                      AppText.of(context).topupHistoryReversedInfo(
-                          fmt.format(tp.reversedAt!.toLocal()),
-                          (tp.reversedBy != null).toString(),
-                          tp.reversedBy ?? ''),
-                      style: t.text.label.copyWith(color: t.color.reject)),
-                if (!tp.reversed) ...[
-                  const SizedBox(height: NbSpace.sm),
-                  NbButton.secondary(
-                    label: AppText.of(context).topupHistoryReverseButton,
-                    onPressed: () => _confirmReverse(context, ref, tp, name),
+      builder: (data) => SearchSortList<Topup>(
+        items: data.topups,
+        searchLabel: AppText.of(context).topupHistorySearchLabel,
+        searchFields: (tp) => [
+          data.membersById[tp.memberId]?.name,
+          tp.createdBy,
+          AppText.of(context).paymentMethodLabel(tp.paymentMethod),
+          AppText.of(context).paymentStatusLabel(tp.paymentStatus),
+        ],
+        sorts: [
+          SortOption(AppText.of(context).searchSortNewest,
+              (a, b) => b.createdAt.compareTo(a.createdAt)),
+          SortOption(AppText.of(context).searchSortOldest,
+              (a, b) => a.createdAt.compareTo(b.createdAt)),
+          SortOption(AppText.of(context).searchSortAmount,
+              (a, b) => b.amount.compareTo(a.amount)),
+          SortOption(
+              AppText.of(context).searchSortNameAz,
+              (a, b) => compareNames(data.membersById[a.memberId]?.name ?? '',
+                  data.membersById[b.memberId]?.name ?? '')),
+        ],
+        builder: (context, topups) => ListView.separated(
+          padding: const EdgeInsets.all(NbSpace.md),
+          itemCount: topups.length,
+          separatorBuilder: nbRowSeparator,
+          itemBuilder: (_, i) {
+            final tp = topups[i];
+            final name = data.membersById[tp.memberId]?.name ??
+                AppText.of(context)
+                    .topupHistoryUnknownMember(shortCode(tp.memberId));
+            return NbRow(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: Text(name, style: t.text.body)),
+                      if (tp.reversed)
+                        Text(AppText.of(context).topupHistoryReversedBadge,
+                            style:
+                                t.text.label.copyWith(color: t.color.reject)),
+                    ],
                   ),
+                  Text(
+                      AppText.of(context).topupHistoryLineSummary(
+                          tp.lunchUnits,
+                          tp.breakfastUnits,
+                          tp.brunchUnits,
+                          AppText.of(context).money(tp.amount),
+                          AppText.of(context)
+                              .paymentMethodLabel(tp.paymentMethod),
+                          AppText.of(context)
+                              .paymentStatusLabel(tp.paymentStatus)),
+                      style: t.text.label),
+                  Text(
+                      AppText.of(context).topupHistoryCreatedInfo(
+                          fmt.format(tp.createdAt.toLocal()), tp.createdBy),
+                      style: t.text.label),
+                  if (tp.reversed && tp.reversedAt != null)
+                    Text(
+                        AppText.of(context).topupHistoryReversedInfo(
+                            fmt.format(tp.reversedAt!.toLocal()),
+                            (tp.reversedBy != null).toString(),
+                            tp.reversedBy ?? ''),
+                        style: t.text.label.copyWith(color: t.color.reject)),
+                  if (!tp.reversed) ...[
+                    const SizedBox(height: NbSpace.sm),
+                    NbButton.secondary(
+                      label: AppText.of(context).topupHistoryReverseButton,
+                      onPressed: () => _confirmReverse(context, ref, tp, name),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
