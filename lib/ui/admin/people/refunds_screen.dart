@@ -78,38 +78,38 @@ class RefundsScreen extends ConsumerWidget {
                     nameById[a.memberId] ?? '', nameById[b.memberId] ?? '')),
           ],
           builder: (context, list) => ListView.separated(
-          itemCount: list.length,
-          separatorBuilder: nbRowSeparator,
-          itemBuilder: (_, i) {
-            final r = list[i];
-            return NbRow(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                      nameById[r.memberId] ??
-                          AppText.of(context)
-                              .topupHistoryUnknownMember(shortCode(r.memberId)),
-                      style: t.text.body),
-                  Text(
-                      AppText.of(context).refundsScreenLineSummary(
-                          r.lunchUnits,
-                          r.breakfastUnits,
-                          r.brunchUnits,
-                          AppText.of(context).money(r.refundAmount)),
-                      style: t.text.body),
-                  Text(
-                      AppText.of(context).refundsScreenLineInfo(
-                          fmt.format(r.createdAt.toLocal()),
-                          r.processedBy,
-                          (r.reason != null).toString(),
-                          r.reason ?? ''),
-                      style: t.text.label),
-                ],
-              ),
-            );
-          },
-        ),
+            itemCount: list.length,
+            separatorBuilder: nbRowSeparator,
+            itemBuilder: (_, i) {
+              final r = list[i];
+              return NbRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        nameById[r.memberId] ??
+                            AppText.of(context).topupHistoryUnknownMember(
+                                shortCode(r.memberId)),
+                        style: t.text.body),
+                    Text(
+                        AppText.of(context).refundsScreenLineSummary(
+                            r.lunchUnits,
+                            r.breakfastUnits,
+                            r.brunchUnits,
+                            AppText.of(context).money(r.refundAmount)),
+                        style: t.text.body),
+                    Text(
+                        AppText.of(context).refundsScreenLineInfo(
+                            fmt.format(r.createdAt.toLocal()),
+                            r.processedBy,
+                            (r.reason != null).toString(),
+                            r.reason ?? ''),
+                        style: t.text.label),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

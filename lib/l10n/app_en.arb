@@ -1670,5 +1670,6 @@
   "purchaseScheduleScreenSearchLabel": "Search items to buy",
   "purchaseScheduleScreenSortDate": "By date",
   "purchaseScheduleScreenSortName": "By name within each day",
-  "purchaseScheduleScreenSortPending": "Not bought first within each day"
+  "purchaseScheduleScreenSortPending": "Not bought first within each day",
+  "refundsScreenSearchLabel": "Search by member, staff or reason"
 }

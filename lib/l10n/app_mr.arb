@@ -767,5 +767,6 @@
   "purchaseScheduleScreenSearchLabel": "खरेदीच्या वस्तू शोधा",
   "purchaseScheduleScreenSortDate": "तारखेनुसार",
   "purchaseScheduleScreenSortName": "प्रत्येक दिवसात नावानुसार",
-  "purchaseScheduleScreenSortPending": "प्रत्येक दिवसात न घेतलेले आधी"
+  "purchaseScheduleScreenSortPending": "प्रत्येक दिवसात न घेतलेले आधी",
+  "refundsScreenSearchLabel": "सदस्य, कर्मचारी किंवा कारणाने शोधा"
 }
