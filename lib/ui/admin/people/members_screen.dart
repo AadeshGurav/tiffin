@@ -12,6 +12,7 @@ import '../../theme/tokens.dart';
 import '../../shared_widgets/motion.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/messages.dart';
+import 'qr_print_screen.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>((ref) async {
   return ref.watch(backendProvider).listMembers();
@@ -26,7 +27,17 @@ class MembersScreen extends ConsumerWidget {
     final t = context.tokens;
     final members = ref.watch(_membersProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(AppText.of(context).membersScreenTitle)),
+      appBar: AppBar(
+        title: Text(AppText.of(context).membersScreenTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print_outlined),
+            tooltip: AppText.of(context).membersScreenPrintQrTooltip,
+            onPressed: () => Navigator.of(context).push<void>(
+                tiffinRoute<void>(context, () => const QrPrintScreen())),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
