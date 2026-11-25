@@ -7,6 +7,8 @@ import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../theme/category_palette.dart';
+import 'category_color_picker.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -51,6 +53,10 @@ class MenuCategoriesScreen extends ConsumerWidget {
               onTap: () => _form(context, ref, c),
               child: Row(
                 children: [
+                  if (c.color != null) ...[
+                    Icon(Icons.circle, color: Color(c.color!), size: 20),
+                    const SizedBox(width: NbSpace.sm),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,34 +95,44 @@ class MenuCategoriesScreen extends ConsumerWidget {
     final t = context.tokens;
     final name = TextEditingController(text: existing?.name ?? '');
     final desc = TextEditingController(text: existing?.description ?? '');
+    var color = CategoryColor.fromArgb(existing?.color);
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(
-            existing == null
-                ? AppText.of(context).menuCategoriesScreenNewCategoryTitle
-                : existing.name,
-            style: t.text.heading),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NbTextField(
-                label: AppText.of(context).menuCategoriesScreenNameLabel,
-                controller: name),
-            const SizedBox(height: NbSpace.sm),
-            NbTextField(
-                label: AppText.of(context).menuCategoriesScreenDescriptionLabel,
-                controller: desc),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+              existing == null
+                  ? AppText.of(context).menuCategoriesScreenNewCategoryTitle
+                  : existing.name,
+              style: t.text.heading),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NbTextField(
+                    label: AppText.of(context).menuCategoriesScreenNameLabel,
+                    controller: name),
+                const SizedBox(height: NbSpace.sm),
+                NbTextField(
+                    label: AppText.of(context)
+                        .menuCategoriesScreenDescriptionLabel,
+                    controller: desc),
+                const SizedBox(height: NbSpace.md),
+                CategoryColorPicker(
+                    selected: color,
+                    onChanged: (c) => setState(() => color = c)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(AppText.of(context).menuCategoriesScreenCancel)),
+            NbButton(
+                label: AppText.of(context).menuCategoriesScreenSave,
+                onPressed: () => Navigator.pop(context, true)),
           ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(AppText.of(context).menuCategoriesScreenCancel)),
-          NbButton(
-              label: AppText.of(context).menuCategoriesScreenSave,
-              onPressed: () => Navigator.pop(context, true)),
-        ],
       ),
     );
     if (ok != true || !context.mounted) return;
@@ -124,10 +140,11 @@ class MenuCategoriesScreen extends ConsumerWidget {
       final backend = ref.read(backendProvider);
       final d = desc.text.trim().isEmpty ? null : desc.text.trim();
       if (existing == null) {
-        await backend.createMenuCategory(name.text.trim(), d);
+        await backend.createMenuCategory(name.text.trim(), d,
+            color: color?.argb);
       } else {
         await backend.updateMenuCategory(existing.id,
-            name: name.text.trim(), description: d);
+            name: name.text.trim(), description: d, color: color?.argb);
       }
     }, successMessage: AppText.of(context).menuCategoriesScreenSaveSuccess);
     if (saved) ref.invalidate(_categoriesProvider);

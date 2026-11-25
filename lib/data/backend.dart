@@ -186,7 +186,6 @@ class Backend {
   Future<void> deleteMember(String id) => members.delete(id);
   Future<Member> creditMember(String id, UnitCounts units) =>
       members.credit(id, units);
-  Future<List<int>> memberQrPng(String id) => members.renderQr(id);
 
   // ---- scanning ----------------------------------------------
 
@@ -247,11 +246,15 @@ class Backend {
   // ---- menu -------------------------------------------
 
   Future<List<MenuCategory>> listMenuCategories() => menu.listCategories();
-  Future<MenuCategory> createMenuCategory(String name, String? description) =>
-      menu.createCategory(name, description);
+  Future<MenuCategory> createMenuCategory(String name, String? description,
+          {int? color}) =>
+      menu.createCategory(name, description, color: color);
   Future<MenuCategory> updateMenuCategory(String id,
-          {String? name, Object? description = kUnset}) =>
-      menu.updateCategory(id, name: name, description: description);
+          {String? name,
+          Object? description = kUnset,
+          Object? color = kUnset}) =>
+      menu.updateCategory(id,
+          name: name, description: description, color: color);
   Future<void> deleteMenuCategory(String id) => menu.deleteCategory(id);
   Future<List<MenuEntry>> listMenu({DateTime? start, DateTime? end}) =>
       menu.listEntries(start: start, end: end);

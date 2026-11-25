@@ -28,7 +28,8 @@ class MenuService {
       (await _store.cached(_categories)).map(MenuCategory.fromJson).toList()
         ..sort((a, b) => a.name.compareTo(b.name));
 
-  Future<MenuCategory> createCategory(String name, String? description) async {
+  Future<MenuCategory> createCategory(String name, String? description,
+      {int? color}) async {
     final clean = name.trim();
     if (clean.isEmpty) {
       throw const ValidationException(ErrorCode.categoryNameBlank);
@@ -39,6 +40,7 @@ class MenuService {
       id: _store.newId(Col.menuCategories),
       name: clean,
       description: description,
+      color: color,
       createdAt: now,
       updatedAt: now,
     );
@@ -52,6 +54,7 @@ class MenuService {
     String id, {
     String? name,
     Object? description = kUnset,
+    Object? color = kUnset,
   }) async {
     final existing = await _store.cachedDoc(_categories.doc(id));
     if (existing == null) {
@@ -61,6 +64,7 @@ class MenuService {
     final changes = <String, dynamic>{
       if (name != null) 'name': name.trim(),
       if (!identical(description, kUnset)) 'description': description,
+      if (!identical(color, kUnset)) 'color': color,
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     };
     await _store.commit(_store.batch()..update(_categories.doc(id), changes),

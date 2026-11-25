@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,11 +8,13 @@ import '../../../domain/member.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/qr_card.dart';
 import '../../shared_widgets/search_sort_list.dart';
 import '../../theme/tokens.dart';
 import '../../shared_widgets/motion.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/messages.dart';
+import 'qr_print_screen.dart';
 
 final _membersProvider = FutureProvider.autoDispose<List<Member>>((ref) async {
   return ref.watch(backendProvider).listMembers();
@@ -29,7 +29,17 @@ class MembersScreen extends ConsumerWidget {
     final t = context.tokens;
     final members = ref.watch(_membersProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(AppText.of(context).membersScreenTitle)),
+      appBar: AppBar(
+        title: Text(AppText.of(context).membersScreenTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print_outlined),
+            tooltip: AppText.of(context).membersScreenPrintQrTooltip,
+            onPressed: () => Navigator.of(context).push<void>(
+                tiffinRoute<void>(context, () => const QrPrintScreen())),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: t.color.accent,
         foregroundColor: t.color.onAccent,
@@ -203,10 +213,15 @@ class _MemberTile extends ConsumerWidget {
 
   Future<void> _showQr(BuildContext context, WidgetRef ref) async {
     final t = context.tokens;
-    Uint8List? png;
+    final QrCardData card;
     try {
-      png = Uint8List.fromList(
-          await ref.read(backendProvider).memberQrPng(member.id));
+      final backend = ref.read(backendProvider);
+      final categories = await backend.listMenuCategories();
+      card = qrCardFor(
+        member,
+        canteenName: (await backend.getSettings()).appName,
+        categoryColors: {for (final c in categories) c.name: c.color},
+      );
     } catch (e, st) {
       if (context.mounted) {
         final notice = AppText.of(context).describeError(e, st);
@@ -219,7 +234,7 @@ class _MemberTile extends ConsumerWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: Text(member.name, style: t.text.heading),
-        content: Image.memory(png!, width: 260, height: 260),
+        content: SizedBox(width: 240, child: QrCardView(card: card)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),

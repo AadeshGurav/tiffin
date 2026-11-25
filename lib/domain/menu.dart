@@ -7,6 +7,7 @@ class MenuCategory {
     required this.id,
     required this.name,
     this.description,
+    this.color,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -15,6 +16,7 @@ class MenuCategory {
         id: j['id'] as String,
         name: j['name'] as String,
         description: j['description'] as String?,
+        color: (j['color'] as num?)?.toInt(),
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
@@ -22,6 +24,10 @@ class MenuCategory {
   final String id;
   final String name;
   final String? description;
+
+  /// ARGB colour the admin gave this category, used to tint its members' QR
+  /// cards. Null (also on documents that predate it) means the neutral default.
+  final int? color;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,6 +35,7 @@ class MenuCategory {
         'id': id,
         'name': name,
         'description': description,
+        'color': color,
         'createdAt': createdAt.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };

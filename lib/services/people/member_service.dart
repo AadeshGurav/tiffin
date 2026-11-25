@@ -140,9 +140,6 @@ class MemberService {
     return getById(id);
   }
 
-  Future<List<int>> renderQr(String id) async =>
-      _qr.renderPng((await getById(id)).qrCodeId);
-
   /// Field updates that add [units] to a member's balances. Shared by
   /// top-ups, refunds and scans so there is one spelling of "change a
   /// balance", and it is always an increment.
