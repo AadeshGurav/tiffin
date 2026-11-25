@@ -33,6 +33,7 @@ unexpected: it gets a reference code and a full log entry automatically.
 | --- | --- |
 | Caught in a screen | `describeError` → inline notice, snackbar or `ErrorPanel` |
 | Uncaught async error (no screen owns it) | A snackbar with the code (`showUncaughtError`) |
+| Server refuses a write after the screen said "saved" (offline or slow sync) | A banner naming what was undone, with the code, until dismissed (`Store.rejections` → `WriteRejectionNotices`). Callers passing `onRejected` to `Store.commit` handle it themselves instead (scan → notification, device join → its own notice) |
 | Widget build error | The friendly panel, with the code as selectable text |
 | `bootstrap()` throws | A plain last-resort screen with the code |
 

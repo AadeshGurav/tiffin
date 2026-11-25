@@ -2,10 +2,16 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../core/error_report.dart';
 import '../core/errors.dart';
 import '../core/logging.dart';
 
 typedef Json = Map<String, dynamic>;
+
+/// A write the server refused after the screen that made it had already said
+/// it was saved. [what] is the label given to [Store.commit]; [ref] is the
+/// reference code the failure was logged under (ADR 0007).
+typedef WriteRejection = ({String what, String ref});
 
 /// Every collection name in one place, so the services and `firestore.rules`
 /// can be checked against a single list.
@@ -74,6 +80,14 @@ class Store {
   /// the first server answer or cache fallback corrects it within a second.
   bool online = true;
 
+  final _rejections = StreamController<WriteRejection>.broadcast();
+
+  /// Every late rejection no caller handled itself, so the app shell can tell
+  /// the person their earlier save was undone (CLAUDE.md §8).
+  Stream<WriteRejection> get rejections => _rejections.stream;
+
+  Future<void> dispose() => _rejections.close();
+
   DocumentReference<Json> get canteenDoc => rootDoc(db, canteenId);
   CollectionReference<Json> col(String name) => canteenDoc.collection(name);
   DocumentReference<Json> doc(String col, String id) =>
@@ -112,10 +126,11 @@ class Store {
   List<Json> _rows(QuerySnapshot<Json> snap) =>
       [for (final d in snap.docs) withId(d)];
 
-  /// See the class comment. [onRejected] runs if the server later refuses a
-  /// batch that was already applied locally (for example a duplicate scan made
-  /// on two offline phones) — the local copy is rolled back by Firestore
-  /// itself, so the callback is only for telling someone.
+  /// See the class comment. If the server later refuses a batch that was
+  /// already applied locally (for example a duplicate scan made on two offline
+  /// phones), Firestore rolls the local copy back itself, and someone has to
+  /// be told: [onRejected] when the caller has its own way, otherwise
+  /// [rejections].
   Future<void> commit(
     WriteBatch batch,
     String what, {
@@ -141,9 +156,16 @@ class Store {
     }
     // Still observed, so a rejection that arrives long after the screen moved
     // on is logged and reported rather than lost.
-    unawaited(ack.then((_) => _log.info('synced $what'), onError: (Object e) {
-      _log.warning('server rejected $what after sync', e);
-      onRejected?.call(e);
+    unawaited(ack.then((_) => _log.info('synced $what'),
+        onError: (Object e, StackTrace st) {
+      if (onRejected != null) {
+        _log.warning('server rejected $what after sync', e);
+        onRejected(e);
+        return;
+      }
+      final ref =
+          reportError(e, st, context: 'server rejected $what after sync');
+      if (!_rejections.isClosed) _rejections.add((what: what, ref: ref));
     }));
   }
 }

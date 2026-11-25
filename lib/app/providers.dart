@@ -70,8 +70,15 @@ final storeProvider = Provider<Store>((ref) {
   final app = ref.watch(firebaseAppProvider).requireValue;
   final canteen = ref.watch(activeCanteenProvider);
   if (canteen == null) throw StateError('No active canteen');
-  return Store(FirebaseFirestore.instanceFor(app: app), canteen);
+  final store = Store(FirebaseFirestore.instanceFor(app: app), canteen);
+  ref.onDispose(store.dispose);
+  return store;
 });
+
+/// Writes the server refused after the screen had already said "saved" —
+/// shown app-wide by `WriteRejectionNotices`.
+final writeRejectionsProvider = StreamProvider<WriteRejection>(
+    (ref) => ref.watch(storeProvider).rejections);
 
 final accessServiceProvider = Provider<AccessService>((ref) {
   final app = ref.watch(firebaseAppProvider).requireValue;
