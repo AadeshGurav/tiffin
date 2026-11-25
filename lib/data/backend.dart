@@ -65,7 +65,7 @@ class Backend {
     scans = ScanService(store, settings, notifications);
     topups = TopupService(store, settings, billing, qr);
     refunds = RefundService(store, settings);
-    menu = MenuService(store);
+    menu = MenuService(store, settings);
     users = UserService(store, auth);
     ingredients = IngredientService(store);
     recipes = RecipeService(store);

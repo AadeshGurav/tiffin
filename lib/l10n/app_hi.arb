@@ -151,6 +151,7 @@
   "recipesScreenSave": "सहेजें",
   "recipesScreenSaveSuccess": "सहेजा गया।",
   "menuScreenTitle": "मेनू कैलेंडर",
+  "menuScreenGroupedMeal": "{group} · {meal}",
   "menuScreenManageCategoriesTooltip": "श्रेणियाँ प्रबंधित करें",
   "menuScreenAddFab": "जोड़ें · {date}",
   "menuScreenLoading": "महीना लोड हो रहा है…",

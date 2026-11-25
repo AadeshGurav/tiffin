@@ -63,6 +63,7 @@ void main() {
           'reportColId',
           'topupScreenAnytimeLabel', // only placeholders: {meal}  ({price})
           'mealUnits', // only placeholders: {meal}: {count}
+          'menuScreenGroupedMeal', // only placeholders: {group} · {meal}
         };
         final untranslated = [
           for (final key in keys(en))

@@ -249,6 +249,18 @@
   "recipesScreenSave": "Save",
   "recipesScreenSaveSuccess": "Saved.",
   "menuScreenTitle": "Menu calendar",
+  "menuScreenGroupedMeal": "{group} · {meal}",
+  "@menuScreenGroupedMeal": {
+    "description": "An anytime meal in the menu's meal picker, with its group. group = a meal group (Drinks); meal = an anytime meal's name (Juice).",
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "menuScreenManageCategoriesTooltip": "Manage categories",
   "menuScreenAddFab": "Add · {date}",
   "@menuScreenAddFab": {
