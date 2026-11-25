@@ -186,7 +186,6 @@ class Backend {
   Future<void> deleteMember(String id) => members.delete(id);
   Future<Member> creditMember(String id, UnitCounts units) =>
       members.credit(id, units);
-  Future<List<int>> memberQrPng(String id) => members.renderQr(id);
 
   // ---- scanning ----------------------------------------------
 

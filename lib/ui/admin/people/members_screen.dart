@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +7,7 @@ import '../../../domain/member.dart';
 import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_text_field.dart';
+import '../../shared_widgets/qr_card.dart';
 import '../../theme/tokens.dart';
 import '../../shared_widgets/motion.dart';
 import '../../../l10n/app_localizations.dart';
@@ -179,10 +178,15 @@ class _MemberTile extends ConsumerWidget {
 
   Future<void> _showQr(BuildContext context, WidgetRef ref) async {
     final t = context.tokens;
-    Uint8List? png;
+    final QrCardData card;
     try {
-      png = Uint8List.fromList(
-          await ref.read(backendProvider).memberQrPng(member.id));
+      final backend = ref.read(backendProvider);
+      final categories = await backend.listMenuCategories();
+      card = qrCardFor(
+        member,
+        canteenName: (await backend.getSettings()).appName,
+        categoryColors: {for (final c in categories) c.name: c.color},
+      );
     } catch (e, st) {
       if (context.mounted) {
         final notice = AppText.of(context).describeError(e, st);
@@ -195,7 +199,7 @@ class _MemberTile extends ConsumerWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: Text(member.name, style: t.text.heading),
-        content: Image.memory(png!, width: 260, height: 260),
+        content: SizedBox(width: 240, child: QrCardView(card: card)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
