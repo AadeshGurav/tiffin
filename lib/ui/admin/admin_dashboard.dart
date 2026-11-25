@@ -31,6 +31,8 @@ class AdminDashboard extends ConsumerWidget {
     final t = context.tokens;
     final text = AppText.of(context);
     final username = ref.watch(sessionProvider)?.username ?? '';
+    final pending = ref.watch(pendingJoinsProvider);
+    final waiting = pending.devices + pending.accounts;
 
     void open(Widget Function() screen) =>
         Navigator.of(context).push(tiffinRoute<void>(context, () => screen()));
@@ -102,8 +104,16 @@ class AdminDashboard extends ConsumerWidget {
           Entrance(
             index: 4,
             child: NbGroup(children: [
-              row(text.adminDashboardDestSettings, Icons.settings,
-                  NbTone.system, () => const SettingsScreen()),
+              NbListRow(
+                icon: Icons.settings,
+                title: text.adminDashboardDestSettings,
+                // Join requests live two taps deep; without this nobody
+                // knows a phone or person is waiting at the door.
+                subtitle:
+                    waiting > 0 ? text.joinRequestsWaiting(waiting) : null,
+                tone: NbTone.system,
+                onTap: () => open(() => const SettingsScreen()),
+              ),
             ]),
           ),
           SizedBox(height: t.shape.borderBase),

@@ -1501,6 +1501,15 @@
   "syncOffline": "Offline — changes will sync",
   "noAccountsTitle": "No accounts yet",
   "noAccountsBody": "The admin hasn't created any accounts. Set them up on the admin phone first.",
+  "joinRequestsWaiting": "{count, plural, =1{1 waiting to join} other{{count} waiting to join}}",
+  "@joinRequestsWaiting": {
+    "description": "Admin dashboard and Settings rows: how many phones or people asked to join and await approval.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "devicesTitle": "Devices",
   "devicesSubtitle": "Phones that can use this canteen",
   "devicesPending": "Waiting for approval",

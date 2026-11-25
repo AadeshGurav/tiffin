@@ -651,6 +651,7 @@
   "syncOffline": "ऑफलाइन — बदल नंतर सिंक होतील",
   "noAccountsTitle": "अजून खाती नाहीत",
   "noAccountsBody": "अ‍ॅडमिनने अजून खाती तयार केलेली नाहीत. आधी अ‍ॅडमिन फोनवर तयार करा.",
+  "joinRequestsWaiting": "{count, plural, other{{count} जोडण्याच्या प्रतीक्षेत}}",
   "devicesTitle": "डिव्हाइस",
   "devicesSubtitle": "ही कॅन्टीन वापरू शकणारे फोन",
   "devicesPending": "मंजुरी बाकी",

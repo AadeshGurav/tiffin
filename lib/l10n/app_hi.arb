@@ -651,6 +651,7 @@
   "syncOffline": "ऑफ़लाइन — बदलाव बाद में सिंक होंगे",
   "noAccountsTitle": "अभी कोई खाता नहीं",
   "noAccountsBody": "एडमिन ने अभी कोई खाता नहीं बनाया। पहले एडमिन फ़ोन पर बनाएं।",
+  "joinRequestsWaiting": "{count, plural, other{{count} जुड़ने की प्रतीक्षा में}}",
   "devicesTitle": "डिवाइस",
   "devicesSubtitle": "फ़ोन जो इस कैंटीन का उपयोग कर सकते हैं",
   "devicesPending": "स्वीकृति बाकी",

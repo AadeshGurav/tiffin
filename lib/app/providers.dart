@@ -227,5 +227,18 @@ final devicesProvider = StreamProvider.autoDispose<List<Device>>(
 final onlineAccountsProvider = StreamProvider.autoDispose<List<OnlineAccount>>(
     (ref) => ref.watch(accessServiceProvider).onlineAccounts());
 
+/// Phones and online accounts asking to join — the admin's cue that someone
+/// is waiting, shown on the dashboard and in Settings. A list that has not
+/// loaded (or failed) counts as none here; its own screen shows why.
+final pendingJoinsProvider =
+    Provider.autoDispose<({int devices, int accounts})>((ref) {
+  final devices = ref.watch(devicesProvider).asData?.value ?? const [];
+  final accounts = ref.watch(onlineAccountsProvider).asData?.value ?? const [];
+  return (
+    devices: devices.where((d) => d.status == 'pending').length,
+    accounts: accounts.where((a) => a.status == 'pending').length,
+  );
+});
+
 final onlineAccountsEnabledProvider = FutureProvider.autoDispose<bool>(
     (ref) => ref.watch(backendProvider).onlineAccountsEnabled());
