@@ -13,6 +13,7 @@ import '../ui/auth/waiting_screen.dart';
 import '../ui/auth/welcome_screen.dart';
 import '../ui/counter/counter_home.dart';
 import '../ui/scanner/scanner_screen.dart';
+import '../ui/shared_widgets/app_shell.dart';
 import '../ui/shared_widgets/brand_splash.dart';
 import '../ui/shared_widgets/nb_feedback.dart';
 import '../ui/shared_widgets/notice_screen.dart';
@@ -58,7 +59,9 @@ class AppGate extends ConsumerWidget {
       Removed(:final device) => WaitingScreen(device: device, removed: true),
       OnlineRefused(:final email, :final pending) =>
         WaitingScreen.onlineRefused(email: email, pending: pending),
-      ApprovedDevice() || OnlineAccess() => const _SignedInGate(),
+      ApprovedDevice() ||
+      OnlineAccess() =>
+        const WriteRejectionNotices(child: _SignedInGate()),
     };
   }
 }

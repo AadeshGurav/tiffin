@@ -1693,5 +1693,18 @@
   "purchaseScheduleScreenSortDate": "By date",
   "purchaseScheduleScreenSortName": "By name within each day",
   "purchaseScheduleScreenSortPending": "Not bought first within each day",
-  "refundsScreenSearchLabel": "Search by member, staff or reason"
+  "refundsScreenSearchLabel": "Search by member, staff or reason",
+  "writeRejectedNotice": "{kind, select, refunds{A refund you saved earlier was refused by the server and undone.} topups{A top-up you saved earlier was refused by the server and undone.} scan{A meal scan made earlier was refused by the server and undone.} members{A member change you saved earlier was refused by the server and undone.} expenses{An expense you saved earlier was refused by the server and undone.} settings{A settings change you saved earlier was refused by the server and undone.} other{A change you saved earlier was refused by the server and undone.}} Check it and enter it again if it is still needed.",
+  "writeRejectedDismiss": "Dismiss",
+  "@writeRejectedNotice": {
+    "description": "Banner that stays until dismissed when the server refuses a save after the screen already said it was saved. kind is the record type.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "@writeRejectedDismiss": {
+    "description": "Closes the refused-save banner."
+  }
 }

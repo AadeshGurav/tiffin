@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../data/store.dart';
 import '../../domain/ops.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/messages.dart';
@@ -177,3 +178,59 @@ class _SyncIndicator extends ConsumerWidget {
     );
   }
 }
+
+/// Tells the person when the server refused a save after the screen had
+/// already confirmed it (Store.commit's late rejections). Firestore has undone
+/// the change by then, so the notice stays until dismissed and names what was
+/// undone, with the reference code it was logged under (ADR 0007).
+class WriteRejectionNotices extends ConsumerWidget {
+  const WriteRejectionNotices({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(writeRejectionsProvider, (_, next) {
+      final rejection = next.asData?.value;
+      if (rejection != null) _show(context, rejection);
+    });
+    return child;
+  }
+
+  void _show(BuildContext context, WriteRejection rejection) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    final t = context.tokens;
+    final text = AppText.of(context);
+    messenger
+      ..clearMaterialBanners()
+      ..showMaterialBanner(MaterialBanner(
+        backgroundColor: t.color.reject,
+        leading: Icon(Icons.cloud_off, color: t.color.onReject),
+        content: Semantics(
+          liveRegion: true,
+          child: Text(
+            '${text.writeRejectedNotice(writeKind(rejection.what))}\n'
+            '${text.errorCodeLabel(rejection.ref)}',
+            style: t.text.body.copyWith(color: t.color.onReject),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => copyErrorCode(context, rejection.ref),
+            child: Text(text.errorCopyCode,
+                style: t.text.body.copyWith(color: t.color.onReject)),
+          ),
+          TextButton(
+            onPressed: messenger.hideCurrentMaterialBanner,
+            child: Text(text.writeRejectedDismiss,
+                style: t.text.body.copyWith(color: t.color.onReject)),
+          ),
+        ],
+      ));
+  }
+}
+
+/// The kind of record a commit label is about ('refunds.create r1' →
+/// 'refunds'), as the select key of `writeRejectedNotice`.
+String writeKind(String what) => what.split(RegExp(r'[. ]')).first;
