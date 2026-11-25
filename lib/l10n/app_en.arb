@@ -132,6 +132,7 @@
   "expensesScreenTitle": "Expenses & revenue",
   "expensesScreenLogExpense": "Log expense",
   "expensesScreenRevenue": "Revenue",
+  "expensesScreenRefunds": "Refunds",
   "expensesScreenExpenses": "Expenses",
   "expensesScreenProfit": "Profit",
   "expensesScreenLoading": "Loading expenses…",

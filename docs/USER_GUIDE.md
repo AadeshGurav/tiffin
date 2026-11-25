@@ -200,7 +200,8 @@ row stays in the log, marked reversed.
 ### 3.6 Expenses, refunds (admin)
 
 - **Expenses & revenue** — log expenses; the top strip shows revenue
-  (confirmed top-ups), expenses, and profit for the period.
+  (confirmed top-ups), refunds paid back, expenses, and profit (revenue
+  minus refunds and expenses) for the period.
 - **Refunds** — deduct units from a leaving member and record it. Units
   pre-fill from their balance and can't exceed it. The actual payout happens
   outside the app.

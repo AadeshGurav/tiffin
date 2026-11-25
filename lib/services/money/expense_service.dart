@@ -7,7 +7,7 @@ import '../../domain/ops.dart';
 import '../scanning/scan_service.dart' show ymd;
 
 /// Expense logging + a revenue-vs-expense summary (PRD §6.6). Revenue is
-/// confirmed top-ups in range.
+/// confirmed top-ups in range; refunds paid back and expenses come off it.
 ///
 /// ponytail: summary sums documents client-side. Fine at one canteen's scale;
 /// switch to Firestore aggregate queries if a year's top-ups reach ~10k.
@@ -40,22 +40,36 @@ class ExpenseService {
   }
 
   Future<ProfitSummary> summary({DateTime? start, DateTime? end}) async {
-    Query<Json> topups =
-        _store.col(Col.topups).where('paymentStatus', isEqualTo: 'confirmed');
-    if (start != null) {
-      topups = topups.where('createdAt',
-          isGreaterThanOrEqualTo: start.toUtc().toIso8601String());
-    }
-    if (end != null) {
-      topups = topups.where('createdAt',
-          isLessThanOrEqualTo: end.toUtc().toIso8601String());
-    }
+    final topups = _inRange(
+        _store.col(Col.topups).where('paymentStatus', isEqualTo: 'confirmed'),
+        'createdAt',
+        start,
+        end);
     final revenue = (await _store.fresh(topups))
         .where((t) => t['reversed'] != true)
         .fold<double>(0, (total, t) => total + (t['amount'] as num).toDouble());
+    final refunds = (await _store
+            .fresh(_inRange(_store.col(Col.refunds), 'createdAt', start, end)))
+        .fold<double>(
+            0, (total, r) => total + (r['refundAmount'] as num).toDouble());
     final spend = (await list(start: start, end: end))
         .fold<double>(0, (total, e) => total + e.amount);
     return ProfitSummary(
-        revenue: revenue, expenses: spend, profit: revenue - spend);
+        revenue: revenue,
+        refunds: refunds,
+        expenses: spend,
+        profit: revenue - refunds - spend);
+  }
+
+  static Query<Json> _inRange(
+      Query<Json> q, String field, DateTime? start, DateTime? end) {
+    if (start != null) {
+      q = q.where(field,
+          isGreaterThanOrEqualTo: start.toUtc().toIso8601String());
+    }
+    if (end != null) {
+      q = q.where(field, isLessThanOrEqualTo: end.toUtc().toIso8601String());
+    }
+    return q;
   }
 }

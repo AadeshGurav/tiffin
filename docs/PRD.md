@@ -137,7 +137,7 @@ UI) — from then on, all account management happens through the admin-only
 
 ### 6.6 Expense & Revenue Tracking (Admin)
 - Admin can log expenses (category, description, amount, date) — groceries, tables, other overhead.
-- System should provide a simple revenue-vs-expense summary (revenue = confirmed top-ups in a date range, expenses = logged expenses in that range, profit = the difference).
+- System should provide a simple revenue-vs-expense summary (revenue = confirmed top-ups in a date range, refunds = money paid back in that range (§6.7), expenses = logged expenses in that range, profit = revenue − refunds − expenses).
 
 ### 6.7 Refunds (Admin)
 - If a member leaves the school or otherwise stops using the canteen, the admin can process a refund: specify how many lunch/breakfast/brunch units are being refunded. Unit inputs pre-fill from that member's actual current balance (capped there, so a refund can't exceed what they have) and the refund amount is calculated automatically from the same unit prices used for top-ups — never typed in.

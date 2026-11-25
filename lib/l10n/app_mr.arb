@@ -82,6 +82,7 @@
   "expensesScreenTitle": "खर्च आणि उत्पन्न",
   "expensesScreenLogExpense": "खर्च नोंदवा",
   "expensesScreenRevenue": "उत्पन्न",
+  "expensesScreenRefunds": "परतावा",
   "expensesScreenExpenses": "खर्च",
   "expensesScreenProfit": "नफा",
   "expensesScreenLoading": "खर्च लोड होत आहेत…",

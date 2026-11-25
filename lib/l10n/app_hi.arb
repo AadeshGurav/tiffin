@@ -82,6 +82,7 @@
   "expensesScreenTitle": "व्यय और आय",
   "expensesScreenLogExpense": "व्यय दर्ज करें",
   "expensesScreenRevenue": "आय",
+  "expensesScreenRefunds": "धनवापसी",
   "expensesScreenExpenses": "व्यय",
   "expensesScreenProfit": "मुनाफ़ा",
   "expensesScreenLoading": "व्यय लोड हो रहे हैं…",

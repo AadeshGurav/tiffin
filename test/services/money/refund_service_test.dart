@@ -52,8 +52,8 @@ void main() {
     await expectLater(
         b.createRefund(
             RefundDraft(memberId: m.id, lunchUnits: -3, processedBy: '')),
-        throwsA(isA<ValidationException>().having(
-            (e) => e.code, 'code', ErrorCode.refundNegativeUnits)));
+        throwsA(isA<ValidationException>()
+            .having((e) => e.code, 'code', ErrorCode.refundNegativeUnits)));
     expect((await b.getMember(m.id)).balances.lunch, 2);
     expect(await b.listRefunds(), isEmpty);
   });

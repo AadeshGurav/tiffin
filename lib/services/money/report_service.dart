@@ -69,6 +69,7 @@ class ReportService {
         ..add([t.reportRangeTo, end == null ? t.reportRangeToday : day(end)])
         ..add([t.reportSheetMembers, members.length])
         ..add([t.reportRevenue, profit.revenue])
+        ..add([t.reportSheetRefunds, profit.refunds])
         ..add([t.reportSheetExpenses, profit.expenses])
         ..add([t.reportProfit, profit.profit]));
     }
