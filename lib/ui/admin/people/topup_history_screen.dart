@@ -63,7 +63,7 @@ class TopupHistoryTab extends ConsumerWidget {
               (a, b) => b.createdAt.compareTo(a.createdAt)),
           SortOption(AppText.of(context).searchSortOldest,
               (a, b) => a.createdAt.compareTo(b.createdAt)),
-          SortOption(AppText.of(context).topupHistorySortAmount,
+          SortOption(AppText.of(context).searchSortAmount,
               (a, b) => b.amount.compareTo(a.amount)),
           SortOption(
               AppText.of(context).searchSortNameAz,

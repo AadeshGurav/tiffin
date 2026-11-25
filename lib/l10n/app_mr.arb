@@ -759,6 +759,8 @@
   "usersScreenSearchLabel": "वापरकर्तानाव किंवा भूमिकेने शोधा",
   "usersScreenSortRole": "भूमिका",
   "topupHistorySearchLabel": "सदस्य, पेमेंट किंवा कॅशियरने शोधा",
-  "topupHistorySortAmount": "सर्वाधिक रक्कम",
-  "scanLogScreenSearchLabel": "सदस्य, जेवण किंवा श्रेणीने शोधा"
+  "searchSortAmount": "सर्वाधिक रक्कम",
+  "scanLogScreenSearchLabel": "सदस्य, जेवण किंवा श्रेणीने शोधा",
+  "expensesScreenSearchLabel": "श्रेणी किंवा वर्णनाने शोधा",
+  "expensesScreenSortCategory": "श्रेणी"
 }

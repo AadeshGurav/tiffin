@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/list_search.dart';
 import '../../../core/number_input.dart';
 import '../../../app/providers.dart';
 import '../../../domain/ops.dart';
@@ -9,6 +10,7 @@ import '../../shared_widgets/nb_button.dart';
 import '../../shared_widgets/nb_feedback.dart';
 import '../../shared_widgets/nb_group.dart';
 import '../../shared_widgets/nb_surface.dart';
+import '../../shared_widgets/search_sort_list.dart';
 import '../../shared_widgets/nb_text_field.dart';
 import '../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
@@ -70,31 +72,46 @@ class ExpensesScreen extends ConsumerWidget {
                 actionLabel: AppText.of(context).expensesScreenEmptyAction,
                 onAction: () => _form(context, ref),
               ),
-              builder: (list) => ListView.separated(
-                padding: const EdgeInsets.all(NbSpace.md),
-                itemCount: list.length,
-                separatorBuilder: nbRowSeparator,
-                itemBuilder: (_, i) {
-                  final e = list[i];
-                  return NbRow(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${e.category} · ${e.description}',
-                                  style: t.text.body),
-                              Text(fmt.format(e.date), style: t.text.label),
-                            ],
+              builder: (all) => SearchSortList<Expense>(
+                items: all,
+                searchLabel: AppText.of(context).expensesScreenSearchLabel,
+                searchFields: (e) => [e.category, e.description, e.createdBy],
+                sorts: [
+                  SortOption(AppText.of(context).searchSortNewest,
+                      (a, b) => b.date.compareTo(a.date)),
+                  SortOption(AppText.of(context).searchSortOldest,
+                      (a, b) => a.date.compareTo(b.date)),
+                  SortOption(AppText.of(context).searchSortAmount,
+                      (a, b) => b.amount.compareTo(a.amount)),
+                  SortOption(AppText.of(context).expensesScreenSortCategory,
+                      (a, b) => compareNames(a.category, b.category)),
+                ],
+                builder: (context, list) => ListView.separated(
+                  padding: const EdgeInsets.all(NbSpace.md),
+                  itemCount: list.length,
+                  separatorBuilder: nbRowSeparator,
+                  itemBuilder: (_, i) {
+                    final e = list[i];
+                    return NbRow(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('${e.category} · ${e.description}',
+                                    style: t.text.body),
+                                Text(fmt.format(e.date), style: t.text.label),
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(AppText.of(context).money(e.amount),
-                            style: t.text.body),
-                      ],
-                    ),
-                  );
-                },
+                          Text(AppText.of(context).money(e.amount),
+                              style: t.text.body),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
